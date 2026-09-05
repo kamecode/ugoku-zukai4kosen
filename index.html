@@ -3,19 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>うごく図解 for 高専 | 半導体・電子回路をアニメーションでわかりやすく学ぶ無料教材</title>
-<meta name="description" content="pn接合・ダイオード・MOSFET・CMOS・オペアンプ・コンパレータのしくみを、スライダーやボタンで動かしながら学べる無料のアニメーション図解教材45本。高専・大学・工業高校の半導体工学と電子回路の予習・復習に。アプリ不要でスマホでも動きます。">
+<title>うごく図解 半導体・電子回路 | 高専・大学向けのアニメーション教材</title>
+<meta name="description" content="pn接合・ダイオード・MOSFET・CMOS・オペアンプ・コンパレータのしくみを、スライダーやボタンで動かしながら学べるアニメーション図解教材45本。高専・大学・工業高校の半導体工学と電子回路の予習・復習に。アプリ不要でスマホでも動きます。">
 <link rel="canonical" href="https://ugoku-zukai4kosen.com/">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
-<meta property="og:title" content="うごく図解 for 高専 — 半導体・電子回路のアニメーション教材">
-<meta property="og:description" content="pn接合・MOSFET・CMOS・オペアンプ・コンパレータを動かしながら学べる無料のインタラクティブ図解45本。">
+<meta property="og:title" content="うごく図解 半導体・電子回路 — 動かしながら学ぶアニメ教材">
+<meta property="og:description" content="pn接合・MOSFET・CMOS・オペアンプ・コンパレータを動かしながら学べるインタラクティブ図解45本。">
 <meta property="og:url" content="https://ugoku-zukai4kosen.com/">
 <meta property="og:image" content="https://ugoku-zukai4kosen.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"うごく図解 for 高専",
+{"@context":"https://schema.org","@type":"WebSite","name":"うごく図解 半導体・電子回路","alternateName":"うごく図解 for 高専",
 "url":"https://ugoku-zukai4kosen.com/",
-"description":"半導体工学・電子回路のしくみをアニメーションで学べる無料のインタラクティブ図解教材集。pn接合、MOSFET、CMOSインバータ、オペアンプ、コンパレータなど45本を収録。"}
+"description":"半導体工学・電子回路のしくみをアニメーションで学べるインタラクティブ図解教材集。pn接合、MOSFET、CMOSインバータ、オペアンプ、コンパレータなど45本を収録。"}
 </script>
 <style>
   :root {
@@ -26,7 +29,10 @@
   body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Yu Gothic", sans-serif;
          color: var(--ink); background: var(--bg); line-height: 1.6; }
   header { background: #0d3c6e; color: #fff; padding: 36px 20px 28px; text-align: center; }
-  header h1 { margin: 0 0 8px; font-size: 1.9rem; }
+  header h1 { margin: 0; font-size: 1.9rem; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .brand img { display: block; }
+  .brand-sub { font-weight: 600; }
   header p { margin: 0; opacity: .85; font-size: .95rem; }
   main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
   .subject { margin-top: 40px; }
@@ -64,15 +70,18 @@
 </head>
 <body>
 <header>
-  <h1>うごく図解 for 高専</h1>
-  <p>半導体・電子回路のしくみを、動かしながら理解するインタラクティブ教材集</p>
+  <div class="brand">
+    <img src="logo.svg" alt="" width="56" height="56">
+    <h1>うごく図解 <span class="brand-sub">半導体・電子回路</span></h1>
+  </div>
+  <p>高専・大学の授業内容を、動かしながら理解するアニメーション教材集</p>
 </header>
 <main>
 
 <div class="howto">
   <p style="margin:0 0 8px; color:var(--ink);">
-  「うごく図解 for 高専」は、<strong>半導体工学</strong>と<strong>電子回路</strong>のしくみを
-  アニメーションで学べる無料のオンライン教材集です。pn接合・ダイオード・MOSFET・CMOSインバータ・
+  「うごく図解 半導体・電子回路」は、<strong>半導体工学</strong>と<strong>電子回路</strong>のしくみを
+  アニメーションで学べるオンライン教材集です。pn接合・ダイオード・MOSFET・CMOSインバータ・
   オペアンプ（反転増幅/非反転増幅）・コンパレータ・半導体製造プロセスまで、全45本を収録しています。</p>
   <p style="margin:0;">
   各図解はスライダー・タブ・ボタンで操作できます。PCでもスマホでも動きます（アプリ不要・その場で動作）。
@@ -310,7 +319,7 @@
 </section>
 
 <footer>
-  うごく図解 for 高専 — 教育目的での利用を歓迎します<br>
+  うごく図解 半導体・電子回路 — 教育目的での利用を歓迎します<br>
   <a href="about.html" style="color:var(--sub);">このサイトについて</a> ・
   <a href="privacy.html" style="color:var(--sub);">プライバシーポリシー</a>
 </footer>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="うごく図解 半導体・電子回路 ロゴ">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d3c6e"/>
+      <stop offset="1" stop-color="#1565c0"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#bg)"/>
+  <!-- 方形波(オシロスコープの信号) -->
+  <path id="wave" d="M16 78 H34 V42 H60 V78 H86 V42 H104"
+        fill="none" stroke="#ffffff" stroke-width="7"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <!-- 波形上を流れる電子 -->
+  <circle r="7" fill="#ffb531">
+    <animateMotion dur="3s" repeatCount="indefinite" rotate="none"
+      path="M16 78 H34 V42 H60 V78 H86 V42 H104"/>
+  </circle>
+  <circle r="4.5" fill="#7fd8ff" opacity="0.9">
+    <animateMotion dur="3s" begin="-1.5s" repeatCount="indefinite" rotate="none"
+      path="M16 78 H34 V42 H60 V78 H86 V42 H104"/>
+  </circle>
+</svg>
