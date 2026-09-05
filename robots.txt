@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ugoku-zukai4kosen.com/sitemap.xml
