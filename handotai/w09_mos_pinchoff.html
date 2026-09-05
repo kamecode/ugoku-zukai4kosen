@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第9週 構造で見るピンチオフ</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222;
+    --pos:#1F6FB2; --neg:#C0392B; --key:#7E3FA0; --grn:#2E8B57;
+    --ox:#E0A800; --ox2:#B8860B; --line:#CCCCCC; --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg);
+    font-family:"メイリオ","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+    color:var(--ink); line-height:1.6;}
+  .wrap{max-width:1060px; margin:0 auto; padding:18px 20px 60px;}
+  h1{color:var(--navy); font-size:24px; margin:6px 0 2px;
+    border-bottom:1px solid var(--line); padding-bottom:10px;}
+  .sub{color:#555; font-size:14px; margin:0 0 14px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px;}
+  .tab{border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:9px 14px; border-radius:8px; font-size:15px; font-weight:bold;
+    cursor:pointer; transition:.15s;}
+  .tab:hover{background:#EEF3F8;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .panel{display:none;} .panel.active{display:block;}
+  .panel-title{color:var(--navy); font-size:19px; margin:4px 0 6px; font-weight:bold;}
+  .panel-lead{font-size:15px; margin:0 0 14px; color:#333;}
+  .layout{display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start;}
+  .col-graph{flex:1 1 480px; min-width:400px;}
+  .col-ctrl{flex:1 1 300px; min-width:280px;}
+  .card{border:1.5px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:14px; background:#FAFBFD;}
+  .card h3{margin:0 0 10px; font-size:16px; color:var(--navy);}
+  .slider-row{margin:14px 0;}
+  .slider-row label{display:block; font-size:14px; font-weight:bold; margin-bottom:6px;}
+  .slider-row .val{display:inline-block; min-width:62px; text-align:right;
+    font-variant-numeric:tabular-nums; font-weight:bold;}
+  input[type=range]{width:100%; height:26px; cursor:pointer;}
+  #s_g{accent-color:var(--pos);} #s_d{accent-color:var(--key);}
+  #s_g2{accent-color:var(--key);} #s_d3{accent-color:var(--key);}
+  .vgs-val{color:var(--pos);} .vds-val{color:var(--key);} .id-val{color:var(--neg);}
+  .readout{background:#fff; border:1.5px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-size:14px;}
+  .readout b{font-size:17px;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:14px;
+    font-size:13px; font-weight:bold; color:#fff; margin-left:6px;}
+  .b-off{background:#999;} .b-lin{background:var(--pos);}
+  .b-pin{background:var(--key);} .b-sat{background:var(--grn);}
+  .note{font-size:13.5px; color:#444; background:#F4F7FA;
+    border-left:4px solid var(--navy); padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  .ana{font-size:14px; background:#FFF7EC; border-left:4px solid var(--ox);
+    padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  svg{width:100%; height:auto; display:block;}
+  .legend{font-size:13px; margin-top:8px;}
+  .legend span{display:inline-block; margin-right:14px;}
+  .chip{display:inline-block; width:14px; height:10px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+  .role-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:6px 0 0;}
+  .role{border:1.5px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff;}
+  .role.g{border-color:var(--pos);} .role.d{border-color:var(--key);}
+  .role .h{font-size:15px; font-weight:bold; margin-bottom:3px;}
+  .role.g .h{color:var(--pos);} .role.d .h{color:var(--key);}
+  .role .t{font-size:13px; color:#444;}
+  @media(max-width:560px){ .role-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第9週　構造で見るピンチオフ ―― カーブの裏で何が起きているか</h1>
+  <p class="sub">特性カーブの「折れ曲がり」の正体を、MOSの断面で見ます。チャネル（電子の通り道）が、ドレイン側で締まって消える瞬間が「ピンチオフ」です。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="t1">① Vgs と Vds の役割分担</button>
+    <button class="tab" data-tab="t2">② ピンチオフの瞬間</button>
+    <button class="tab" data-tab="t3">③ 飽和の意味</button>
+  </div>
+
+  <!-- ===== タブ1 役割分担 ===== -->
+  <div class="panel active" id="t1">
+    <div class="panel-title">① 電流が流れるには Vgs と Vds の両方が必要</div>
+    <p class="panel-lead">Vgs（ゲート電圧）が <b>チャネルを作り</b>、Vds（ドレイン電圧）が <b>電子を流す</b>。どちらか一方では流れません。スライダーで両方を動かしてみてください。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg1" viewBox="0 0 520 360" aria-label="MOS断面 役割分担"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#1F6FB2;"></span>半導体（基板・S/D）</span>
+          <span><span class="chip" style="background:#E0A800;"></span>酸化膜（絶縁）</span>
+          <span><span class="chip" style="background:#7E3FA0;"></span>ゲート（金属）</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>2つの電圧を動かす</h3>
+          <div class="slider-row">
+            <label>Vgs（チャネルを作る）：<span class="val vgs-val" id="v1g">2.00 V</span></label>
+            <input type="range" id="s_g" min="0" max="2.5" step="0.01" value="2.0">
+          </div>
+          <div class="slider-row">
+            <label>Vds（流す力）：<span class="val vds-val" id="v1d">1.00 V</span></label>
+            <input type="range" id="s_d" min="0" max="3.5" step="0.01" value="1.0">
+          </div>
+          <div class="readout" id="r1">…</div>
+        </div>
+        <div class="role-grid">
+          <div class="role g"><div class="h">Vgs＝蛇口の開き</div><div class="t">ゲートの＋電界が電子を酸化膜の下に集め、通り道（チャネル）を作る。Vth(0.5V)を超えて初めてできる。</div></div>
+          <div class="role d"><div class="h">Vds＝水圧</div><div class="t">できた通り道に電子を流す力。チャネルがあっても Vds=0 なら流れない。</div></div>
+        </div>
+        <div class="note">Vgs だけ（Vds=0）→ 通り道はあるが流れない。Vds だけ（Vgs≦Vth）→ 通り道がないので流れない。<b>両方そろって初めて電流が流れます。</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ2 ピンチオフ ===== -->
+  <div class="panel" id="t2">
+    <div class="panel-title">② Vds を上げると、ドレイン側のチャネルが締まる</div>
+    <p class="panel-lead">Vgs を一定にして Vds を上げていくと、ドレイン側のチャネルが少しずつ細くなり、ついに <b>Vds = Vgs − Vth</b> でちぎれて消えます。これがピンチオフ。特性カーブの「折れ曲がり」と同じ瞬間です。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg2" viewBox="0 0 520 360" aria-label="ピンチオフ断面"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#1F6FB2;"></span>チャネル（電子の通り道）</span>
+          <span><span class="chip" style="background:#7E3FA0;"></span>締まった所</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>Vds を上げてみる</h3>
+          <div class="slider-row">
+            <label>Vgs（固定気味）：<span class="val vgs-val" id="v2g">2.00 V</span></label>
+            <input type="range" id="s_g2" min="0.6" max="2.5" step="0.01" value="2.0">
+          </div>
+          <div class="slider-row">
+            <label>Vds（上げていく）：<span class="val vds-val" id="v2d">0.50 V</span></label>
+            <input type="range" id="s_d2" min="0" max="3.5" step="0.01" value="0.5">
+          </div>
+          <div class="readout" id="r2">…</div>
+        </div>
+        <div class="ana"><b>なぜ締まる？</b>ドレイン側ほどチャネルの電位が高くなり、ゲートとの差（チャネルを作る力）が小さくなります。ドレイン端でその差がゼロになった所が、通り道のちぎれる点です。</div>
+        <div class="note">ピンチオフ点 <b>Vds = Vgs − Vth</b>。いまは Vgs−Vth = <span id="vov2" style="font-weight:bold;color:#7E3FA0;">1.50</span>V。Vds がこの値に達するとドレイン端が締まります。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ3 飽和 ===== -->
+  <div class="panel" id="t3">
+    <div class="panel-title">③ 締まった後は、Vds を上げても電流が増えない＝飽和</div>
+    <p class="panel-lead">ピンチオフの後、さらに Vds を上げても、増えた電圧は「締まったすき間」にかかるだけ。チャネルを通る電子の量はほぼ変わりません。だから電流は <b>頭打ち（飽和）</b> になります。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg3" viewBox="0 0 520 360" aria-label="飽和断面"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#1F6FB2;"></span>チャネル</span>
+          <span><span class="chip" style="background:#7E3FA0;"></span>締まった区間（ここに余分なVdsがかかる）</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>飽和領域で Vds を上げる</h3>
+          <div class="slider-row">
+            <label>Vds（飽和域：1.5V以上）：<span class="val vds-val" id="v3d">2.00 V</span></label>
+            <input type="range" id="s_d3" min="1.5" max="3.5" step="0.01" value="2.0">
+          </div>
+          <div class="readout" id="r3">…</div>
+        </div>
+        <div class="note">Vgs=2.0V 固定（Vov=1.5V）。ピンチオフ後の区間が伸びても、電子が流れ込む量はほぼ一定。これが「飽和電流は Vgs で決まる」の構造的な理由です。</div>
+        <div class="ana" style="background:#EAF1F8; border-left-color:#1C3A5E;"><b>発展：</b>厳密には締まった区間が伸びるぶん、実効的なチャネル長 L が少し短くなって電流がわずかに増えます（チャネル長変調）。本編では「ほぼ一定」とみなします。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const Vth=0.5, K=1.0;
+function Id(Vgs,Vds){const Vov=Vgs-Vth; if(Vov<=0)return 0; if(Vds<Vov)return K*(Vov*Vds-Vds*Vds/2); return K*0.5*Vov*Vov;}
+function region(Vgs,Vds){const Vov=Vgs-Vth; if(Vov<=0)return"off"; if(Vds<Vov-1e-6)return"lin"; if(Vds<=Vov+1e-6)return"pin"; return"sat";}
+
+const SVGNS="http://www.w3.org/2000/svg";
+function el(n,a){const e=document.createElementNS(SVGNS,n); for(const k in a)e.setAttribute(k,a[k]); return e;}
+
+// ===== MOS構造図（§6標準形）=====
+// レイアウト座標（SVG 520x360）
+const L={
+  subX:60, subY:150, subW:400, subH:150,   // p型基板
+  sX:60,  sW:90,  sdY:150, sdH:70,          // ソース(n型)
+  dX:370, dW:90,                            // ドレイン(n型)
+  oxX:148, oxW:224, oxY:122, oxH:22,        // 酸化膜（S/Dに少し被る）
+  gX:148,  gW:224,  gY:96,  gH:26           // ゲート
+};
+// チャネル領域（ソース内端〜ドレイン内端、酸化膜直下）
+const chX0=L.sX+L.sW, chX1=L.dX, chY=L.subY; // チャネル上面=基板上面
+const chMaxH=26; // チャネル最大厚み(px)
+
+function drawBase(svg, opts){
+  svg.innerHTML="";
+  opts=opts||{};
+  // p型基板
+  svg.appendChild(el("rect",{x:L.subX,y:L.subY,width:L.subW,height:L.subH,fill:"#D6E6F2",stroke:"#1F6FB2","stroke-width":1.5}));
+  let pt=el("text",{x:L.subX+L.subW/2,y:L.subY+L.subH-12,"text-anchor":"middle","font-size":13,fill:"#1F6FB2","font-weight":"bold"}); pt.textContent="p型シリコン基板"; svg.appendChild(pt);
+  // ソース／ドレイン(n型・濃い青)
+  svg.appendChild(el("rect",{x:L.sX,y:L.sdY,width:L.sW,height:L.sdH,fill:"#1F6FB2",stroke:"#15527f","stroke-width":1.2}));
+  svg.appendChild(el("rect",{x:L.dX,y:L.sdY,width:L.dW,height:L.sdH,fill:"#1F6FB2",stroke:"#15527f","stroke-width":1.2}));
+  let st=el("text",{x:L.sX+L.sW/2,y:L.sdY+L.sdH/2+5,"text-anchor":"middle","font-size":12,fill:"#fff","font-weight":"bold"}); st.textContent="ソース(n)"; svg.appendChild(st);
+  let dt=el("text",{x:L.dX+L.dW/2,y:L.sdY+L.sdH/2+5,"text-anchor":"middle","font-size":12,fill:"#fff","font-weight":"bold"}); dt.textContent="ドレイン(n)"; svg.appendChild(dt);
+  // 酸化膜(黄土)
+  svg.appendChild(el("rect",{x:L.oxX,y:L.oxY,width:L.oxW,height:L.oxH,fill:"#E0A800",stroke:"#B8860B","stroke-width":1.2}));
+  let ot=el("text",{x:L.oxX+L.oxW/2,y:L.oxY+L.oxH/2+4,"text-anchor":"middle","font-size":11,fill:"#6b4e00","font-weight":"bold"}); ot.textContent="酸化膜（絶縁）"; svg.appendChild(ot);
+  // ゲート(紫)
+  svg.appendChild(el("rect",{x:L.gX,y:L.gY,width:L.gW,height:L.gH,fill:"#7E3FA0",stroke:"#5c2d77","stroke-width":1.2}));
+  let gt=el("text",{x:L.gX+L.gW/2,y:L.gY+L.gH/2+5,"text-anchor":"middle","font-size":13,fill:"#fff","font-weight":"bold"}); gt.textContent="ゲート(G)"; svg.appendChild(gt);
+  // 端子リード：G上, S・Dはゲート外側へ斜め, B下
+  // G
+  svg.appendChild(el("line",{x1:L.gX+L.gW/2,y1:L.gY,x2:L.gX+L.gW/2,y2:L.gY-30,stroke:"#333","stroke-width":2}));
+  let lg=el("text",{x:L.gX+L.gW/2,y:L.gY-36,"text-anchor":"middle","font-size":12,fill:"#7E3FA0","font-weight":"bold"});
+  lg.textContent="Vgs"+(opts.vgs!=null?("="+opts.vgs.toFixed(1)+"V"):""); svg.appendChild(lg);
+  // S（左外側へ）
+  svg.appendChild(el("line",{x1:L.sX+L.sW/2,y1:L.sdY,x2:L.sX-2,y2:L.sdY-34,stroke:"#333","stroke-width":2}));
+  let ls=el("text",{x:L.sX-6,y:L.sdY-38,"text-anchor":"middle","font-size":12,fill:"#333","font-weight":"bold"}); ls.textContent="S"; svg.appendChild(ls);
+  // D（右外側へ）
+  svg.appendChild(el("line",{x1:L.dX+L.dW/2,y1:L.sdY,x2:L.dX+L.dW+2,y2:L.sdY-34,stroke:"#333","stroke-width":2}));
+  let ld=el("text",{x:L.dX+L.dW+6,y:L.sdY-38,"text-anchor":"middle","font-size":12,fill:"#333","font-weight":"bold"});
+  ld.textContent="D"+(opts.vds!=null?(" Vds="+opts.vds.toFixed(1)+"V"):""); svg.appendChild(ld);
+  // B（下）
+  svg.appendChild(el("line",{x1:L.subX+L.subW/2,y1:L.subY+L.subH,x2:L.subX+L.subW/2,y2:L.subY+L.subH+24,stroke:"#333","stroke-width":2}));
+  let lb=el("text",{x:L.subX+L.subW/2,y:L.subY+L.subH+38,"text-anchor":"middle","font-size":12,fill:"#333","font-weight":"bold"}); lb.textContent="基板(B)"; svg.appendChild(lb);
+}
+
+// チャネルを台形ポリゴンで描く（厚みプロファイル）
+function drawChannel(svg, Vgs, Vds, opts){
+  opts=opts||{};
+  const Vov=Vgs-Vth;
+  if(Vov<=0){
+    let t=el("text",{x:(chX0+chX1)/2,y:chY-6,"text-anchor":"middle","font-size":12,fill:"#999","font-weight":"bold"});
+    t.textContent="チャネルなし（Vgs≦Vth）"; svg.appendChild(t); return;
+  }
+  const Vds_eff=Math.min(Vds,Vov);
+  const N=24;
+  // 上辺(基板上面 chY)固定、下辺が厚みぶん下がる台形を多segで
+  // 厚み(x)=Vov - Vds_eff*x  (x:0..1) を chMaxH/Vov でスケール（最大Vovで満厚）
+  const scale=chMaxH/1.5; // Vov=1.5を満厚基準
+  // ポリゴン点列（上辺左→右、下辺右→左）
+  let top=[], bot=[];
+  for(let i=0;i<=N;i++){
+    const xf=i/N;
+    const X=chX0+(chX1-chX0)*xf;
+    const t=Math.max(Vov-Vds_eff*xf,0)*scale;
+    top.push([X,chY]);
+    bot.push([X,chY+Math.max(t,0)]);
+  }
+  let pts=top.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")+" "+
+          bot.reverse().map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  svg.appendChild(el("polygon",{points:pts,fill:"#9FC3E0",stroke:"#1F6FB2","stroke-width":1.5,opacity:0.95}));
+  // チャネル内の電子（青丸）を厚みに応じて配置
+  for(let i=1;i<N;i+=2){
+    const xf=i/N;
+    const X=chX0+(chX1-chX0)*xf;
+    const t=Math.max(Vov-Vds_eff*xf,0)*scale;
+    if(t>5){ svg.appendChild(el("circle",{cx:X,cy:chY+t*0.5,r:3,fill:"#15527f"})); }
+  }
+  // ピンチオフ：ドレイン端が締まったら紫マーク
+  const reg=region(Vgs,Vds);
+  if(reg==="pin"||reg==="sat"){
+    // 締まり点の位置（飽和では Vds_eff=Vov なのでドレイン端 xf=1）
+    const px=chX1, py=chY;
+    svg.appendChild(el("circle",{cx:px,cy:py+2,r:6,fill:"#7E3FA0",stroke:"#fff","stroke-width":1.5}));
+    // ラベルは基板の下方（流れ矢印より下）に置いて衝突回避
+    let pl=el("text",{x:px-4,y:chY+72,"text-anchor":"end","font-size":11.5,fill:"#7E3FA0","font-weight":"bold"});
+    pl.textContent="↑ ここが締まった（ピンチオフ）"; svg.appendChild(pl);
+  }
+  // 飽和：締まった区間を強調（ドレイン側に余分Vdsがかかる帯）
+  if(reg==="sat" && opts.showPinchZone){
+    const zoneW=Math.min((Vds-Vov)/2*30, (chX1-chX0)*0.35); // 余分Vdsに応じて区間が伸びる
+    if(zoneW>2){
+      svg.appendChild(el("rect",{x:chX1-zoneW,y:chY,width:zoneW,height:chMaxH+4,fill:"#7E3FA0",opacity:0.18}));
+      let zt=el("text",{x:chX1-zoneW/2,y:chY+88,"text-anchor":"middle","font-size":10.5,fill:"#7E3FA0","font-weight":"bold"});
+      zt.textContent="余分なVdsはここに"; svg.appendChild(zt);
+    }
+  }
+  // チャネルラベル
+  let ct=el("text",{x:chX0+6,y:chY-6,"font-size":11.5,fill:"#1F6FB2","font-weight":"bold"}); ct.textContent="チャネル"; svg.appendChild(ct);
+}
+
+// 電子の流れ矢印（S→D）
+function drawFlow(svg, on){
+  if(!on)return;
+  const ay=chY+40; // 流れ矢印の高さ（基板内）
+  svg.appendChild(el("line",{x1:chX0+10,y1:ay,x2:chX1-22,y2:ay,stroke:"#1F6FB2","stroke-width":2.5,"stroke-dasharray":"6 4"}));
+  svg.appendChild(el("polygon",{points:`${chX1-22},${ay} ${chX1-30},${ay-4} ${chX1-30},${ay+4}`,fill:"#1F6FB2"}));
+  let ft=el("text",{x:chX0+14,y:ay+15,"font-size":11,fill:"#1F6FB2","font-weight":"bold"}); ft.textContent="電子の流れ（→ 電流は逆向き）"; svg.appendChild(ft);
+}
+
+// ===== タブ1 =====
+const s_g=document.getElementById("s_g"), s_d=document.getElementById("s_d");
+function draw1(){
+  const Vgs=parseFloat(s_g.value), Vds=parseFloat(s_d.value);
+  const svg=document.getElementById("svg1");
+  drawBase(svg,{vgs:Vgs,vds:Vds});
+  drawChannel(svg,Vgs,Vds);
+  const flowing = (Vgs>Vth)&&(Vds>0.01);
+  drawFlow(svg, flowing);
+  document.getElementById("v1g").textContent=Vgs.toFixed(2)+" V";
+  document.getElementById("v1d").textContent=Vds.toFixed(2)+" V";
+  const hasCh=Vgs>Vth;
+  let msg, badge;
+  if(!hasCh && Vds<=0.01){badge='<span class="badge b-off">流れない</span>'; msg="通り道もなく、流す力もありません。";}
+  else if(!hasCh){badge='<span class="badge b-off">流れない</span>'; msg="Vds はあるが <b>通り道（チャネル）がない</b>。まず Vgs を 0.5V より上げて。";}
+  else if(Vds<=0.01){badge='<span class="badge b-off">流れない</span>'; msg="通り道はできたが <b>流す力（Vds）がゼロ</b>。Vds を上げて。";}
+  else {badge='<span class="badge b-sat">流れる</span>'; msg="通り道があり、流す力もある → <b>電流が流れます</b>。";}
+  document.getElementById("r1").innerHTML=`状態：${badge}<br>${msg}<br>Id（相対）＝ <b class="id-val">${Id(Vgs,Vds).toFixed(2)}</b>`;
+}
+s_g.addEventListener("input",draw1); s_d.addEventListener("input",draw1);
+
+// ===== タブ2 =====
+const s_g2=document.getElementById("s_g2"), s_d2=document.getElementById("s_d2");
+function draw2(){
+  const Vgs=parseFloat(s_g2.value), Vds=parseFloat(s_d2.value);
+  const svg=document.getElementById("svg2");
+  drawBase(svg,{vgs:Vgs,vds:Vds});
+  drawChannel(svg,Vgs,Vds);
+  drawFlow(svg, (Vgs>Vth)&&(Vds>0.01));
+  document.getElementById("v2g").textContent=Vgs.toFixed(2)+" V";
+  document.getElementById("v2d").textContent=Vds.toFixed(2)+" V";
+  document.getElementById("vov2").textContent=(Vgs-Vth).toFixed(2);
+  const reg=region(Vgs,Vds);
+  const map={off:["b-off","チャネルなし","Vgs を上げて通り道を作って。"],
+    lin:["b-lin","線形領域（まだ締まっていない）","ドレイン側がやや細いが、まだつながっています。"],
+    pin:["b-pin","ピンチオフの瞬間！","ドレイン端でちょうど通り道がちぎれました（Vds=Vgs−Vth）。"],
+    sat:["b-sat","ピンチオフ後（飽和）","ドレイン側は締まったまま。電流は頭打ち。"]};
+  const m=map[reg];
+  document.getElementById("r2").innerHTML=`状態：<span class="badge ${m[0]}">${m[1]}</span><br>${m[2]}<br>Id（相対）＝ <b class="id-val">${Id(Vgs,Vds).toFixed(2)}</b>`;
+}
+s_g2.addEventListener("input",draw2); s_d2.addEventListener("input",draw2);
+
+// ===== タブ3 =====
+const s_d3=document.getElementById("s_d3");
+function draw3(){
+  const Vgs=2.0, Vds=parseFloat(s_d3.value);
+  const svg=document.getElementById("svg3");
+  drawBase(svg,{vgs:Vgs,vds:Vds});
+  drawChannel(svg,Vgs,Vds,{showPinchZone:true});
+  drawFlow(svg, true);
+  document.getElementById("v3d").textContent=Vds.toFixed(2)+" V";
+  const id=Id(Vgs,Vds);
+  document.getElementById("r3").innerHTML=
+    `状態：<span class="badge b-sat">飽和領域</span><br>Vds を ${Vds.toFixed(2)}V まで上げても、Id（相対）＝ <b class="id-val">${id.toFixed(2)}</b> のまま<b>ほぼ一定</b>。<br>増えた Vds は「締まった区間」にかかるだけです。`;
+}
+s_d3.addEventListener("input",draw3);
+
+// ===== タブ切替 =====
+const tabs=document.querySelectorAll(".tab"), panels=document.querySelectorAll(".panel");
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  tabs.forEach(x=>x.classList.remove("active")); panels.forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const id=t.getAttribute("data-tab"); document.getElementById(id).classList.add("active");
+  if(id==="t1")draw1(); if(id==="t2")draw2(); if(id==="t3")draw3();
+}));
+draw1(); draw2(); draw3();
+</script>
+</body>
+</html>

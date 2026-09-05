@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#ffffff;font-family:'Noto Sans CJK JP',sans-serif;}
+  #stage{width:1180px;height:760px;position:relative;background:#fff;}
+  svg{display:block;}
+  .ttl{font-size:28px;font-weight:700;fill:#0D3C6E;}
+  .sub{font-size:15px;fill:#555;}
+  .lab{font-size:16px;fill:#222;}
+  .labb{font-size:16px;font-weight:700;fill:#222;}
+  .blue{fill:#1565C0;}.orange{fill:#E65100;}.red{fill:#D32F2F;}.gray{fill:#9E9E9E;}
+  .small{font-size:13px;fill:#555;}
+  .mono{font-family:'DejaVu Sans Mono',monospace;}
+  .panel{position:absolute;left:40px;top:600px;width:1100px;}
+  .ctl{display:inline-block;margin-right:36px;font-size:15px;color:#222;vertical-align:middle;}
+  input[type=range]{width:220px;vertical-align:middle;}
+  .v1c{color:#1565C0;font-weight:700;}
+  .v2c{color:#6A1B9A;font-weight:700;}
+  .voc{color:#E65100;font-weight:700;}
+  .rdo{font-size:14px;color:#333;margin-right:18px;}
+  #valbox{font-family:'DejaVu Sans Mono',monospace;font-size:17px;margin-top:10px;}
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="svg" width="1180" height="590" viewBox="0 0 1180 590" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrB" markerWidth="11" markerHeight="11" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" fill="#1565C0"/></marker>
+    <marker id="arrP" markerWidth="11" markerHeight="11" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" fill="#6A1B9A"/></marker>
+    <marker id="arrO" markerWidth="11" markerHeight="11" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" fill="#E65100"/></marker>
+  </defs>
+
+  <text x="40" y="40" class="ttl">反転加算回路：電流が「足し合わさって」出力になる</text>
+  <line x1="40" y1="54" x2="1140" y2="54" stroke="#0D3C6E" stroke-width="2"/>
+  <text x="40" y="78" class="sub">i1 と i2 が加算ノードで合流し、そのまま Rf を通って出力へ抜ける（入力電流ゼロだから −入力には流れ込まない）　R1=R2=Rf=10kΩ</text>
+
+  <!-- OPアンプ -->
+  <polygon points="600,280 600,420 760,350" fill="#fff" stroke="#222" stroke-width="2.5"/>
+  <text x="624" y="344" class="labb">NJM4558</text>
+  <text x="632" y="364" class="small">A回路</text>
+  <text x="612" y="312" class="labb red">−</text>
+  <text x="611" y="398" class="labb blue">＋</text>
+
+  <!-- V1 source -->
+  <circle cx="110" cy="220" r="24" fill="#fff" stroke="#1565C0" stroke-width="2.5"/>
+  <text x="110" y="216" text-anchor="middle" class="small blue">FG</text>
+  <text x="110" y="233" text-anchor="middle" class="labb blue">V1</text>
+  <line x1="110" y1="244" x2="110" y2="290" stroke="#1565C0" stroke-width="2"/>
+  <line x1="110" y1="290" x2="200" y2="290" stroke="#1565C0" stroke-width="2"/>
+  <rect x="200" y="280" width="76" height="20" fill="#fff" stroke="#222" stroke-width="2"/>
+  <text x="238" y="274" text-anchor="middle" class="lab">R1 10kΩ</text>
+  <line x1="276" y1="290" x2="450" y2="290" stroke="#222" stroke-width="2" id="wireV1"/>
+
+  <!-- V2 source -->
+  <circle cx="110" cy="430" r="24" fill="#fff" stroke="#6A1B9A" stroke-width="2.5"/>
+  <text x="110" y="426" text-anchor="middle" class="small" fill="#6A1B9A">FG</text>
+  <text x="110" y="443" text-anchor="middle" class="labb" fill="#6A1B9A">V2</text>
+  <line x1="110" y1="406" x2="110" y2="360" stroke="#6A1B9A" stroke-width="2"/>
+  <line x1="110" y1="360" x2="200" y2="360" stroke="#6A1B9A" stroke-width="2"/>
+  <rect x="200" y="350" width="76" height="20" fill="#fff" stroke="#222" stroke-width="2"/>
+  <text x="238" y="344" text-anchor="middle" class="lab">R2 10kΩ</text>
+  <line x1="276" y1="360" x2="450" y2="360" stroke="#222" stroke-width="2" id="wireV2"/>
+
+  <!-- 加算ノード x=450 -->
+  <line x1="450" y1="290" x2="450" y2="360" stroke="#222" stroke-width="2"/>
+  <circle cx="450" cy="306" r="4.5" fill="#222"/>
+  <line x1="450" y1="306" x2="600" y2="306" stroke="#222" stroke-width="2" id="wireNode"/>
+  <text x="404" y="276" class="small">加算ノード</text>
+  <text x="392" y="406" class="small">（−入力＝仮想GND≈0V）</text>
+
+  <!-- +入力GND -->
+  <line x1="600" y1="394" x2="540" y2="394" stroke="#1565C0" stroke-width="2"/>
+  <line x1="540" y1="394" x2="540" y2="440" stroke="#1565C0" stroke-width="2"/>
+  <g stroke="#777" stroke-width="2"><line x1="524" y1="440" x2="556" y2="440"/><line x1="529" y1="446" x2="551" y2="446"/><line x1="534" y1="452" x2="546" y2="452"/></g>
+
+  <!-- 帰還 Rf -->
+  <line x1="760" y1="350" x2="840" y2="350" stroke="#222" stroke-width="2"/>
+  <circle cx="840" cy="350" r="4.5" fill="#222"/>
+  <line x1="840" y1="350" x2="840" y2="170" stroke="#222" stroke-width="2"/>
+  <line x1="840" y1="170" x2="530" y2="170" stroke="#222" stroke-width="2" id="wireRfTop"/>
+  <rect x="451" y="160" width="78" height="20" fill="#fff" stroke="#E65100" stroke-width="2"/>
+  <text x="490" y="154" text-anchor="middle" class="labb orange">Rf 10kΩ</text>
+  <line x1="451" y1="170" x2="450" y2="170" stroke="#222" stroke-width="2"/>
+  <line x1="450" y1="170" x2="450" y2="306" stroke="#222" stroke-width="2" id="wireRfDown"/>
+
+  <!-- 出力 -->
+  <line x1="840" y1="350" x2="980" y2="350" stroke="#E65100" stroke-width="2.5" id="wireOut"/>
+  <circle cx="980" cy="350" r="4.5" fill="#E65100"/>
+  <text x="848" y="340" class="labb orange">Vout</text>
+  <text x="120" y="540" class="small gray">※ここでは入力電流 i1・i2 が加算ノードで合流する様子に注目（合流した電流は Rf を通り、出力は OPアンプが Vout = −(V1+V2) に保つ）。</text>
+
+  <!-- 電源 -->
+  <line x1="684" y1="316" x2="684" y2="244" stroke="#D32F2F" stroke-width="2"/>
+  <circle cx="684" cy="316" r="3.5" fill="#D32F2F"/>
+  <text x="696" y="238" class="small red">V+ = +8V（pin8）</text>
+  <line x1="684" y1="384" x2="684" y2="456" stroke="#1565C0" stroke-width="2"/>
+  <circle cx="684" cy="384" r="3.5" fill="#1565C0"/>
+  <text x="696" y="470" class="small blue">V− = −8V（pin4）</text>
+
+  <!-- 電流の粒（JSで動かす）：入力側のみ -->
+  <g id="dotsV1"></g>
+  <g id="dotsV2"></g>
+
+  <!-- ===== 右：出力バーグラフ ===== -->
+  <g id="bars" transform="translate(1010,110)">
+    <text x="0" y="-16" class="labb">入出力（V）</text>
+    <!-- 軸 0ラインは中央 y=160（範囲 ±8V → 高さ ±120px, 15px/V） -->
+    <line x1="-10" y1="160" x2="150" y2="160" stroke="#888" stroke-width="1.2"/>
+    <text x="-34" y="44" class="small">+8</text>
+    <text x="-34" y="164" class="small">0</text>
+    <text x="-34" y="284" class="small">−8</text>
+    <line x1="-10" y1="40" x2="150" y2="40" stroke="#eee" stroke-width="1"/>
+    <line x1="-10" y1="280" x2="150" y2="280" stroke="#eee" stroke-width="1"/>
+    <!-- レール ±7V 目安線 -->
+    <line x1="-10" y1="55" x2="150" y2="55" stroke="#f3c" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5"/>
+    <line x1="-10" y1="265" x2="150" y2="265" stroke="#f3c" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5"/>
+    <rect id="barV1" x="6" y="160" width="34" height="0" fill="#1565C0"/>
+    <rect id="barV2" x="50" y="160" width="34" height="0" fill="#6A1B9A"/>
+    <rect id="barVo" x="100" y="160" width="40" height="0" fill="#E65100"/>
+    <text x="23" y="300" text-anchor="middle" class="small blue">V1</text>
+    <text x="67" y="300" text-anchor="middle" class="small" fill="#6A1B9A">V2</text>
+    <text x="120" y="300" text-anchor="middle" class="small orange">Vout</text>
+  </g>
+</svg>
+
+<div class="panel">
+  <span class="ctl">入力 <span class="v1c">V1</span>: <input id="s1" type="range" min="-4" max="4" step="0.5" value="2"> <span id="v1lab" class="v1c">+2.0 V</span></span>
+  <span class="ctl">入力 <span class="v2c">V2</span>: <input id="s2" type="range" min="-4" max="4" step="0.5" value="1"> <span id="v2lab" class="v2c">+1.0 V</span></span>
+  <div id="valbox">
+    i1 = V1/R1 = <span class="v1c" id="i1v">0.20</span> mA　／　i2 = V2/R2 = <span class="v2c" id="i2v">0.10</span> mA　→　合流 i = <span id="isum">0.30</span> mA
+    <br>Vout = −Rf·(i1+i2) = −(V1+V2) = <span class="voc" id="voutv">−3.0 V</span> <span id="satlab" style="color:#c2185b"></span>
+  </div>
+</div>
+</div>
+
+<script>
+const s1=document.getElementById('s1'), s2=document.getElementById('s2');
+const VRAIL=7.0;     // 飽和レール
+const PXV=15;        // 15px per V (bar)
+const dotsV1=document.getElementById('dotsV1'), dotsV2=document.getElementById('dotsV2');
+
+// 配線経路（電流粒が流れるパス）。点の配列で表現。
+const pathV1=[[276,290],[450,290],[450,306],[600,306]];           // R1出口→加算ノード→-入力
+const pathV2=[[276,360],[450,360],[450,306],[600,306]];           // R2出口→加算ノード→-入力
+
+function lerpPath(path, t){ // t:0..1 全長に対する位置
+  let segLens=[], total=0;
+  for(let i=0;i<path.length-1;i++){const dx=path[i+1][0]-path[i][0],dy=path[i+1][1]-path[i][1];const l=Math.hypot(dx,dy);segLens.push(l);total+=l;}
+  let d=t*total;
+  for(let i=0;i<segLens.length;i++){
+    if(d<=segLens[i]){const r=d/segLens[i];return [path[i][0]+(path[i+1][0]-path[i][0])*r, path[i][1]+(path[i+1][1]-path[i][1])*r];}
+    d-=segLens[i];
+  }
+  return path[path.length-1];
+}
+
+let dotState={v1:[],v2:[]};
+function makeDots(group,n,color,store){
+  group.innerHTML='';store.length=0;
+  for(let i=0;i<n;i++){
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('r','4');c.setAttribute('fill',color);
+    group.appendChild(c);store.push({el:c,phase:i/n});
+  }
+}
+
+let V1=2,V2=1;
+function update(){
+  V1=parseFloat(s1.value); V2=parseFloat(s2.value);
+  document.getElementById('v1lab').textContent=(V1>=0?'+':'')+V1.toFixed(1)+' V';
+  document.getElementById('v2lab').textContent=(V2>=0?'+':'')+V2.toFixed(1)+' V';
+  const i1=V1/10, i2=V2/10; // mA (R=10k, V in V → mA)
+  document.getElementById('i1v').textContent=(i1>=0?'':'')+i1.toFixed(2);
+  document.getElementById('i2v').textContent=(i2>=0?'':'')+i2.toFixed(2);
+  document.getElementById('isum').textContent=(i1+i2).toFixed(2);
+  let vout=-(V1+V2);
+  let sat=false;
+  if(vout>VRAIL){vout=VRAIL;sat=true;} if(vout<-VRAIL){vout=-VRAIL;sat=true;}
+  document.getElementById('voutv').textContent=(vout>=0?'+':'')+vout.toFixed(1)+' V';
+  document.getElementById('satlab').textContent=sat?'　← 出力飽和（レールに張り付き）':'';
+
+  // bars
+  const setBar=(id,val)=>{const b=document.getElementById(id);const h=Math.abs(val)*PXV;b.setAttribute('height',h);b.setAttribute('y',val>=0?160-h:160);};
+  setBar('barV1',V1); setBar('barV2',V2); setBar('barVo',vout);
+
+  // dot density ∝ |current|
+  const n1=Math.max(1,Math.round(Math.abs(i1)*30));
+  const n2=Math.max(1,Math.round(Math.abs(i2)*30));
+  makeDots(dotsV1,n1,'#1565C0',dotState.v1);
+  makeDots(dotsV2,n2,'#6A1B9A',dotState.v2);
+}
+s1.oninput=update; s2.oninput=update;
+
+let t0=performance.now();
+function anim(now){
+  const dt=(now-t0)/1000; t0=now;
+  const i1=V1/10,i2=V2/10;
+  const spd1=Math.sign(i1)||0, spd2=Math.sign(i2)||0;
+  const move=(store,path,dir)=>{
+    store.forEach(o=>{
+      o.phase+=dir*dt*0.4;
+      o.phase=((o.phase%1)+1)%1;
+      const p=lerpPath(path,o.phase);
+      o.el.setAttribute('cx',p[0]);o.el.setAttribute('cy',p[1]);
+    });
+  };
+  // 電流の向き：正電圧→反転入力へ電流が流れ込む向きを正とする
+  move(dotState.v1,pathV1,spd1);
+  move(dotState.v2,pathV2,spd2);
+  requestAnimationFrame(anim);
+}
+update();
+requestAnimationFrame(anim);
+</script>
+</body>
+</html>

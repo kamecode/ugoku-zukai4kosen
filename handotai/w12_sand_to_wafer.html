@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>砂からウェハまで｜第12週</title>
+<style>
+  :root{
+    --ink:#1b2733; --sub:#5a6b7a; --line:#cfd8e0;
+    --paper:#f4f1ea; --card:#ffffff;
+    --pos:#1F6FB2; --emph:#7E3FA0; --task:#2E8B57;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),var(--paper);
+    color:var(--ink);min-height:100vh;padding:24px 16px 56px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  .eyebrow{font-size:13px;letter-spacing:.18em;color:var(--emph);font-weight:700;margin-bottom:6px;}
+  h1{font-size:25px;margin:0 0 4px;line-height:1.3;}
+  .lead{color:var(--sub);font-size:15px;margin:0 0 22px;line-height:1.7;}
+  .flow{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px;
+  }
+  @media(max-width:760px){.flow{grid-template-columns:1fr 1fr;}}
+  .stepcard{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 10px;cursor:pointer;transition:.18s;text-align:center;position:relative;
+  }
+  .stepcard:hover{border-color:var(--emph);transform:translateY(-2px);box-shadow:0 8px 20px -12px rgba(20,40,60,.4);}
+  .stepcard.active{border-color:var(--emph);box-shadow:0 8px 24px -10px rgba(126,63,160,.5);}
+  .stepcard .ico{width:100%;height:62px;margin-top:8px;}
+  .stepcard .ico svg{width:100%;height:100%;}
+  .stepcard .num{
+    position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;
+    background:var(--emph);color:#fff;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stepcard h3{margin:6px 0 2px;font-size:14px;}
+  .stepcard .pur{font-size:11px;font-weight:700;}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--line);font-size:20px;}
+  .detail{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:18px 20px;margin-top:14px;min-height:120px;
+    box-shadow:0 10px 30px -18px rgba(20,40,60,.4);
+  }
+  .detail h2{margin:0 0 4px;font-size:19px;color:var(--emph);}
+  .detail .en{color:#93a1ad;font-size:12px;font-weight:600;margin-bottom:8px;}
+  .detail p{margin:0;color:var(--sub);font-size:14.5px;line-height:1.8;}
+  .detail .hint{margin-top:10px;font-size:12.5px;color:var(--task);font-weight:700;}
+  .purebar{
+    margin-top:8px;height:8px;border-radius:4px;overflow:hidden;background:#eceff3;display:flex;
+  }
+  .purebar > i{display:block;height:100%;}
+  .tip{font-size:12px;color:#93a1ad;margin-top:14px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第12週 ｜ 砂からチップへ ①</div>
+  <h1>砂からウェハまで ─ 純度を上げる旅</h1>
+  <p class="lead">スマホやPCの頭脳も、出発点はただの「石・砂」。それが世界一精密な結晶になるまでの道のりです。<br>各ステップをタップすると詳しい説明が出ます。</p>
+
+  <div class="flow" id="flow"></div>
+
+  <div class="detail" id="detail"></div>
+
+  <p class="tip">💡 純度の数字に注目：98% → 99.9999999999%（トゥエルブナイン級）まで、けた違いに上がっていきます</p>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+// 各ステップのアイコンSVG（簡易）
+const icons={
+  silica:`<svg viewBox='0 0 100 100'><polygon points='30,70 45,40 60,68' fill='#b0a48c'/><polygon points='52,72 68,45 82,72' fill='#9a8d72'/><circle cx='40' cy='66' r='5' fill='#c7bca3'/></svg>`,
+  mg:`<svg viewBox='0 0 100 100'><rect x='28' y='40' width='44' height='34' rx='4' fill='#8a8f96'/><rect x='34' y='46' width='32' height='6' fill='#a7adb4'/><text x='50' y='66' font-size='13' fill='#fff' text-anchor='middle' font-weight='700'>98%</text></svg>`,
+  poly:`<svg viewBox='0 0 100 100'><rect x='34' y='34' width='32' height='40' rx='3' fill='#aeb8c2'/><rect x='40' y='30' width='20' height='8' rx='2' fill='#c2ccd6'/></svg>`,
+  ingot:`<svg viewBox='0 0 100 100'><path d='M44 24 h12 v8 l10 12 v34 h-32 v-34 l10 -12 z' fill='#aeb8c2'/><rect x='47' y='46' width='4' height='30' fill='#e6ecf2' opacity='.6'/></svg>`,
+  wafer:`<svg viewBox='0 0 100 100'><ellipse cx='50' cy='54' rx='34' ry='10' fill='#c2ccd6'/><ellipse cx='50' cy='50' rx='34' ry='10' fill='#d7dee5'/><rect x='64' y='44' width='10' height='3' fill='#9aa6b4' transform='rotate(30 69 45)'/></svg>`,
+};
+const steps=[
+ {key:"silica",t:"珪石・珪砂",en:"Silica (SiO₂)",pur:"ただの石・砂",purPct:5,purColor:"#b0a48c",
+  desc:"出発点は、ありふれた珪石（けいせき）や珪砂。成分は二酸化ケイ素（シリカ＝SiO₂）。地球の地殻にたっぷりある、いわば「ただの石・砂」です。",
+  hint:"ガラスや砂浜の砂と同じ仲間。これがチップの原料です。"},
+ {key:"mg",t:"金属級シリコン",en:"Metallurgical-grade Si",pur:"純度 約98%",purPct:35,purColor:"#8a8f96",
+  desc:"シリカを炉で還元して、酸素を取り除き、シリコンの塊を取り出します。純度は約98%。一見きれいですが、半導体にはまだまだ不純物だらけです。",
+  hint:"98%でも“まだ汚い”。ここからが本番です。"},
+ {key:"poly",t:"超高純度シリコン",en:"Polysilicon (11N)",pur:"99.999999999%",purPct:80,purColor:"#1F6FB2",
+  desc:"ガス化と精製を何度もくり返し、不純物を徹底的に減らします。到達する純度はイレブンナイン（9が11個）級。これが砂との最大の落差です。",
+  hint:"砂浜の砂が、世界一きれいな素材に生まれ変わる瞬間。"},
+ {key:"ingot",t:"単結晶インゴット",en:"Single-crystal ingot",pur:"原子が整列",purPct:95,purColor:"#7E3FA0",
+  desc:"超高純度シリコンを溶かし、種結晶から回しながら引き上げて（CZ法）、原子がきれいに整列した1本の大きな単結晶の柱に育てます。",
+  hint:"純度だけでなく“並び方”も完璧に。別の図解で詳しく。"},
+ {key:"wafer",t:"シリコンウェハ",en:"Silicon wafer",pur:"鏡面の円盤",purPct:100,purColor:"#2E8B57",
+  desc:"インゴットを薄く輪切りにして、鏡のように磨き上げます。これがウェハ。1枚から何百個ものチップを切り出す「土台」になります。",
+  hint:"1枚の大きな板チョコから、たくさんのチップを割って配るイメージ。"},
+];
+
+let cur=2; // 初期表示は「超高純度シリコン」（落差の山場）
+const flow=document.getElementById("flow");
+const detail=document.getElementById("detail");
+
+// カード生成（カードの間に矢印は入れず、グリッドで等間隔。矢印は擬似的にカード内右に）
+steps.forEach((s,i)=>{
+  const card=document.createElement("div");
+  card.className="stepcard";
+  card.innerHTML=`<div class="num">${i+1}</div>
+    <div class="ico">${icons[s.key]}</div>
+    <h3>${s.t}</h3>
+    <div class="pur" style="color:${s.purColor}">${s.pur}</div>`;
+  card.onclick=()=>{cur=i;render();};
+  flow.appendChild(card);
+});
+
+function render(){
+  document.querySelectorAll(".stepcard").forEach((c,i)=>c.classList.toggle("active",i===cur));
+  const s=steps[cur];
+  detail.innerHTML=`<h2>${cur+1}. ${s.t}</h2>
+    <div class="en">${s.en}</div>
+    <p>${s.desc}</p>
+    <div class="purebar"><i style="width:${s.purPct}%;background:${s.purColor}"></i></div>
+    <div class="hint">💡 ${s.hint}</div>`;
+}
+render();
+</script>
+</body>
+</html>

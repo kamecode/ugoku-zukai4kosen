@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第8週 MOSの構造 アニメ図解</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222; --grey:#6b7480;
+    --flow:#1F6FB2;   /* 電子・ポジティブ青／半導体側 */
+    --stop:#C0392B;   /* 正孔・ネガティブ赤 */
+    --emph:#7E3FA0;   /* 強調・ゲート/金属 紫 */
+    --chal:#2E8B57;   /* 課題・補足 緑 */
+    --line:#cfd6df; --panel:#f4f6f9;
+    --metal:#7E3FA0;  /* Metal=紫系 */
+    --oxide:#E0A800;  /* Oxide=黄土（絶縁体・通さない印象） */
+    --semi:#1F6FB2;   /* Semiconductor=青系 */
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"メイリオ","Meiryo",sans-serif;background:#FFFFFF;color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 60px;}
+  header.title{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px;}
+  header.title .week{font-size:14px;color:var(--flow);font-weight:bold;letter-spacing:.04em;}
+  header.title h1{font-size:26px;color:var(--navy);margin:6px 0 4px;font-weight:bold;}
+  header.title p.sub{font-size:15px;color:#555;margin:0;}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .tab{font-family:inherit;font-size:15px;font-weight:bold;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:9px 14px;cursor:pointer;line-height:1.3;transition:all .12s;}
+  .tab .num{display:inline-block;background:var(--panel);color:var(--navy);border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:13px;margin-right:7px;}
+  .tab.active{background:var(--navy);color:#fff;}
+  .tab.active .num{background:#fff;color:var(--navy);}
+  .panel{display:none;} .panel.active{display:block;}
+  .stage{border:1px solid var(--line);border-radius:10px;background:#fff;padding:14px;margin-bottom:14px;}
+  svg{display:block;width:100%;height:auto;}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 14px;}
+  .controls .ctrl{font-family:inherit;font-size:15px;font-weight:bold;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:8px 14px;cursor:pointer;}
+  .controls .ctrl.on{background:var(--navy);color:#fff;}
+  .note{background:var(--panel);border-left:4px solid var(--navy);border-radius:0 8px 8px 0;padding:12px 14px;font-size:15px;color:var(--ink);}
+  .note b{color:var(--navy);}
+  .note .met{color:var(--metal);font-weight:bold;}
+  .note .oxi{color:#B8860B;font-weight:bold;}
+  .note .sem{color:var(--flow);font-weight:bold;}
+  .note .chal{color:var(--chal);font-weight:bold;}
+  .panel h2{font-size:19px;color:var(--navy);margin:2px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+  .legend{font-size:13px;color:#555;margin:8px 0 0;}
+  .legend span{margin-right:16px;white-space:nowrap;}
+  .sw{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px;margin-right:5px;}
+  .foot{font-size:12px;color:#888;margin-top:24px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <div class="week">第8週　MOSの構造を知る</div>
+    <h1>MOSトランジスタは何でできている？</h1>
+    <p class="sub">電圧でスイッチを操作する部品。まずはその「つくり」を分解して見てみよう</p>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="t1"><span class="num">1</span>組み立てる（層構造）</button>
+    <button class="tab" data-tab="t2"><span class="num">2</span>名前の由来：M-O-S</button>
+    <button class="tab" data-tab="t3"><span class="num">3</span>水門の門番</button>
+  </div>
+
+  <!-- ① 組み立てる -->
+  <section class="panel active" id="t1">
+    <h2>① MOSを組み立てる ― 下から順に積み上げる</h2>
+    <div class="controls">
+      <button class="ctrl" id="t1-prev">← 戻る</button>
+      <button class="ctrl on" id="t1-next">次の層を足す →</button>
+      <button class="ctrl" id="t1-reset">最初から</button>
+    </div>
+    <div class="stage">
+      <svg id="svg1" viewBox="0 0 920 470" role="img" aria-label="MOSの層構造を組み立てるアニメーション"></svg>
+    </div>
+    <p class="legend">
+      <span><span class="sw" style="background:#1F6FB2"></span>半導体（基板・ソース/ドレイン）</span>
+      <span><span class="sw" style="background:#E0A800"></span>酸化膜（絶縁体）</span>
+      <span><span class="sw" style="background:#7E3FA0"></span>ゲート電極（金属）</span>
+    </p>
+    <div class="note" id="note1"></div>
+  </section>
+
+  <!-- ② M-O-S -->
+  <section class="panel" id="t2">
+    <h2>② 名前の由来：M-O-S ― 構造そのままの名前</h2>
+    <div class="controls">
+      <button class="ctrl on" id="t2-m">M：Metal</button>
+      <button class="ctrl" id="t2-o">O：Oxide</button>
+      <button class="ctrl" id="t2-s">S：Semiconductor</button>
+      <button class="ctrl" id="t2-all">3層まとめて</button>
+    </div>
+    <div class="stage">
+      <svg id="svg2" viewBox="0 0 920 510" role="img" aria-label="MOSの名前の由来を示す図"></svg>
+    </div>
+    <div class="note" id="note2"></div>
+  </section>
+
+  <!-- ③ 水門の門番 -->
+  <section class="panel" id="t3">
+    <h2>③ 水門の門番 ― ゲートが下の水路を上から見張る</h2>
+    <div class="controls">
+      <button class="ctrl on" id="t3-struct">構造で見る</button>
+      <button class="ctrl" id="t3-gate">水門のたとえ</button>
+    </div>
+    <div class="stage">
+      <svg id="svg3" viewBox="0 0 920 470" role="img" aria-label="MOSを水門の門番にたとえた図"></svg>
+    </div>
+    <div class="note" id="note3"></div>
+  </section>
+
+  <div class="foot">第8週 MOSの構造｜アニメ図解｜白背景・ネイビー基調・色の意味ルール準拠</div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const COL={navy:"#1C3A5E",ink:"#222222",grey:"#6b7480",flow:"#1F6FB2",stop:"#C0392B",emph:"#7E3FA0",chal:"#2E8B57",line:"#cfd6df",panel:"#f4f6f9",
+           metal:"#7E3FA0",oxide:"#E0A800",semi:"#1F6FB2"};
+function el(t,a={}){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a={}){const e=el("text",Object.assign({x,y,"font-family":'"メイリオ","Meiryo",sans-serif'},a));e.textContent=s;return e;}
+
+document.querySelectorAll(".tab").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById(b.dataset.tab).classList.add("active");
+  });
+});
+
+// ===== 共通レイアウト（検算済み座標）=====
+const LAY={
+  sub:{x:160,y:250,w:600,h:150},          // 基板(p型)
+  src:{x:170,y:250,w:120,h:70},           // ソース(n+)
+  drn:{x:630,y:250,w:120,h:70},           // ドレイン(n+)
+  ox:{x:260,y:228,w:400,h:22},            // 酸化膜（ソース/ドレインに各30px被りチャネルを覆う＝正しい構造）
+  g:{x:264,y:178,w:392,h:50},             // ゲート(金属)（同上）
+};
+const chX0=LAY.src.x+LAY.src.w, chX1=LAY.drn.x; // チャネル領域 290..630
+
+// 各層を描く関数（dim:trueで淡く）
+function drawSubstrate(s,opt={}){
+  const o=opt.dim?0.28:1;
+  const fo=opt.dim?0.06:0.16;
+  s.appendChild(el("rect",{x:LAY.sub.x,y:LAY.sub.y,width:LAY.sub.w,height:LAY.sub.h,fill:COL.semi,"fill-opacity":fo,stroke:COL.semi,"stroke-width":2,"stroke-opacity":o,rx:3}));
+  s.appendChild(txt(LAY.sub.x+LAY.sub.w-12,LAY.sub.y+LAY.sub.h-14,"p型シリコン基板（土台）",{"text-anchor":"end","font-size":14,fill:COL.semi,"fill-opacity":o,"font-weight":"bold"}));
+}
+function drawSourceDrain(s,opt={}){
+  const o=opt.dim?0.28:1;
+  const fo=opt.dim?0.12:0.42;
+  [["ソース",LAY.src],["ドレイン",LAY.drn]].forEach(([name,r])=>{
+    s.appendChild(el("rect",{x:r.x,y:r.y,width:r.w,height:r.h,fill:COL.flow,"fill-opacity":fo,stroke:COL.flow,"stroke-width":2,"stroke-opacity":o,rx:3}));
+    s.appendChild(txt(r.x+r.w/2,r.y+r.h/2+5,name,{"text-anchor":"middle","font-size":15,fill:COL.navy,"fill-opacity":o,"font-weight":"bold"}));
+    s.appendChild(txt(r.x+r.w/2,r.y+r.h/2+24,"(n型)",{"text-anchor":"middle","font-size":12,fill:COL.flow,"fill-opacity":o}));
+  });
+}
+function drawOxide(s,opt={}){
+  const o=opt.dim?0.28:1;
+  const fo=opt.dim?0.22:0.7;
+  s.appendChild(el("rect",{x:LAY.ox.x,y:LAY.ox.y,width:LAY.ox.w,height:LAY.ox.h,fill:COL.oxide,"fill-opacity":fo,stroke:"#B8860B","stroke-width":1.5,"stroke-opacity":o}));
+  s.appendChild(txt(LAY.ox.x-78,LAY.ox.y+LAY.ox.h-3,"酸化膜",{"text-anchor":"start","font-size":13,fill:"#B8860B","fill-opacity":o,"font-weight":"bold"}));
+  s.appendChild(el("line",{x1:LAY.ox.x-30,y1:LAY.ox.y+LAY.ox.h/2,x2:LAY.ox.x-2,y2:LAY.ox.y+LAY.ox.h/2,stroke:"#B8860B","stroke-width":1,"stroke-opacity":o}));
+}
+function drawGate(s,opt={}){
+  const o=opt.dim?0.28:1;
+  const fo=opt.dim?0.12:0.42;
+  s.appendChild(el("rect",{x:LAY.g.x,y:LAY.g.y,width:LAY.g.w,height:LAY.g.h,fill:COL.metal,"fill-opacity":fo,stroke:COL.metal,"stroke-width":2,"stroke-opacity":o,rx:3}));
+  s.appendChild(txt(LAY.g.x+LAY.g.w/2,LAY.g.y+LAY.g.h/2+6,"ゲート電極（金属）",{"text-anchor":"middle","font-size":15,fill:COL.metal,"fill-opacity":o,"font-weight":"bold"}));
+}
+// 端子リード＋ラベル
+function drawTerminals(s){
+  // G（ゲート上）
+  const gx=LAY.g.x+LAY.g.w/2;
+  s.appendChild(el("line",{x1:gx,y1:LAY.g.y,x2:gx,y2:LAY.g.y-46,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(el("circle",{cx:gx,cy:LAY.g.y-46,r:4,fill:COL.navy}));
+  s.appendChild(txt(gx+10,LAY.g.y-44,"G：ゲート",{"font-size":15,fill:COL.navy,"font-weight":"bold"}));
+  // S（ソース上）：中央から真上へ。ゲート(264..656)の外側なので貫通しない
+  const sx=LAY.src.x+LAY.src.w/2;
+  s.appendChild(el("line",{x1:sx,y1:LAY.src.y,x2:sx,y2:LAY.g.y-20,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(el("circle",{cx:sx,cy:LAY.g.y-20,r:4,fill:COL.navy}));
+  s.appendChild(txt(sx-10,LAY.g.y-24,"S：ソース",{"text-anchor":"end","font-size":15,fill:COL.navy,"font-weight":"bold"}));
+  // D（ドレイン上）：中央から真上へ。ゲートの外側
+  const dx=LAY.drn.x+LAY.drn.w/2;
+  s.appendChild(el("line",{x1:dx,y1:LAY.drn.y,x2:dx,y2:LAY.g.y-20,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(el("circle",{cx:dx,cy:LAY.g.y-20,r:4,fill:COL.navy}));
+  s.appendChild(txt(dx+10,LAY.g.y-24,"D：ドレイン",{"font-size":15,fill:COL.navy,"font-weight":"bold"}));
+  // B（基板下）
+  const bx=LAY.sub.x+LAY.sub.w/2;
+  s.appendChild(el("line",{x1:bx,y1:LAY.sub.y+LAY.sub.h,x2:bx,y2:LAY.sub.y+LAY.sub.h+34,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(el("circle",{cx:bx,cy:LAY.sub.y+LAY.sub.h+34,r:4,fill:COL.navy}));
+  s.appendChild(txt(bx,LAY.sub.y+LAY.sub.h+54,"B：基板（ボディ）",{"text-anchor":"middle","font-size":15,fill:COL.navy,"font-weight":"bold"}));
+}
+
+/* =========================================================
+   ① 組み立てる（層構造）
+   ステップ：0=基板 →1=ソース/ドレイン →2=酸化膜 →3=ゲート →4=端子完成
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg1");
+  let step=0; const MAX=4;
+  const titles=[
+    "土台：p型シリコン基板",
+    "左右に「ソース」と「ドレイン」（n型）を埋め込む",
+    "チャネルの上に「酸化膜」（絶縁体）をのせる",
+    "酸化膜の上に「ゲート電極」（金属）をのせる",
+    "完成：4つの端子（G・S・D・B）",
+  ];
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    svg.appendChild(txt(460,40,titles[step],{"text-anchor":"middle","font-size":18,"font-weight":"bold",fill:COL.navy}));
+    // ステップ番号
+    svg.appendChild(txt(880,40,(step+1)+" / "+(MAX+1),{"text-anchor":"end","font-size":13,fill:COL.grey}));
+    // 積み上げ：常に下の層から
+    if(step>=0) drawSubstrate(svg);
+    if(step>=1) drawSourceDrain(svg);
+    if(step>=2) drawOxide(svg);
+    if(step>=3) drawGate(svg);
+    if(step>=4) drawTerminals(svg);
+    // チャネル位置のヒント（step>=2でチャネル領域を点線で）
+    if(step>=2 && step<4){
+      svg.appendChild(el("line",{x1:chX0,y1:LAY.sub.y,x2:chX1,y2:LAY.sub.y,stroke:COL.chal,"stroke-width":2,"stroke-dasharray":"5 3"}));
+      svg.appendChild(txt((chX0+chX1)/2,LAY.sub.y+22,"ここが将来チャネル（電気の通り道）になる",{"text-anchor":"middle","font-size":12,fill:COL.chal,"font-weight":"bold"}));
+    }
+    updateNote();
+    document.getElementById("t1-prev").classList.toggle("on",step>0);
+    document.getElementById("t1-next").classList.toggle("on",step<MAX);
+  }
+  const notes=[
+    'まず土台になる<b>p型シリコン基板</b>。この上にすべてを作っていきます。',
+    '基板の左右に、<span class="sem">n型のソースとドレイン</span>を埋め込みます。電気の「入口」と「出口」になります。間のすき間が将来の通り道。',
+    'ソースとドレインの間（チャネルになる場所）の上に、<span class="oxi">酸化膜（絶縁体）</span>を薄くのせます。<b>電気を通さない層</b>です。ここがMOSの肝。',
+    '酸化膜の上に<span class="met">ゲート電極（金属）</span>をのせます。ゲートは酸化膜で下と<b>絶縁</b>されていて、直接はつながっていません。',
+    '4つの端子が完成：<b>G</b>(ゲート)・<b>S</b>(ソース)・<b>D</b>(ドレイン)・<b>B</b>(基板)。<span class="chal">次回は、Gに電圧をかけると下の通り道(チャネル)ができてS→Dに電流が流れる＝スイッチONを学びます。</span>'
+  ];
+  function updateNote(){ document.getElementById("note1").innerHTML=notes[step]; }
+  document.getElementById("t1-next").addEventListener("click",()=>{if(step<MAX){step++;render();}});
+  document.getElementById("t1-prev").addEventListener("click",()=>{if(step>0){step--;render();}});
+  document.getElementById("t1-reset").addEventListener("click",()=>{step=0;render();});
+  render();
+})();
+
+/* =========================================================
+   ② 名前の由来 M-O-S
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg2");
+  let mode="m";
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    svg.appendChild(txt(460,32,"MOS ＝ Metal - Oxide - Semiconductor（金属-酸化膜-半導体）",
+      {"text-anchor":"middle","font-size":16,"font-weight":"bold",fill:COL.navy}));
+    // 構造全体を上段に描いて、該当層だけ強調（端子は省略してすっきり）
+    const hi=(layer)=> (mode==="all"||mode===layer);
+    drawSubstrate(svg,{dim:!hi("s")});
+    drawSourceDrain(svg,{dim:!hi("s")});
+    drawOxide(svg,{dim:!hi("o")});
+    drawGate(svg,{dim:!hi("m")});
+    // 下段に対応表を横3列で並べる（構造図と重ならない）
+    const rows=[
+      ["m","M","Metal","金属","ゲート電極",COL.metal],
+      ["o","O","Oxide","酸化膜","絶縁体の層",  "#B8860B"],
+      ["s","S","Semiconductor","半導体","基板・ソース/ドレイン",COL.semi],
+    ];
+    const cardW=288, gap=8, startX=(920-(cardW*3+gap*2))/2, cy=420, ch=68;
+    rows.forEach(([key,L,en,jp,part,c],i)=>{
+      const on=(mode==="all"||mode===key);
+      const cx=startX+i*(cardW+gap);
+      svg.appendChild(el("rect",{x:cx,y:cy,width:cardW,height:ch,fill:on?c:"#eef0f3","fill-opacity":on?0.14:0.5,stroke:on?c:COL.line,"stroke-width":on?2.5:1,rx:6}));
+      svg.appendChild(txt(cx+18,cy+44,L,{"font-size":30,"font-weight":"bold",fill:on?c:COL.grey}));
+      svg.appendChild(txt(cx+52,cy+26,en,{"font-size":15,"font-weight":"bold",fill:on?COL.navy:COL.grey}));
+      svg.appendChild(txt(cx+52,cy+46,"（"+jp+"）＝ "+part,{"font-size":12,fill:on?COL.ink:COL.grey}));
+    });
+    updateNote();
+    ["m","o","s","all"].forEach(k=>document.getElementById("t2-"+k).classList.toggle("on",mode===k));
+  }
+  const notes={
+    m:'<span class="met">M＝Metal（金属）</span>：いちばん上の<b>ゲート電極</b>。ここに電圧をかけて操作します。',
+    o:'<span class="oxi">O＝Oxide（酸化膜）</span>：真ん中の<b>絶縁体の層</b>。ゲートと半導体を電気的に切り離す、MOSの最重要パーツ。',
+    s:'<span class="sem">S＝Semiconductor（半導体）</span>：いちばん下の<b>基板</b>と、左右の<b>ソース/ドレイン</b>。電気の通り道はここにできます。',
+    all:'MOSという名前は、<b>3つの層を下から重ねた構造そのまま</b>です。<span class="met">金属</span>／<span class="oxi">酸化膜</span>／<span class="sem">半導体</span>のサンドイッチ、と覚えましょう。'
+  };
+  function updateNote(){ document.getElementById("note2").innerHTML=notes[mode]; }
+  document.getElementById("t2-m").addEventListener("click",()=>{mode="m";render();});
+  document.getElementById("t2-o").addEventListener("click",()=>{mode="o";render();});
+  document.getElementById("t2-s").addEventListener("click",()=>{mode="s";render();});
+  document.getElementById("t2-all").addEventListener("click",()=>{mode="all";render();});
+  render();
+})();
+
+/* =========================================================
+   ③ 水門の門番
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg3");
+  let mode="struct";
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    if(mode==="struct"){
+      svg.appendChild(txt(460,38,"構造で見る：ゲートが上、通り道が下",{"text-anchor":"middle","font-size":18,"font-weight":"bold",fill:COL.navy}));
+      drawSubstrate(svg); drawSourceDrain(svg); drawOxide(svg); drawGate(svg); drawTerminals(svg);
+      // ソース→ドレインの通り道を矢印で示す（まだ流れない＝点線）
+      svg.appendChild(el("line",{x1:chX0+10,y1:LAY.sub.y+10,x2:chX1-10,y2:LAY.sub.y+10,stroke:COL.grey,"stroke-width":2,"stroke-dasharray":"6 4"}));
+      svg.appendChild(txt((chX0+chX1)/2,LAY.sub.y+34,"電気の通り道（チャネル予定地）",{"text-anchor":"middle","font-size":12,fill:COL.grey}));
+    }else{
+      svg.appendChild(txt(460,38,"水門のたとえ：ゲートは下の水路を見張る門番",{"text-anchor":"middle","font-size":18,"font-weight":"bold",fill:COL.navy}));
+      // 水路（下）＝ソースからドレインへ
+      const wy=300, wh=70;
+      svg.appendChild(el("rect",{x:140,y:wy,width:640,height:wh,fill:COL.flow,"fill-opacity":0.10,stroke:COL.flow,"stroke-width":2}));
+      svg.appendChild(txt(120,wy+wh/2+5,"水路",{"text-anchor":"end","font-size":15,fill:COL.flow,"font-weight":"bold"}));
+      // 上流(ソース)・下流(ドレイン)
+      svg.appendChild(txt(170,wy-12,"上流＝ソース",{"font-size":14,fill:COL.navy,"font-weight":"bold"}));
+      svg.appendChild(txt(750,wy-12,"下流＝ドレイン",{"text-anchor":"end","font-size":14,fill:COL.navy,"font-weight":"bold"}));
+      // 水門（中央・上から下りる門）＝ゲート
+      const gx=460, gw=130;
+      svg.appendChild(el("rect",{x:gx-gw/2,y:160,width:gw,height:110,fill:COL.metal,"fill-opacity":0.22,stroke:COL.metal,"stroke-width":2.5}));
+      svg.appendChild(txt(gx,150,"ゲート＝門番",{"text-anchor":"middle","font-size":16,fill:COL.metal,"font-weight":"bold"}));
+      svg.appendChild(txt(gx,215,"上から",{"text-anchor":"middle","font-size":14,fill:COL.metal}));
+      svg.appendChild(txt(gx,235,"見張る",{"text-anchor":"middle","font-size":14,fill:COL.metal}));
+      // 門の支柱（水路まで）
+      svg.appendChild(el("line",{x1:gx,y1:270,x2:gx,y2:wy,stroke:COL.metal,"stroke-width":2,"stroke-dasharray":"4 3"}));
+      // 「今はまだ閉じている＝流れない」注記
+      svg.appendChild(el("rect",{x:gx-22,y:wy-2,width:44,height:wh+4,fill:COL.stop,"fill-opacity":0.18,stroke:COL.stop,"stroke-width":2}));
+      svg.appendChild(txt(gx,wy+wh+24,"今は門が閉じている → 水（電気）は流れない",{"text-anchor":"middle","font-size":13,fill:COL.stop,"font-weight":"bold"}));
+    }
+    updateNote();
+    document.getElementById("t3-struct").classList.toggle("on",mode==="struct");
+    document.getElementById("t3-gate").classList.toggle("on",mode==="gate");
+  }
+  const notes={
+    struct:'MOSは、下に<b>電気の通り道（ソース→ドレイン）</b>、その上に<span class="met">ゲート</span>がのった構造。'
+      +'ゲートは酸化膜で下と切り離されているのに、<b>上から下の通り道を操作できる</b>のがポイントです。',
+    gate:'たとえるなら<span class="met">ゲート＝水門の門番</span>。下を流れる水（電気）を、上から門で見張っています。'
+      +'<span class="chal">門を開ければ水が流れ、閉じれば止まる――この「開け閉め」を電圧でやるのが次回（第9週）です。</span>今日は「門番が上にいる」構造だけ押さえればOK。'
+  };
+  function updateNote(){ document.getElementById("note3").innerHTML=notes[mode]; }
+  document.getElementById("t3-struct").addEventListener("click",()=>{mode="struct";render();});
+  document.getElementById("t3-gate").addEventListener("click",()=>{mode="gate";render();});
+  render();
+})();
+</script>
+</body>
+</html>

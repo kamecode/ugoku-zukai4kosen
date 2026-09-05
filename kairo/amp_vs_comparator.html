@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>増幅器 vs コンパレータ 対比図</title>
+<style>
+  :root{
+    --blue:#1565C0; --orange:#E65100; --red:#D32F2F;
+    --purple:#6A1B9A; --gray:#9E9E9E; --green:#2E7D32;
+    --navy:#0D3C6E; --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;color:var(--ink);}
+  .wrap{width:1260px;margin:0 auto;padding:20px 26px 24px;}
+  h1{font-size:25px;color:var(--navy);margin:0 0 4px;font-weight:800;}
+  .lead{font-size:14.5px;color:#555;margin:0 0 14px;}
+  .lead b.amp{color:var(--blue);} .lead b.cmp{color:var(--purple);}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .card{border-radius:14px;border:2px solid;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.05);}
+  .card.amp{border-color:#9bbbe0;} .card.cmp{border-color:#c9a8de;}
+  .card-head{padding:10px 16px;font-size:16.5px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:space-between;}
+  .amp .card-head{background:var(--blue);} .cmp .card-head{background:var(--purple);}
+  .tag{font-size:11.5px;font-weight:700;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:999px;}
+  .card-body{padding:10px 14px 14px;}
+  .secttl{font-size:12.5px;font-weight:700;color:#888;margin:8px 2px 2px;}
+  .keyrow{display:flex;align-items:center;gap:8px;justify-content:center;margin:6px 0 2px;}
+  .keyrow .eq{font-size:15px;font-weight:800;}
+  .amp .eq{color:var(--blue);} .cmp .eq{color:var(--purple);}
+  text{font-family:"Noto Sans CJK JP",sans-serif;}
+  /* 比較表（両カラム下に共通） */
+  .cmp-table{margin-top:16px;border:1px solid #e6ebef;border-radius:12px;overflow:hidden;}
+  .cmp-table table{width:100%;border-collapse:collapse;font-size:13px;}
+  .cmp-table th{background:#f3f6f9;color:var(--navy);font-weight:800;padding:9px 12px;text-align:left;font-size:13px;}
+  .cmp-table td{padding:8px 12px;border-top:1px solid #eef1f4;vertical-align:top;}
+  .cmp-table td.k{color:#888;font-weight:700;width:18%;background:#fafbfc;}
+  .cmp-table td.a{color:var(--blue);width:41%;}
+  .cmp-table td.c{color:var(--purple);width:41%;}
+  .foot{margin-top:14px;background:#f7f9fb;border:1px solid #e6ebef;border-radius:12px;padding:11px 16px;font-size:13.5px;color:#444;line-height:1.7;}
+  .foot b{color:var(--navy);}
+  .hl{background:#fff3e0;padding:1px 5px;border-radius:5px;font-weight:700;color:var(--orange);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>同じ NJM4558、帰還線の有無で真逆に ― <b class="amp">増幅器</b> vs <b class="cmp">コンパレータ</b></h1>
+  <p class="lead">左右で<b>素子も入力も同じ</b>。違うのは<span class="hl">出力を−入力へ戻す帰還線があるか／無いか</span>だけ。これだけで、出力が「連続的に増幅」か「2値で判定」かに分かれます。</p>
+
+  <div class="cols">
+    <!-- 増幅器 -->
+    <div class="card amp">
+      <div class="card-head"><span>増幅器（非反転増幅・負帰還あり）</span><span class="tag">仮想短絡 ○</span></div>
+      <div class="card-body">
+        <div class="secttl">回路（出力→−入力へ Rf・R1 で分圧帰還）</div>
+        <svg id="ampCirc" width="560" height="200" viewBox="0 0 560 200"></svg>
+        <div class="secttl">入出力波形（同じ正弦入力に対して）</div>
+        <svg id="ampWave" width="560" height="150" viewBox="0 0 560 150"></svg>
+        <div class="keyrow"><span class="eq">V<tspan>out</tspan> = (1+Rf/R1)·V<tspan>in</tspan>（連続・比例）</span></div>
+      </div>
+    </div>
+
+    <!-- コンパレータ -->
+    <div class="card cmp">
+      <div class="card-head"><span>コンパレータ（帰還なし）</span><span class="tag">仮想短絡 ✕</span></div>
+      <div class="card-body">
+        <div class="secttl">回路（帰還線なし・−入力は基準 Vref）</div>
+        <svg id="cmpCirc" width="560" height="200" viewBox="0 0 560 200"></svg>
+        <div class="secttl">入出力波形（同じ正弦入力に対して）</div>
+        <svg id="cmpWave" width="560" height="150" viewBox="0 0 560 150"></svg>
+        <div class="keyrow"><span class="eq">V<tspan>out</tspan> = ＋レール / −レール（2値・判定）</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmp-table">
+    <table>
+      <tr><th>観点</th><th style="color:#1565C0">増幅器</th><th style="color:#6A1B9A">コンパレータ</th></tr>
+      <tr><td class="k">帰還</td><td class="a">負帰還あり（出力→−入力へ Rf・R1）</td><td class="c">なし（または正帰還＝ヒステリシス）</td></tr>
+      <tr><td class="k">＋入力と−入力</td><td class="a">仮想短絡で同電位（差≈0）</td><td class="c">差は残る（同電位にならない）</td></tr>
+      <tr><td class="k">出力</td><td class="a">入力に比例して連続変化</td><td class="c">＋レール か −レール の2値</td></tr>
+      <tr><td class="k">利得</td><td class="a">有限（Rf/R1 で設計）</td><td class="c">実質「無限大」をそのまま使う</td></tr>
+      <tr><td class="k">役割</td><td class="a">信号の大きさを測る・増幅</td><td class="c">基準とどちらが大きいか判定</td></tr>
+      <tr><td class="k">使う場面</td><td class="a">センサ増幅・オーディオ前段</td><td class="c">レベル検出・波形整形・ON/OFF判定</td></tr>
+    </table>
+  </div>
+
+  <div class="foot">
+    <b>見るべき1点：</b> 左は出力が−入力へ戻る線（Rf）があるので、OPアンプは差をゼロに保てる＝<b style="color:#1565C0">きれいに増幅</b>。
+    右はその線が無いので、わずかな差でも巨大利得で振り切る＝<b style="color:#6A1B9A">2値で判定</b>。<span class="hl">帰還線1本</span>が増幅器と判定器の分かれ目です。
+  </div>
+</div>
+
+<script>
+const C={blue:'#1565C0',orange:'#E65100',red:'#D32F2F',purple:'#6A1B9A',gray:'#9E9E9E',ink:'#333'};
+
+/* ===== OPアンプ三角の共通描画 ===== */
+function opamp(triL,opy){
+  const triR=triL+96, triMidY=opy+44;
+  const inMinusY=opy+22, inPlusY=opy+66;
+  let h='';
+  h+=`<polygon points="${triL},${opy} ${triR},${triMidY} ${triL},${opy+88}" fill="#fff" stroke="#333" stroke-width="2.3"/>`;
+  h+=`<text x="${triL+22}" y="${inMinusY+5}" font-size="17" font-weight="800" fill="#333">−</text>`;
+  h+=`<text x="${triL+22}" y="${inPlusY+6}" font-size="16" font-weight="800" fill="#333">+</text>`;
+  h+=`<text x="${triL+30}" y="${triMidY+4}" font-size="10.5" fill="#666">4558</text>`;
+  // 電源
+  h+=`<line x1="${triL+34}" y1="${opy-1}" x2="${triL+34}" y2="${opy-16}" stroke="${C.red}" stroke-width="2.2"/>`;
+  h+=`<text x="${triL+40}" y="${opy-6}" font-size="10.5" font-weight="700" fill="${C.red}">+8V</text>`;
+  h+=`<line x1="${triL+34}" y1="${opy+89}" x2="${triL+34}" y2="${opy+104}" stroke="${C.blue}" stroke-width="2.2"/>`;
+  h+=`<text x="${triL+40}" y="${opy+103}" font-size="10.5" font-weight="700" fill="${C.blue}">−8V</text>`;
+  return {h,triR,triMidY,inMinusY,inPlusY};
+}
+
+/* ===== 増幅器の回路（非反転増幅） ===== */
+function drawAmpCirc(){
+  const s=document.getElementById('ampCirc');
+  const triL=250, opy=52;
+  const o=opamp(triL,opy);
+  let h=o.h;
+  // −入力ノード（三角手前）：R1→GND（真下）, Rf→出力（上）
+  const nodeX=triL-34;
+  // R1 が下ろされるx座標
+  const r1x=nodeX;
+  // 入力 Vin → ＋入力(pin3, 下側)。R1縦線(x=r1x)をジャンプで跨ぐ（青）
+  const inX=24;
+  h+=`<circle cx="${inX+16}" cy="${o.inPlusY}" r="15" fill="#fff" stroke="${C.blue}" stroke-width="2.3"/>`;
+  h+=`<path d="M ${inX+8} ${o.inPlusY} q 4 -5 8 0 q 4 5 8 0" fill="none" stroke="${C.blue}" stroke-width="1.7"/>`;
+  h+=`<text x="${inX+16}" y="${o.inPlusY+28}" font-size="11" font-weight="700" text-anchor="middle" fill="${C.blue}">FG（V<tspan baseline-shift="sub" font-size="8">in</tspan>）</text>`;
+  // FG → r1x手前まで
+  h+=`<line x1="${inX+31}" y1="${o.inPlusY}" x2="${r1x-7}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.3"/>`;
+  // ジャンプ（半円・R1縦線を跨ぐ）
+  h+=`<path d="M ${r1x-7} ${o.inPlusY} a 7 7 0 0 1 14 0" fill="none" stroke="${C.blue}" stroke-width="2.3"/>`;
+  // 続き → ＋入力(三角)
+  h+=`<line x1="${r1x+7}" y1="${o.inPlusY}" x2="${triL}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.3"/>`;
+
+  // −入力ノード → 三角
+  h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${triL}" y2="${o.inMinusY}" stroke="#333" stroke-width="2"/>`;
+  h+=`<circle cx="${nodeX}" cy="${o.inMinusY}" r="3.2" fill="#333"/>`;
+  h+=`<text x="${nodeX-6}" y="${o.inMinusY-7}" font-size="10" text-anchor="end" fill="#888">−入力</text>`;
+  // R1：−入力ノード → 真下 → GND（青のVin線とは色を変え黒系に）
+  h+=`<line x1="${r1x}" y1="${o.inMinusY}" x2="${r1x}" y2="${o.inMinusY+10}" stroke="#333" stroke-width="2"/>`;
+  h+=`<rect x="${r1x-8}" y="${o.inMinusY+10}" width="16" height="24" fill="#fff" stroke="#333" stroke-width="2"/>`;
+  h+=`<text x="${r1x+13}" y="${o.inMinusY+26}" font-size="10" fill="#333">R1</text>`;
+  // R1下端からGNDへ（途中で青のVin線をVin側がジャンプして跨ぐ）
+  h+=`<line x1="${r1x}" y1="${o.inMinusY+34}" x2="${r1x}" y2="${o.inPlusY+24}" stroke="#333" stroke-width="2"/>`;
+  const gy=o.inPlusY+24;
+  h+=`<line x1="${r1x-9}" y1="${gy}" x2="${r1x+9}" y2="${gy}" stroke="#333" stroke-width="2.5"/>`;
+  h+=`<line x1="${r1x-5}" y1="${gy+4}" x2="${r1x+5}" y2="${gy+4}" stroke="#333" stroke-width="2"/>`;
+  h+=`<line x1="${r1x-2}" y1="${gy+8}" x2="${r1x+2}" y2="${gy+8}" stroke="#333" stroke-width="2"/>`;
+  // Rf：出力 → −入力ノード（上を回す・橙で強調）
+  const outX=o.triR+90, topY=opy-30;
+  h+=`<line x1="${o.triR}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY}" stroke="${C.orange}" stroke-width="2.8"/>`;
+  h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${nodeX}" y2="${topY}" stroke="${C.orange}" stroke-width="2.6"/>`;
+  h+=`<line x1="${nodeX}" y1="${topY}" x2="${outX}" y2="${topY}" stroke="${C.orange}" stroke-width="2.6"/>`;
+  h+=`<line x1="${outX}" y1="${topY}" x2="${outX}" y2="${o.triMidY}" stroke="${C.orange}" stroke-width="2.6"/>`;
+  const rfx=(nodeX+outX)/2;
+  h+=`<rect x="${rfx-18}" y="${topY-8}" width="36" height="16" fill="#fff" stroke="${C.orange}" stroke-width="2.2"/>`;
+  h+=`<text x="${rfx}" y="${topY-12}" font-size="10.5" text-anchor="middle" font-weight="700" fill="${C.orange}">Rf（帰還）</text>`;
+  // 出力ラベル＋点
+  h+=`<circle cx="${outX}" cy="${o.triMidY}" r="4.5" fill="${C.orange}"/>`;
+  h+=`<text x="${outX+8}" y="${o.triMidY+5}" font-size="12" font-weight="800" fill="${C.orange}">V<tspan baseline-shift="sub" font-size="9">out</tspan></text>`;
+  s.innerHTML=h;
+}
+
+/* ===== コンパレータの回路（帰還なし） ===== */
+function drawCmpCirc(){
+  const s=document.getElementById('cmpCirc');
+  const triL=250, opy=52;
+  const o=opamp(triL,opy);
+  let h=o.h;
+  // 入力 Vin → ＋入力(pin3, 下側)。分圧縦線(x=divX)をジャンプで跨ぐ（青）
+  const inX=24;
+  const nodeX=triL-30;
+  const divX=nodeX-46;
+  h+=`<circle cx="${inX+16}" cy="${o.inPlusY}" r="15" fill="#fff" stroke="${C.blue}" stroke-width="2.3"/>`;
+  h+=`<path d="M ${inX+8} ${o.inPlusY} q 4 -5 8 0 q 4 5 8 0" fill="none" stroke="${C.blue}" stroke-width="1.7"/>`;
+  h+=`<text x="${inX+16}" y="${o.inPlusY+28}" font-size="11" font-weight="700" text-anchor="middle" fill="${C.blue}">FG（V<tspan baseline-shift="sub" font-size="8">in</tspan>）</text>`;
+  // FG → divX手前
+  h+=`<line x1="${inX+31}" y1="${o.inPlusY}" x2="${divX-7}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.3"/>`;
+  // ジャンプ（分圧の−8V縦線を跨ぐ）
+  h+=`<path d="M ${divX-7} ${o.inPlusY} a 7 7 0 0 1 14 0" fill="none" stroke="${C.blue}" stroke-width="2.3"/>`;
+  // 続き → ＋入力(三角)
+  h+=`<line x1="${divX+7}" y1="${o.inPlusY}" x2="${triL}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.3"/>`;
+
+  // −入力ノード（三角手前）→ Vref 分圧（縦ラインは divX）
+  h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${triL}" y2="${o.inMinusY}" stroke="${C.purple}" stroke-width="2.3"/>`;
+  h+=`<circle cx="${nodeX}" cy="${o.inMinusY}" r="3.2" fill="${C.purple}"/>`;
+  h+=`<text x="${nodeX+4}" y="${o.inMinusY-7}" font-size="11" font-weight="700" fill="${C.purple}">V<tspan baseline-shift="sub" font-size="8">ref</tspan></text>`;
+  // 中点ノードへ水平に左へ、そこから上=+8V/下=−8Vの分圧
+  h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<circle cx="${divX}" cy="${o.inMinusY}" r="2.8" fill="${C.purple}"/>`;
+  // 上: 中点 → 抵抗 → +8V
+  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY-14}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<rect x="${divX-8}" y="${o.inMinusY-44}" width="16" height="30" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${o.inMinusY-44}" x2="${divX}" y2="${o.inMinusY-58}" stroke="${C.red}" stroke-width="2"/>`;
+  h+=`<text x="${divX}" y="${o.inMinusY-62}" font-size="9.5" text-anchor="middle" font-weight="700" fill="${C.red}">+8V</text>`;
+  // 下: 中点 → 抵抗 → −8V（Vin線はジャンプ済みなので交差しない）
+  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY+14}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<rect x="${divX-8}" y="${o.inMinusY+14}" width="16" height="30" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${o.inMinusY+44}" x2="${divX}" y2="${o.inPlusY+20}" stroke="${C.blue}" stroke-width="2"/>`;
+  h+=`<text x="${divX}" y="${o.inPlusY+34}" font-size="9.5" text-anchor="middle" font-weight="700" fill="${C.blue}">−8V</text>`;
+
+  // 出力（帰還線なし！を強調）
+  const outX=o.triR+90;
+  h+=`<line x1="${o.triR}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY}" stroke="${C.orange}" stroke-width="2.8"/>`;
+  h+=`<circle cx="${outX}" cy="${o.triMidY}" r="4.5" fill="${C.orange}"/>`;
+  h+=`<text x="${outX+8}" y="${o.triMidY+5}" font-size="12" font-weight="800" fill="${C.orange}">V<tspan baseline-shift="sub" font-size="9">out</tspan></text>`;
+  // 「帰還線なし」を破線×で示す（出力→−入力ノードへ戻る線が無い）
+  const topY=opy-30;
+  h+=`<path d="M ${nodeX} ${o.inMinusY} L ${nodeX} ${topY} L ${outX} ${topY} L ${outX} ${o.triMidY}" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-dasharray="5 5"/>`;
+  h+=`<text x="${(nodeX+outX)/2}" y="${topY-8}" font-size="11" text-anchor="middle" font-weight="700" fill="#9E9E9E">帰還線なし</text>`;
+  // ✕マーク
+  const xx=(nodeX+outX)/2;
+  h+=`<line x1="${xx-7}" y1="${topY-3}" x2="${xx+7}" y2="${topY+11}" stroke="${C.red}" stroke-width="2.5"/>`;
+  h+=`<line x1="${xx+7}" y1="${topY-3}" x2="${xx-7}" y2="${topY+11}" stroke="${C.red}" stroke-width="2.5"/>`;
+  s.innerHTML=h;
+}
+
+/* ===== 波形 ===== */
+function drawWave(svgId, mode){
+  const s=document.getElementById(svgId);
+  const W=560,H=150,padL=30,padR=14,padT=12,padB=18;
+  const x0=padL,x1=W-padR,y0=padT,y1=H-padB,mid=(y0+y1)/2,yspan=(y1-y0)/2-4;
+  const RAIL=7;
+  function X(t){return x0+t*(x1-x0);}
+  function Y(v){return mid-(v/RAIL)*yspan;}
+  let h='';
+  h+=`<line x1="${x0}" y1="${mid}" x2="${x1}" y2="${mid}" stroke="#ddd"/>`;
+  h+=`<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="#ddd"/>`;
+  const N=240, A=2.0; // 入力振幅2V
+  let pin='',pout='';
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const vi=A*Math.sin(2*Math.PI*2*t);
+    let vo;
+    if(mode==='amp'){ vo=3*vi; if(vo>RAIL)vo=RAIL; if(vo<-RAIL)vo=-RAIL; } // 非反転増幅 利得+3、飽和なし範囲
+    else { vo = (vi>0)? RAIL : -RAIL; } // コンパレータ（Vref=0）
+    pin+=(i?'L':'M')+X(t).toFixed(1)+' '+Y(vi).toFixed(1)+' ';
+    pout+=(i?'L':'M')+X(t).toFixed(1)+' '+Y(vo).toFixed(1)+' ';
+  }
+  h+=`<path d="${pout}" fill="none" stroke="${C.orange}" stroke-width="2.6"/>`;
+  h+=`<path d="${pin}" fill="none" stroke="${C.blue}" stroke-width="2"/>`;
+  // 凡例
+  h+=`<line x1="${x1-150}" y1="${y0+4}" x2="${x1-134}" y2="${y0+4}" stroke="${C.blue}" stroke-width="2"/><text x="${x1-130}" y="${y0+8}" font-size="9.5" fill="${C.blue}">入力</text>`;
+  h+=`<line x1="${x1-92}" y1="${y0+4}" x2="${x1-76}" y2="${y0+4}" stroke="${C.orange}" stroke-width="2.6"/><text x="${x1-72}" y="${y0+8}" font-size="9.5" fill="${C.orange}">出力</text>`;
+  if(mode==='amp'){
+    h+=`<text x="${x0+4}" y="${y1-2}" font-size="10" fill="#888">入力と同じ形のまま比例して増幅</text>`;
+  }else{
+    h+=`<text x="${x0+4}" y="${y1-2}" font-size="10" fill="#888">0Vを跨ぐたびに矩形へ振り切り</text>`;
+  }
+  s.innerHTML=h;
+}
+
+drawAmpCirc();
+drawCmpCirc();
+drawWave('ampWave','amp');
+drawWave('cmpWave','cmp');
+</script>
+</body>
+</html>

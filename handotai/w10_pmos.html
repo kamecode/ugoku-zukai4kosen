@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第10週 pMOSの動作 ―― nMOSの鏡像</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222;
+    --pos:#1F6FB2; --neg:#C0392B; --key:#7E3FA0; --grn:#2E8B57;
+    --ox:#E0A800; --ox2:#B8860B; --line:#CCCCCC; --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg);
+    font-family:"メイリオ","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+    color:var(--ink); line-height:1.6;}
+  .wrap{max-width:1060px; margin:0 auto; padding:18px 20px 60px;}
+  h1{color:var(--navy); font-size:24px; margin:6px 0 2px;
+    border-bottom:1px solid var(--line); padding-bottom:10px;}
+  .sub{color:#555; font-size:14px; margin:0 0 14px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px;}
+  .tab{border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:9px 14px; border-radius:8px; font-size:15px; font-weight:bold;
+    cursor:pointer; transition:.15s;}
+  .tab:hover{background:#EEF3F8;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .panel{display:none;} .panel.active{display:block;}
+  .panel-title{color:var(--navy); font-size:19px; margin:4px 0 6px; font-weight:bold;}
+  .panel-lead{font-size:15px; margin:0 0 14px; color:#333;}
+  .layout{display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start;}
+  .col-graph{flex:1 1 480px; min-width:400px;}
+  .col-ctrl{flex:1 1 300px; min-width:280px;}
+  .card{border:1.5px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:14px; background:#FAFBFD;}
+  .card h3{margin:0 0 10px; font-size:16px; color:var(--navy);}
+  .toggle-row{display:flex; gap:10px; margin:10px 0;}
+  .toggle{flex:1; border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:10px; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; text-align:center;}
+  .toggle.active{background:var(--navy); color:#fff;}
+  .readout{background:#fff; border:1.5px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-size:14px;}
+  .readout b{font-size:17px;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:14px;
+    font-size:13px; font-weight:bold; color:#fff; margin-left:6px;}
+  .b-on{background:var(--grn);} .b-off{background:#999;}
+  .note{font-size:13.5px; color:#444; background:#F4F7FA;
+    border-left:4px solid var(--navy); padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  .ana{font-size:14px; background:#FFF7EC; border-left:4px solid var(--ox);
+    padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  svg{width:100%; height:auto; display:block;}
+  .legend{font-size:13px; margin-top:8px;}
+  .legend span{display:inline-block; margin-right:14px;}
+  .chip{display:inline-block; width:14px; height:10px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+  .chipc{display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:middle; margin-right:5px;}
+  .chipr{display:inline-block; width:12px; height:12px; border-radius:50%; border:2.5px solid var(--neg); vertical-align:middle; margin-right:5px;}
+  /* 早見表 */
+  table.compare{width:100%; border-collapse:collapse; margin-top:6px; font-size:14.5px;}
+  table.compare th, table.compare td{border:1.5px solid var(--line); padding:9px 11px; text-align:center;}
+  table.compare th{background:var(--navy); color:#fff;}
+  table.compare td.label{background:#F4F7FA; font-weight:bold; color:var(--navy); text-align:left;}
+  .nmos-col{color:var(--pos); font-weight:bold;}
+  .pmos-col{color:var(--neg); font-weight:bold;}
+  @media(max-width:560px){ table.compare{font-size:12.5px;} }
+  /* サブタブ */
+  .subtab{border:1.3px solid #7E3FA0; background:#fff; color:#7E3FA0;
+    padding:7px 12px; border-radius:7px; font-size:14px; font-weight:bold; cursor:pointer;}
+  .subtab:hover{background:#F3E8FA;}
+  .subtab.active{background:#7E3FA0; color:#fff;}
+  .subpanel.active{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第10週　pMOSの動作 ―― nMOSの鏡像（ぜんぶ逆）</h1>
+  <p class="sub">第9週まで学んだMOSは nMOS（電子で動く）。CMOSに進む前に、その「双子の相棒」pMOS を立てます。コツは「pMOSは nMOS のすべてが逆」。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="t1">① nMOSのおさらい</button>
+    <button class="tab" data-tab="t2">② pMOSの構造</button>
+    <button class="tab" data-tab="t3">③ pMOSのON条件</button>
+    <button class="tab" data-tab="t4">④ pMOSの特性カーブ</button>
+    <button class="tab" data-tab="t5">⑤ nMOS vs pMOS 早見</button>
+  </div>
+
+  <!-- ===== タブ1 nMOSおさらい ===== -->
+  <div class="panel active" id="t1">
+    <div class="panel-title">① nMOSのおさらい（第9週）</div>
+    <p class="panel-lead">土台は <b>p型基板</b>、ソース/ドレインは <b>n型</b>。ゲートに <b>高い電圧</b>をかけると、電子（青）が集まって通り道（チャネル）ができ、ONになります。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg1" viewBox="0 0 520 360" aria-label="nMOS構造"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#D6E6F2;"></span>p型基板</span>
+          <span><span class="chip" style="background:#1F6FB2;"></span>n型 S/D</span>
+          <span><span class="chipc" style="background:#15527f;"></span>電子（多数キャリア）</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>ゲート電圧を切り替え</h3>
+          <div class="toggle-row">
+            <button class="toggle" data-n="low">低い（OFF）</button>
+            <button class="toggle active" data-n="high">高い（ON）</button>
+          </div>
+          <div class="readout" id="r1">…</div>
+        </div>
+        <div class="ana"><b>合言葉：</b>nMOSは「<b>押す（高い電圧）とON</b>」。電子（−）は＋に引かれるので、ゲートを＋（高く）すると電子が集まります。</div>
+        <div class="note">第9週の主役。動くのは電子。これを基準に、次は「ぜんぶ逆」のpMOSを見ます。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ2 pMOS構造 ===== -->
+  <div class="panel" id="t2">
+    <div class="panel-title">② pMOSの構造 ―― 型がぜんぶ逆</div>
+    <p class="panel-lead">土台は <b>n型基板</b>、ソース/ドレインは <b>p型</b>。動くキャリアは <b>正孔</b>（赤い輪）。nMOSと型が真逆なのが一目でわかります。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg2" viewBox="0 0 520 360" aria-label="pMOS構造"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#F6DAD6;"></span>n型基板</span>
+          <span><span class="chip" style="background:#C0392B;"></span>p型 S/D</span>
+          <span><span class="chipr"></span>正孔（多数キャリア）</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>nMOSと比べる</h3>
+          <div class="readout">
+            <b>基板：</b>p型 → <span class="pmos-col">n型</span>へ<br>
+            <b>S/D：</b>n型 → <span class="pmos-col">p型</span>へ<br>
+            <b>動くキャリア：</b>電子 → <span class="pmos-col">正孔</span>へ<br>
+            すべてが反転しています。
+          </div>
+        </div>
+        <div class="note">第5週で学んだ「n型＝電子が多い／p型＝正孔が多い」がそのまま効きます。pMOSの主役は正孔（＋の符号を持つように振る舞う空席）。</div>
+        <div class="ana"><b>覚え方：</b>名前の通り。<b>n</b>MOS は <b>n</b>型のS/Dで電子、<b>p</b>MOS は <b>p</b>型のS/Dで正孔。「S/Dの型＝動くキャリア」。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ3 pMOSのON条件 ===== -->
+  <div class="panel" id="t3">
+    <div class="panel-title">③ pMOSのON条件 ―― 引くとON</div>
+    <p class="panel-lead">pMOSは、ゲートに <b>低い電圧</b>をかけるとONになります（nMOSと逆！）。正孔（＋）は低い電圧（−側）に引かれて集まり、通り道を作ります。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg3" viewBox="0 0 520 360" aria-label="pMOS ON条件"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#F6DAD6;"></span>n型基板</span>
+          <span><span class="chip" style="background:#C0392B;"></span>p型 S/D</span>
+          <span><span class="chipr"></span>正孔のチャネル</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>ゲート電圧を切り替え</h3>
+          <div class="toggle-row">
+            <button class="toggle active" data-p="low">低い（ON）</button>
+            <button class="toggle" data-p="high">高い（OFF）</button>
+          </div>
+          <div class="readout" id="r3">…</div>
+        </div>
+        <div class="ana"><b>合言葉：</b>pMOSは「<b>引く（低い電圧）とON</b>」。nMOSの「押すとON」とちょうど反対。この一文がCMOSの全てを支えます。</div>
+        <div class="note">「nMOS＝押すとON／pMOS＝引くとON」。次のタブで左右に並べて、対称性を確認します。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ4 pMOSの特性カーブ（第3象限）===== -->
+  <div class="panel" id="t4">
+    <div class="panel-title">④ pMOSの特性カーブ ―― nMOSを点対称にひっくり返す</div>
+    <p class="panel-lead">pMOSは電圧も電流も <b>マイナス方向</b>。グラフは原点の<b>左下（第3象限）</b>に伸びます。形は第9週のnMOSと同じ。違うのは「向き」だけ ―― nMOSのグラフを点対称（180°回転）にした姿です。</p>
+    <div class="subtabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="subtab active" data-sub="s1">Vgs-Id（しきい値）</button>
+      <button class="subtab" data-sub="s2">Vds-Id（3領域）</button>
+      <button class="subtab" data-sub="s3">2軸スライダー</button>
+      <button class="subtab" data-sub="s4">飽和電流の式</button>
+    </div>
+
+    <!-- sub1: Vgs-Id -->
+    <div class="subpanel active" id="psub1">
+      <div class="layout">
+        <div class="col-graph">
+          <svg id="psvg1" viewBox="0 0 460 360" aria-label="pMOS Vgs-Id"></svg>
+          <div class="legend">
+            <span><span class="chip" style="background:#C0392B;"></span>しきい値 Vth=−0.5V</span>
+            <span><span class="chip" style="background:#1F6FB2;"></span>Id（負方向に流れる）</span>
+          </div>
+        </div>
+        <div class="col-ctrl">
+          <div class="card">
+            <h3>ゲート電圧を動かす（負方向）</h3>
+            <div class="slider-row" style="margin:14px 0;">
+              <label style="display:block;font-size:14px;font-weight:bold;margin-bottom:6px;">Vgs：<span id="pv1g" style="color:#1F6FB2;font-weight:bold;">−0.50 V</span></label>
+              <input type="range" id="ps1g" min="-2.5" max="0" step="0.01" value="-0.5" style="width:100%;height:26px;">
+            </div>
+            <div class="readout" id="pr1">…</div>
+          </div>
+          <div class="ana"><b>nMOSとの違い：</b>nMOSは「Vgsを＋に上げる」とON。pMOSは「Vgsを−に下げる」とON。<b>Vgsがしきい値Vth(−0.5V)より低くなる</b>と電流が流れ始めます。</div>
+          <div class="note">電流Idも負（ソースからドレインへ正孔が流れる＝電流は逆向き）。グラフは原点から左下へ伸びます。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sub2: Vds-Id 3領域 -->
+    <div class="subpanel" id="psub2" style="display:none;">
+      <div class="layout">
+        <div class="col-graph">
+          <svg id="psvg2" viewBox="0 0 460 360" aria-label="pMOS Vds-Id"></svg>
+          <div class="legend">
+            <span><span class="chip" style="background:#1F6FB2;"></span>線形</span>
+            <span><span class="chip" style="background:#7E3FA0;"></span>ピンチオフ</span>
+            <span><span class="chip" style="background:#2E8B57;"></span>飽和</span>
+          </div>
+        </div>
+        <div class="col-ctrl">
+          <div class="card">
+            <h3>ドレイン電圧を動かす（負方向）</h3>
+            <div class="slider-row" style="margin:14px 0;">
+              <label style="display:block;font-size:14px;font-weight:bold;margin-bottom:6px;">Vgs（固定気味）：<span id="pv2g" style="color:#1F6FB2;font-weight:bold;">−2.00 V</span></label>
+              <input type="range" id="ps2g" min="-2.5" max="-0.6" step="0.01" value="-2.0" style="width:100%;height:26px;">
+            </div>
+            <div class="slider-row" style="margin:14px 0;">
+              <label style="display:block;font-size:14px;font-weight:bold;margin-bottom:6px;">Vds：<span id="pv2d" style="color:#7E3FA0;font-weight:bold;">0.00 V</span></label>
+              <input type="range" id="ps2d" min="-4" max="0" step="0.01" value="0" style="width:100%;height:26px;">
+            </div>
+            <div class="readout" id="pr2">…</div>
+          </div>
+          <div class="note">3つの領域はnMOSと同じ（線形→ピンチオフ→飽和）。ピンチオフは <b>Vds=Vgs−Vth</b> で起こり、左下方向に進みます。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sub3: 2軸 -->
+    <div class="subpanel" id="psub3" style="display:none;">
+      <div class="layout">
+        <div class="col-graph">
+          <svg id="psvg3" viewBox="0 0 460 360" aria-label="pMOS 特性ファミリー"></svg>
+          <div class="legend">
+            <span><span class="chip" style="background:#7E3FA0;"></span>ピンチオフ境界</span>
+            <span><span class="chip" style="background:#1F6FB2;"></span>選択中のカーブ</span>
+          </div>
+        </div>
+        <div class="col-ctrl">
+          <div class="card">
+            <h3>2軸スライダー</h3>
+            <div class="slider-row" style="margin:14px 0;">
+              <label style="display:block;font-size:14px;font-weight:bold;margin-bottom:6px;">Vgs：<span id="pv3g" style="color:#1F6FB2;font-weight:bold;">−1.50 V</span></label>
+              <input type="range" id="ps3g" min="-2.5" max="0" step="0.01" value="-1.5" style="width:100%;height:26px;">
+            </div>
+            <div class="slider-row" style="margin:14px 0;">
+              <label style="display:block;font-size:14px;font-weight:bold;margin-bottom:6px;">Vds：<span id="pv3d" style="color:#7E3FA0;font-weight:bold;">−2.00 V</span></label>
+              <input type="range" id="ps3d" min="-4" max="0" step="0.01" value="-2.0" style="width:100%;height:26px;">
+            </div>
+            <div class="readout" id="pr3">…</div>
+          </div>
+          <div class="ana"><b>nMOSの鏡像：</b>Vgsをより低く（負に大きく）するほど、飽和電流の大きさが (Vgs−Vth)² で増えます。形は第9週のnMOSと同じ、向きが点対称なだけ。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sub4: 式 -->
+    <div class="subpanel" id="psub4" style="display:none;">
+      <p class="panel-lead">pMOSの飽和電流の式も、形はnMOSと同じです。符号の扱いだけ異なります。</p>
+      <div style="text-align:center;font-size:26px;color:#1C3A5E;font-weight:bold;background:#FAFBFD;border:1.5px solid #CCCCCC;border-radius:12px;padding:22px 14px;margin:12px 0;">
+        I<sub>d</sub> = −<span style="font-size:20px;">½</span> μ C<sub>ox</sub> (W/L) (V<sub>gs</sub> − V<sub>th</sub>)<sup style="font-size:17px;">2</sup>
+      </div>
+      <div class="note">nMOSとの違いは先頭の <b>マイナス符号</b>だけ（電流が負方向に流れることを表す）。Vth も負（−0.5V）。(Vgs−Vth) が2乗で効く点はまったく同じです。</div>
+      <div class="ana"><b>合格ライン（pMOSも同じ）：</b>「nMOSを点対称にひっくり返したもの」「形と3領域は同じ、向きと符号が逆」とわかればOK。符号計算の深追いは不要です。</div>
+      <div class="note" style="background:#EAF1F8;border-left-color:#1C3A5E;"><b>なぜ符号が逆？</b>pMOSはVgsもVdsも負、流れる電流も負（正孔がソース→ドレインへ動く＝電流は逆向き）。だから式全体にマイナスが付きます。大きさ（絶対値）で見れば、nMOSとまったく同じ式です。</div>
+    </div>
+  </div>
+
+  <!-- ===== タブ5 早見表 ===== -->
+  <div class="panel" id="t5">
+    <div class="panel-title">⑤ nMOS vs pMOS 早見 ―― きれいな鏡像</div>
+    <p class="panel-lead">2つを並べると、すべてが左右対称（鏡像）になっています。この対称性こそ、次回のCMOSで「片方ON・片方OFF」を作り出す土台です。</p>
+    <table class="compare">
+      <tr><th>項目</th><th class="nmos-col" style="color:#cfe3f5;">nMOS</th><th class="pmos-col" style="color:#f3cfca;">pMOS</th></tr>
+      <tr><td class="label">基板（土台）</td><td class="nmos-col">p型</td><td class="pmos-col">n型</td></tr>
+      <tr><td class="label">ソース/ドレイン</td><td class="nmos-col">n型</td><td class="pmos-col">p型</td></tr>
+      <tr><td class="label">動くキャリア</td><td class="nmos-col">電子（−）</td><td class="pmos-col">正孔（＋）</td></tr>
+      <tr><td class="label">ONになる条件</td><td class="nmos-col">ゲートが高い電圧</td><td class="pmos-col">ゲートが低い電圧</td></tr>
+      <tr><td class="label">合言葉</td><td class="nmos-col">押すとON</td><td class="pmos-col">引くとON</td></tr>
+      <tr><td class="label">入力が「1（高）」のとき</td><td class="nmos-col">ON</td><td class="pmos-col">OFF</td></tr>
+      <tr><td class="label">入力が「0（低）」のとき</td><td class="nmos-col">OFF</td><td class="pmos-col">ON</td></tr>
+    </table>
+    <div class="ana" style="margin-top:16px;"><b>ここが核心：</b>同じ入力に対して、nMOSとpMOSは <b>必ず逆のON/OFF</b> になります。だから2つを積めば「いつも片方だけが通る」回路が作れる ―― それが次回のCMOSインバータです。</div>
+    <div class="note">符号（Vgsの正負・ソース基準）の厳密な議論には立ち入りません。「高い/低いでON/OFFが逆」というイメージで十分です。</div>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+function el(n,a){const e=document.createElementNS(SVGNS,n); for(const k in a)e.setAttribute(k,a[k]); return e;}
+
+// レイアウト（SVG 520x360）共通
+const L={
+  subX:60, subY:150, subW:400, subH:150,
+  sX:60, sW:90, sdY:150, sdH:70,
+  dX:370, dW:90,
+  oxX:148, oxW:224, oxY:122, oxH:22,
+  gX:148, gW:224, gY:96, gH:26
+};
+const chX0=L.sX+L.sW, chX1=L.dX, chY=L.subY+6, chMaxH=24;
+
+// type: "nmos" or "pmos"
+function drawMOS(svg, type, on){
+  svg.innerHTML="";
+  const isP = (type==="pmos");
+  const subFill = isP ? "#F6DAD6" : "#D6E6F2";    // n型基板=淡赤 / p型基板=淡青
+  const subStroke = isP ? "#C0392B" : "#1F6FB2";
+  const sdFill = isP ? "#C0392B" : "#1F6FB2";      // p型S/D=赤 / n型S/D=青
+  const sdStroke = isP ? "#8f2a20" : "#15527f";
+  const subLabel = isP ? "n型シリコン基板" : "p型シリコン基板";
+  const sdLabel = isP ? "p" : "n";
+  // 基板
+  svg.appendChild(el("rect",{x:L.subX,y:L.subY,width:L.subW,height:L.subH,fill:subFill,stroke:subStroke,"stroke-width":1.5}));
+  let pt=el("text",{x:L.subX+L.subW/2,y:L.subY+L.subH-12,"text-anchor":"middle","font-size":13,fill:subStroke,"font-weight":"bold"}); pt.textContent=subLabel; svg.appendChild(pt);
+  // S/D
+  svg.appendChild(el("rect",{x:L.sX,y:L.sdY,width:L.sW,height:L.sdH,fill:sdFill,stroke:sdStroke,"stroke-width":1.2}));
+  svg.appendChild(el("rect",{x:L.dX,y:L.sdY,width:L.dW,height:L.sdH,fill:sdFill,stroke:sdStroke,"stroke-width":1.2}));
+  let st=el("text",{x:L.sX+L.sW/2,y:L.sdY+L.sdH/2+5,"text-anchor":"middle","font-size":12,fill:"#fff","font-weight":"bold"}); st.textContent="ソース("+sdLabel+")"; svg.appendChild(st);
+  let dt=el("text",{x:L.dX+L.dW/2,y:L.sdY+L.sdH/2+5,"text-anchor":"middle","font-size":12,fill:"#fff","font-weight":"bold"}); dt.textContent="ドレイン("+sdLabel+")"; svg.appendChild(dt);
+  // 酸化膜
+  svg.appendChild(el("rect",{x:L.oxX,y:L.oxY,width:L.oxW,height:L.oxH,fill:"#E0A800",stroke:"#B8860B","stroke-width":1.2}));
+  let ot=el("text",{x:L.oxX+L.oxW/2,y:L.oxY+L.oxH/2+4,"text-anchor":"middle","font-size":11,fill:"#6b4e00","font-weight":"bold"}); ot.textContent="酸化膜（絶縁）"; svg.appendChild(ot);
+  // ゲート
+  svg.appendChild(el("rect",{x:L.gX,y:L.gY,width:L.gW,height:L.gH,fill:"#7E3FA0",stroke:"#5c2d77","stroke-width":1.2}));
+  let gt=el("text",{x:L.gX+L.gW/2,y:L.gY+L.gH/2+5,"text-anchor":"middle","font-size":13,fill:"#fff","font-weight":"bold"}); gt.textContent="ゲート(G)"; svg.appendChild(gt);
+  // ゲート電圧ラベル（高い/低い）
+  svg.appendChild(el("line",{x1:L.gX+L.gW/2,y1:L.gY,x2:L.gX+L.gW/2,y2:L.gY-32,stroke:"#333","stroke-width":2}));
+  // 入力の高低を表すバッジ
+  const gateHigh = isP ? !on : on; // nMOS:on=高 / pMOS:on=低
+  const gv = gateHigh ? "高い電圧" : "低い電圧";
+  const gcol = gateHigh ? "#C0392B" : "#1F6FB2";
+  let gl=el("text",{x:L.gX+L.gW/2,y:L.gY-38,"text-anchor":"middle","font-size":13,fill:"#7E3FA0","font-weight":"bold"});
+  gl.textContent="ゲート＝"+gv; svg.appendChild(gl);
+  // 電界の向き矢印（ONのとき）
+  // チャネル＆キャリア
+  if(on){
+    const chFill = isP ? "#EFC3BD" : "#9FC3E0";
+    const chStroke = isP ? "#C0392B" : "#1F6FB2";
+    svg.appendChild(el("rect",{x:chX0,y:chY,width:chX1-chX0,height:chMaxH,fill:chFill,stroke:chStroke,"stroke-width":1.5,opacity:0.95}));
+    // キャリア
+    for(let i=1;i<12;i++){
+      const x=chX0+(chX1-chX0)*i/12;
+      if(isP){
+        // 正孔=赤い輪
+        svg.appendChild(el("circle",{cx:x,cy:chY+chMaxH/2,r:4,fill:"none",stroke:"#C0392B","stroke-width":2.5}));
+      } else {
+        // 電子=青丸
+        svg.appendChild(el("circle",{cx:x,cy:chY+chMaxH/2,r:3.5,fill:"#15527f"}));
+      }
+    }
+    let cl=el("text",{x:chX0+6,y:chY-3,"font-size":11,fill:isP?"#7a241b":"#15527f","font-weight":"bold"});
+    cl.textContent=isP?"正孔のチャネル":"電子のチャネル"; svg.appendChild(cl);
+    // 状態ラベル
+    let on_t=el("text",{x:(chX0+chX1)/2,y:chY+chMaxH+34,"text-anchor":"middle","font-size":18,fill:"#2E8B57","font-weight":"bold"});
+    on_t.textContent="ON（通り道あり）"; svg.appendChild(on_t);
+  } else {
+    let off_t=el("text",{x:(chX0+chX1)/2,y:chY+chMaxH+10,"text-anchor":"middle","font-size":18,fill:"#999","font-weight":"bold"});
+    off_t.textContent="OFF（通り道なし）"; svg.appendChild(off_t);
+  }
+}
+
+// ===== タブ1 nMOS =====
+let n1_on=true;
+function draw1(){
+  drawMOS(document.getElementById("svg1"),"nmos",n1_on);
+  document.getElementById("r1").innerHTML = n1_on
+    ? `状態：<span class="badge b-on">ON</span><br>ゲートが<b>高い電圧</b>→電子が集まり通り道完成。`
+    : `状態：<span class="badge b-off">OFF</span><br>ゲートが<b>低い電圧</b>→電子が集まらず通り道なし。`;
+}
+document.querySelectorAll('[data-n]').forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll('[data-n]').forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); n1_on=(b.dataset.n==="high"); draw1();
+}));
+
+// ===== タブ2 pMOS構造（常時ON表示で構造を見せる）=====
+function draw2(){ drawMOS(document.getElementById("svg2"),"pmos",true); }
+
+// ===== タブ3 pMOS ON条件 =====
+let p3_on=true; // 初期はON(低い電圧)
+function draw3(){
+  drawMOS(document.getElementById("svg3"),"pmos",p3_on);
+  document.getElementById("r3").innerHTML = p3_on
+    ? `状態：<span class="badge b-on">ON</span><br>ゲートが<b>低い電圧</b>→正孔が集まり通り道完成。nMOSと逆！`
+    : `状態：<span class="badge b-off">OFF</span><br>ゲートが<b>高い電圧</b>→正孔が集まらず通り道なし。`;
+}
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); p3_on=(b.dataset.p==="low"); draw3();
+}));
+
+// ===== pMOS特性カーブ（第3象限・点対称モデル）=====
+// 検算済み: Id_p(Vgs,Vds) = -Id_n(-Vgs,-Vds)
+const Vth_n=0.5, Kp=1.0;
+function Id_n_(Vgs,Vds){const Vov=Vgs-Vth_n; if(Vov<=0)return 0; if(Vds<Vov)return Kp*(Vov*Vds-Vds*Vds/2); return Kp*0.5*Vov*Vov;}
+function Id_p_(Vgs,Vds){return -Id_n_(-Vgs,-Vds);}
+function region_p_(Vgs,Vds){const v=-Vgs-Vth_n; if(v<=0)return"off"; const nd=-Vds; if(nd<v-1e-6)return"lin"; if(nd<=v+1e-6)return"pin"; return"sat";}
+
+const PNS="http://www.w3.org/2000/svg";
+function pel(n,a){const e=document.createElementNS(PNS,n); for(const k in a)e.setAttribute(k,a[k]); return e;}
+// 第3象限プロット領域：原点を右上に置き、左へVgs/Vds負、下へId負
+const Ppx=58, Ppy=40, Ppw=360, Pph=250;
+const ORx=Ppx+Ppw, ORy=Ppy;        // 原点(0,0)＝右上
+const PID_MAX=2.05, PV_GMAX=2.5, PV_DMAX=4.0;
+function pgx(v){ /* v:0..-max → x */ return ORx + (v/PV_DMAX)*Ppw; } // Vds負→左
+function pgxg(v){ return ORx + (v/PV_GMAX)*Ppw; } // Vgs負→左
+function pgy(id){ /* id:0..-max → y下 */ return ORy - (id/PID_MAX)*Pph; } // id負→下
+
+function pAxes(svg,xlabel,ylabel,gmax){
+  for(let i=1;i<=4;i++){
+    svg.appendChild(pel("line",{x1:Ppx,y1:Ppy+Pph*i/5,x2:Ppx+Ppw,y2:Ppy+Pph*i/5,stroke:"#EEE","stroke-width":1}));
+    svg.appendChild(pel("line",{x1:Ppx+Ppw*i/5,y1:Ppy,x2:Ppx+Ppw*i/5,y2:Ppy+Pph,stroke:"#EEE","stroke-width":1}));
+  }
+  // 軸（原点右上から、左へ／下へ）
+  svg.appendChild(pel("line",{x1:ORx,y1:ORy,x2:Ppx,y2:ORy,stroke:"#222","stroke-width":2})); // 横(左へ)
+  svg.appendChild(pel("line",{x1:ORx,y1:ORy,x2:ORx,y2:Ppy+Pph,stroke:"#222","stroke-width":2})); // 縦(下へ)
+  svg.appendChild(pel("polygon",{points:`${Ppx},${ORy} ${Ppx+8},${ORy-4} ${Ppx+8},${ORy+4}`,fill:"#222"}));
+  svg.appendChild(pel("polygon",{points:`${ORx},${Ppy+Pph} ${ORx-4},${Ppy+Pph-8} ${ORx+4},${Ppy+Pph-8}`,fill:"#222"}));
+  // 原点ラベル
+  let o=pel("text",{x:ORx+4,y:ORy-6,"font-size":12,fill:"#888"}); o.textContent="0"; svg.appendChild(o);
+  let tx=pel("text",{x:Ppx,y:ORy-10,"font-size":13,fill:"#1C3A5E","font-weight":"bold","text-anchor":"start"}); tx.textContent=xlabel; svg.appendChild(tx);
+  let ty=pel("text",{x:ORx-6,y:Ppy+Pph+18,"font-size":13,fill:"#1C3A5E","font-weight":"bold","text-anchor":"end"}); ty.textContent=ylabel; svg.appendChild(ty);
+}
+
+// sub1: pMOS Vgs-Id
+const ps1g=document.getElementById("ps1g");
+function pdraw1(){
+  const Vgs=parseFloat(ps1g.value);
+  const svg=document.getElementById("psvg1"); svg.innerHTML="";
+  pAxes(svg,"← Vgs（負）","Id（負）↓",PV_GMAX);
+  // Vth線(=-0.5)
+  const xth=pgxg(-0.5);
+  svg.appendChild(pel("line",{x1:xth,y1:Ppy,x2:xth,y2:Ppy+Pph,stroke:"#C0392B","stroke-width":1.5,"stroke-dasharray":"5 4"}));
+  let lab=pel("text",{x:xth-4,y:Ppy+12,"font-size":12,fill:"#C0392B","font-weight":"bold","text-anchor":"end"}); lab.textContent="Vth=−0.5V"; svg.appendChild(lab);
+  // 曲線（Vds=-5固定→飽和）
+  let d="";
+  for(let i=0;i<=120;i++){
+    const vg=-i/120*PV_GMAX;
+    const id=Id_p_(vg,-5.0);
+    d+=(i===0?"M":"L")+pgxg(vg).toFixed(1)+" "+pgy(id).toFixed(1)+" ";
+  }
+  svg.appendChild(pel("path",{d,fill:"none",stroke:"#1F6FB2","stroke-width":3}));
+  // 動作点
+  const id=Id_p_(Vgs,-5.0);
+  const X=pgxg(Vgs),Y=pgy(id);
+  svg.appendChild(pel("line",{x1:X,y1:ORy,x2:X,y2:Y,stroke:"#888","stroke-width":1,"stroke-dasharray":"3 3"}));
+  svg.appendChild(pel("circle",{cx:X,cy:Y,r:6,fill:"#C0392B",stroke:"#fff","stroke-width":2}));
+  document.getElementById("pv1g").textContent=Vgs.toFixed(2)+" V";
+  const on=Vgs<-0.5;
+  document.getElementById("pr1").innerHTML = on
+    ? `状態：<span class="badge b-on">ON（流れる）</span><br>Vgs(${Vgs.toFixed(2)}V)がVth(−0.5V)より<b>低い</b>→正孔のチャネルができ、Idが負方向に流れる。<br>Id（相対）＝<b style="color:#C0392B;">${id.toFixed(2)}</b>`
+    : `状態：<span class="badge b-off">OFF</span><br>Vgs(${Vgs.toFixed(2)}V)はまだVth(−0.5V)より<b>高い</b>→チャネルなし、Id＝<b style="color:#C0392B;">0</b>。`;
+}
+ps1g.addEventListener("input",pdraw1);
+
+// sub2: pMOS Vds-Id 3領域
+const ps2g=document.getElementById("ps2g"), ps2d=document.getElementById("ps2d");
+function pdraw2(){
+  const Vgs=parseFloat(ps2g.value), Vds=parseFloat(ps2d.value);
+  const Vov=Vgs-(-0.5); // 負
+  const svg=document.getElementById("psvg2"); svg.innerHTML="";
+  pAxes(svg,"← Vds（負）","Id（負）↓",PV_DMAX);
+  // 線形部分（Vds:0→Vov）
+  let dl="";
+  const nLin=80;
+  for(let i=0;i<=nLin;i++){
+    const vd=Math.max(Vov,-PV_DMAX)*i/nLin;
+    dl+=(i===0?"M":"L")+pgx(vd).toFixed(1)+" "+pgy(Id_p_(Vgs,vd)).toFixed(1)+" ";
+  }
+  svg.appendChild(pel("path",{d:dl,fill:"none",stroke:"#1F6FB2","stroke-width":3}));
+  // 飽和部分
+  if(Vov>-PV_DMAX){
+    const idsat=Id_p_(Vgs,-PV_DMAX);
+    let ds="M"+pgx(Vov).toFixed(1)+" "+pgy(idsat).toFixed(1)+" L"+pgx(-PV_DMAX).toFixed(1)+" "+pgy(idsat).toFixed(1);
+    svg.appendChild(pel("path",{d:ds,fill:"none",stroke:"#2E8B57","stroke-width":3}));
+  }
+  // ピンチオフ点
+  if(Vov<0 && Vov>-PV_DMAX){
+    const xp=pgx(Vov), yp=pgy(Id_p_(Vgs,Vov));
+    svg.appendChild(pel("line",{x1:xp,y1:Ppy,x2:xp,y2:Ppy+Pph,stroke:"#7E3FA0","stroke-width":1.2,"stroke-dasharray":"4 4"}));
+    svg.appendChild(pel("circle",{cx:xp,cy:yp,r:5,fill:"#7E3FA0",stroke:"#fff","stroke-width":1.5}));
+    let pl=pel("text",{x:xp-4,y:Ppy+12,"font-size":11,fill:"#7E3FA0","font-weight":"bold","text-anchor":"end"});
+    pl.textContent="ピンチオフ Vds=Vgs−Vth="+Vov.toFixed(2)+"V"; svg.appendChild(pl);
+  }
+  // 動作点
+  const id=Id_p_(Vgs,Vds);
+  const X=pgx(Vds),Y=pgy(id);
+  svg.appendChild(pel("line",{x1:X,y1:ORy,x2:X,y2:Y,stroke:"#888","stroke-width":1,"stroke-dasharray":"3 3"}));
+  svg.appendChild(pel("circle",{cx:X,cy:Y,r:6,fill:"#C0392B",stroke:"#fff","stroke-width":2}));
+  document.getElementById("pv2g").textContent=Vgs.toFixed(2)+" V";
+  document.getElementById("pv2d").textContent=Vds.toFixed(2)+" V";
+  const reg=region_p_(Vgs,Vds);
+  const labelMap={off:"OFF",lin:"線形領域",pin:"ピンチオフ点",sat:"飽和領域"};
+  const descMap={off:"Vgsを下げてチャネルを作って。",lin:"Vdsを負に下げるとIdが負方向にじわじわ増える。",pin:"Vds=Vgs−Vth。ドレイン側が締まる。",sat:"Vdsを下げてもIdはほぼ一定。"};
+  const styleMap={off:"background:#999;",lin:"background:#1F6FB2;",pin:"background:#7E3FA0;",sat:"background:#2E8B57;"};
+  document.getElementById("pr2").innerHTML=
+    `領域：<span class="badge" style="${styleMap[reg]}">${labelMap[reg]}</span><br>${descMap[reg]}<br>Id（相対）＝<b style="color:#C0392B;">${id.toFixed(2)}</b>`;
+}
+ps2g.addEventListener("input",pdraw2); ps2d.addEventListener("input",pdraw2);
+
+// sub3: pMOS 2軸 特性ファミリー
+const ps3g=document.getElementById("ps3g"), ps3d=document.getElementById("ps3d");
+function pdraw3(){
+  const Vgs=parseFloat(ps3g.value), Vds=parseFloat(ps3d.value);
+  const svg=document.getElementById("psvg3"); svg.innerHTML="";
+  pAxes(svg,"← Vds（負）","Id（負）↓",PV_DMAX);
+  // ファミリー（Vgs=-1.0,-1.5,-2.0,-2.5）
+  for(let vg=-1.0; vg>=-PV_GMAX-1e-6; vg-=0.5){
+    let d="";
+    for(let i=0;i<=100;i++){
+      const vd=-PV_DMAX*i/100;
+      d+=(i===0?"M":"L")+pgx(vd).toFixed(1)+" "+pgy(Id_p_(vg,vd)).toFixed(1)+" ";
+    }
+    svg.appendChild(pel("path",{d,fill:"none",stroke:"#CBD5E0","stroke-width":1.5}));
+    const idr=Id_p_(vg,-PV_DMAX);
+    let t=pel("text",{x:pgx(-PV_DMAX)-3,y:pgy(idr)+4,"font-size":10,fill:"#9AA8B8","text-anchor":"end"});
+    t.textContent="Vgs="+vg.toFixed(1); svg.appendChild(t);
+  }
+  // ピンチオフ境界 Id=-(K/2)Vds^2
+  let db="";
+  for(let i=0;i<=100;i++){
+    const vd=-PV_DMAX*i/100;
+    const idb=-0.5*Kp*vd*vd;
+    if(idb<-PID_MAX) break;
+    db+=(i===0?"M":"L")+pgx(vd).toFixed(1)+" "+pgy(idb).toFixed(1)+" ";
+  }
+  svg.appendChild(pel("path",{d:db,fill:"none",stroke:"#7E3FA0","stroke-width":2,"stroke-dasharray":"6 4"}));
+  // 選択カーブ
+  if(Vgs<-0.5){
+    let d="";
+    for(let i=0;i<=120;i++){
+      const vd=-PV_DMAX*i/120;
+      d+=(i===0?"M":"L")+pgx(vd).toFixed(1)+" "+pgy(Id_p_(Vgs,vd)).toFixed(1)+" ";
+    }
+    svg.appendChild(pel("path",{d,fill:"none",stroke:"#1F6FB2","stroke-width":3.5}));
+  }
+  const id=Id_p_(Vgs,Vds), X=pgx(Vds),Y=pgy(id);
+  svg.appendChild(pel("line",{x1:X,y1:ORy,x2:X,y2:Y,stroke:"#888","stroke-width":1,"stroke-dasharray":"3 3"}));
+  svg.appendChild(pel("circle",{cx:X,cy:Y,r:6.5,fill:"#C0392B",stroke:"#fff","stroke-width":2}));
+  document.getElementById("pv3g").textContent=Vgs.toFixed(2)+" V";
+  document.getElementById("pv3d").textContent=Vds.toFixed(2)+" V";
+  const idsat=(Vgs<-0.5)?Math.abs(0.5*Kp*(Vgs+0.5)*(Vgs+0.5)):0;
+  const reg3=region_p_(Vgs,Vds);
+  const lab3={off:'OFF',lin:'線形',pin:'ピンチオフ',sat:'飽和'};
+  const sty3={off:'background:#999;',lin:'background:#1F6FB2;',pin:'background:#7E3FA0;',sat:'background:#2E8B57;'};
+  document.getElementById("pr3").innerHTML = (Vgs>=-0.5)
+    ? `状態：<span class="badge b-off">OFF</span><br>VgsをVth(−0.5V)より低くしてください。`
+    : `領域：<span class="badge" style="${sty3[reg3]}">${lab3[reg3]}</span><br>いまのId（相対）＝<b style="color:#C0392B;">${id.toFixed(2)}</b><br>飽和の大きさ＝<b>${idsat.toFixed(2)}</b>（∝(Vgs−Vth)²＝${((Vgs+0.5)*(Vgs+0.5)).toFixed(2)}）`;
+}
+ps3g.addEventListener("input",pdraw3); ps3d.addEventListener("input",pdraw3);
+
+// サブタブ切替
+document.querySelectorAll('.subtab').forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll('.subtab').forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll('.subpanel').forEach(x=>{x.classList.remove("active");x.style.display="none";});
+  b.classList.add("active");
+  const id="p"+b.dataset.sub.replace("s","sub");
+  const el2=document.getElementById(id); el2.classList.add("active"); el2.style.display="block";
+  if(b.dataset.sub==="s1")pdraw1(); if(b.dataset.sub==="s2")pdraw2(); if(b.dataset.sub==="s3")pdraw3();
+}));
+
+// ===== タブ切替 =====
+const tabs=document.querySelectorAll(".tab"), panels=document.querySelectorAll(".panel");
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  tabs.forEach(x=>x.classList.remove("active")); panels.forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const id=t.getAttribute("data-tab"); document.getElementById(id).classList.add("active");
+  if(id==="t1")draw1(); if(id==="t2")draw2(); if(id==="t3")draw3();
+  if(id==="t4")pdraw1();
+}));
+draw1(); draw2(); draw3();
+pdraw1(); pdraw2(); pdraw3();
+</script>
+</body>
+</html>

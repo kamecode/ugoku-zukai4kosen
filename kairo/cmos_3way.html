@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMOSインバータ 3点連動図（回路・VTC・貫通電流）</title>
+<style>
+  :root{
+    --pmos:#6A1B9A;    /* PMOS 紫 */
+    --nmos:#2E7D32;    /* NMOS / 電流 緑 */
+    --in:#1565C0;      /* 入力/VGS 青 */
+    --vdd:#D32F2F;     /* VDD/電源プラス 赤 */
+    --mark:#E65100;    /* 注目点/動作点 橙 */
+    --gray:#9E9E9E;    /* OFF / 未使用 */
+    --head:#0D3C6E;    /* 見出し濃紺 */
+    --ink:#1a2230;
+    --paper:#ffffff;
+    --panel:#f7f9fc;
+    --line:#cdd6e3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#eef2f7;color:var(--ink);
+    font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 20px 30px;}
+  h1{color:var(--head);font-size:21px;margin:6px 0 2px;}
+  .sub{color:#5a6b82;font-size:13px;margin:0 0 14px;}
+  .stage{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:stretch;}
+  @media(max-width:900px){.stage{grid-template-columns:1fr;}}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;box-shadow:0 1px 3px rgba(20,40,80,.06);}
+  .card h2{font-size:14px;color:var(--head);margin:0 0 8px;letter-spacing:.02em;}
+  .graphs{display:grid;grid-template-rows:1fr 1fr;gap:16px;}
+  svg{display:block;width:100%;height:auto;}
+  /* control bar */
+  .control{margin-top:16px;background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:14px 18px;box-shadow:0 1px 3px rgba(20,40,80,.06);}
+  .ctop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctop label{font-size:13px;color:#42526b;font-weight:600;}
+  input[type=range]{flex:1 1 240px;min-width:200px;accent-color:var(--in);height:5px;}
+  .readout{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;}
+  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
+    font-variant-numeric:tabular-nums;}
+  .pill b{font-family:Arial,sans-serif;}
+  .pill.vin{border-color:var(--in);color:var(--in);}
+  .pill.vout{border-color:var(--mark);color:var(--mark);}
+  .pill.cur{border-color:var(--nmos);color:var(--nmos);}
+  .pill.state{font-weight:700;}
+  .btns{display:flex;gap:8px;margin-left:auto;}
+  button{font-family:inherit;font-size:13px;border:1px solid var(--line);background:#fff;
+    color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;}
+  button:hover{background:var(--panel);}
+  button.play{background:var(--head);color:#fff;border-color:var(--head);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#5a6b82;margin-top:10px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:13px;height:13px;border-radius:3px;display:inline-block;}
+  .note{font-size:12px;color:#6a7890;margin-top:6px;line-height:1.5;}
+  /* device on/off visual */
+  .devlabel{font-family:Arial,sans-serif;font-size:13px;font-weight:700;}
+  .flowdot{opacity:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CMOSインバータ ― 回路・入出力特性・貫通電流の3点連動</h1>
+  <p class="sub">入力 Vin を動かすと、回路の状態・VTC上の動作点・貫通電流の山が同時に動きます。授業投影用（スライダー操作）。</p>
+
+  <div class="stage">
+    <!-- LEFT: circuit -->
+    <div class="card">
+      <h2>回路の状態と電流の道</h2>
+      <svg id="ckt" viewBox="0 0 360 420" aria-label="CMOSインバータ回路図">
+        <!-- rails -->
+        <line x1="60" y1="40" x2="320" y2="40" stroke="var(--vdd)" stroke-width="3"/>
+        <text x="60" y="32" class="devlabel" fill="var(--vdd)">VDD = <tspan id="vddtxt">8.0</tspan> V</text>
+        <line x1="60" y1="392" x2="320" y2="392" stroke="#444" stroke-width="3"/>
+        <text x="60" y="410" class="devlabel" fill="#444">GND (VSS)</text>
+
+        <!-- ===== layout reference (textbook MOSFET symbol) =====
+             terminal trunk x=288 (S/D vertical leads)
+             channel bar   x=258 ; gate plate x=242 ; gate bus x=200
+             PMOS upper: S top(y=150) -> VDD ; D bottom(y=206) -> output
+             NMOS lower: D top(y=246) -> output ; S bottom(y=302) -> GND
+        ====================================================== -->
+
+        <!-- ==== PMOS (upper) ==== -->
+        <g id="pmos">
+          <!-- VDD down to S terminal -->
+          <line x1="288" y1="40" x2="288" y2="150" stroke="var(--vdd)" stroke-width="2"/>
+          <!-- S: terminal -> L -> into channel bar top -->
+          <line x1="288" y1="150" x2="270" y2="150" stroke="var(--vdd)" stroke-width="2"/>
+          <line x1="270" y1="150" x2="270" y2="158" stroke="var(--vdd)" stroke-width="2"/>
+          <line x1="270" y1="158" x2="258" y2="158" stroke="var(--vdd)" stroke-width="2"/>
+          <text x="292" y="146" font-size="10" fill="var(--pmos)">S</text>
+          <!-- channel bar (three-segment look via one thick line) -->
+          <line id="pch" x1="258" y1="158" x2="258" y2="198" stroke="var(--gray)" stroke-width="6"/>
+          <!-- gate plate (separated from channel) -->
+          <line x1="242" y1="156" x2="242" y2="200" stroke="var(--in)" stroke-width="3"/>
+          <!-- gate terminal from plate center, with PMOS bubble -->
+          <circle cx="234" cy="178" r="4.5" fill="#fff" stroke="var(--in)" stroke-width="2"/>
+          <line x1="200" y1="178" x2="229.5" y2="178" stroke="var(--in)" stroke-width="2"/>
+          <text x="150" y="172" font-size="11" fill="var(--pmos)" class="devlabel">PMOS</text>
+          <!-- D: channel bar bottom -> L -> terminal -->
+          <line x1="258" y1="198" x2="270" y2="198" stroke="var(--pmos)" stroke-width="2"/>
+          <line x1="270" y1="198" x2="270" y2="206" stroke="var(--pmos)" stroke-width="2"/>
+          <line x1="270" y1="206" x2="288" y2="206" stroke="var(--pmos)" stroke-width="2"/>
+          <text x="292" y="203" font-size="10" fill="var(--pmos)">D</text>
+          <line x1="288" y1="206" x2="288" y2="226" stroke="var(--pmos)" stroke-width="2"/>
+        </g>
+
+        <!-- output node + wire to right -->
+        <circle cx="288" cy="226" r="4" fill="var(--mark)"/>
+        <line x1="288" y1="226" x2="326" y2="226" stroke="var(--mark)" stroke-width="2"/>
+        <text x="326" y="220" text-anchor="end" font-size="12" fill="var(--mark)" class="devlabel">Vout=<tspan id="vouttxt">8.0</tspan>V</text>
+
+        <!-- ==== NMOS (lower) ==== -->
+        <g id="nmos">
+          <line x1="288" y1="226" x2="288" y2="246" stroke="var(--nmos)" stroke-width="2"/>
+          <!-- D: terminal -> L -> channel bar top -->
+          <line x1="288" y1="246" x2="270" y2="246" stroke="var(--nmos)" stroke-width="2"/>
+          <line x1="270" y1="246" x2="270" y2="254" stroke="var(--nmos)" stroke-width="2"/>
+          <line x1="270" y1="254" x2="258" y2="254" stroke="var(--nmos)" stroke-width="2"/>
+          <text x="292" y="244" font-size="10" fill="var(--nmos)">D</text>
+          <!-- channel bar -->
+          <line id="nch" x1="258" y1="254" x2="258" y2="294" stroke="var(--gray)" stroke-width="6"/>
+          <!-- gate plate -->
+          <line x1="242" y1="252" x2="242" y2="296" stroke="var(--in)" stroke-width="3"/>
+          <line x1="200" y1="274" x2="242" y2="274" stroke="var(--in)" stroke-width="2"/>
+          <text x="150" y="282" font-size="11" fill="var(--nmos)" class="devlabel">NMOS</text>
+          <!-- S: channel bar bottom -> L -> terminal -> GND -->
+          <line x1="258" y1="294" x2="270" y2="294" stroke="var(--nmos)" stroke-width="2"/>
+          <line x1="270" y1="294" x2="270" y2="302" stroke="var(--nmos)" stroke-width="2"/>
+          <line x1="270" y1="302" x2="288" y2="302" stroke="var(--nmos)" stroke-width="2"/>
+          <text x="292" y="305" font-size="10" fill="var(--nmos)">S</text>
+          <line x1="288" y1="302" x2="288" y2="392" stroke="var(--nmos)" stroke-width="2"/>
+        </g>
+
+        <!-- input node: gate common bus (x=200) -->
+        <line x1="200" y1="178" x2="200" y2="274" stroke="var(--in)" stroke-width="2.5"/>
+        <circle cx="200" cy="226" r="4" fill="var(--in)"/>
+        <line x1="60" y1="226" x2="200" y2="226" stroke="var(--in)" stroke-width="2"/>
+        <text x="58" y="222" text-anchor="end" font-size="12" fill="var(--in)" class="devlabel">Vin</text>
+
+        <!-- current flow dots (top path: VDD->out) -->
+        <g id="flowTop">
+          <circle class="flowdot" r="3.5" fill="var(--vdd)"/>
+          <circle class="flowdot" r="3.5" fill="var(--vdd)"/>
+          <circle class="flowdot" r="3.5" fill="var(--vdd)"/>
+        </g>
+        <!-- current flow dots (bottom path: out->GND) -->
+        <g id="flowBot">
+          <circle class="flowdot" r="3.5" fill="var(--nmos)"/>
+          <circle class="flowdot" r="3.5" fill="var(--nmos)"/>
+          <circle class="flowdot" r="3.5" fill="var(--nmos)"/>
+        </g>
+        <!-- shoot-through emphasis -->
+        <text id="shoot" x="288" y="355" text-anchor="middle" font-size="13" fill="var(--vdd)" class="devlabel" opacity="0">⚡ 貫通電流 ⚡</text>
+      </svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--vdd)"></i>VDD/上の電流</span>
+        <span><i class="sw" style="background:var(--nmos)"></i>NMOS/下の電流</span>
+        <span><i class="sw" style="background:var(--gray)"></i>OFF(閉)</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: two graphs -->
+    <div class="graphs">
+      <div class="card">
+        <h2>入出力特性 VTC（横軸 Vin・縦軸 Vout）</h2>
+        <svg id="vtc" viewBox="0 0 560 240" aria-label="VTCグラフ"></svg>
+      </div>
+      <div class="card">
+        <h2>貫通電流（横軸 Vin・縦軸 電源電流の大きさ＝相対値）</h2>
+        <svg id="cur" viewBox="0 0 560 240" aria-label="貫通電流グラフ"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- control -->
+  <div class="control">
+    <div class="ctop">
+      <label for="vin">入力 Vin</label>
+      <input id="vin" type="range" min="0" max="8" step="0.05" value="0">
+      <div class="btns">
+        <button id="play" class="play">▶ 自動掃引</button>
+        <button id="reset">リセット</button>
+      </div>
+    </div>
+    <div class="readout">
+      <span class="pill vin">Vin = <b id="rVin">0.00</b> V</span>
+      <span class="pill vout">Vout = <b id="rVout">8.00</b> V</span>
+      <span class="pill cur">電源電流 = <b id="rCur">ほぼ0</b></span>
+      <span class="pill state" id="rState">下OFF・上ON → 出力 High</span>
+    </div>
+    <p class="note">※遷移領域（Vin ≈ VDD/2）で NMOS・PMOS が<b>両方とも半開き</b>になり、電源→GND へ貫通電流が突き抜けます。VTC の急降下と、貫通電流の山が同じ Vin に来ることを確認してください。<br><b>このグラフは「山の形」を見せる定性的なものです。実際に何 mA 流れるか・電源電圧が何 V 落ちるかは、第5・6週の実験で自分で測ります。</b></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- model parameters (qualitative, for teaching) ----
+  const VDD = 8.0;          // fixed for this anim
+  const VM  = 3.7;          // logical threshold: defined by Vout = Vin (slightly below VDD/2)
+  const k   = 2.2;          // steepness of VTC transition
+  const Ipk = 1.0;          // internal scale only (relative). NOT a real current value.
+  const sig = 0.55;         // width of current hump [V]
+  // logistic center c chosen so VTC crosses the Vout=Vin line exactly at Vin=VM:
+  //   VDD/(1+exp(k(VM-c))) = VM  =>  c = VM - ln(VDD/VM - 1)/k
+  const c = VM - Math.log(VDD/VM - 1)/k;
+
+  // VTC: smooth high->low; passes through (VM, VM) on the Vout=Vin line
+  function vout(vin){
+    return VDD / (1 + Math.exp(k*(vin - c)));
+  }
+  // supply current hump: peak near the steepest part of VTC (logistic center c)
+  function isupply(vin){
+    return Ipk * Math.exp(-Math.pow((vin - c)/sig, 2));
+  }
+
+  // ---- build VTC svg ----
+  const W=560,H=240, mL=54,mR=18,mT=14,mB=34;
+  const px = v => mL + (v/VDD)*(W-mL-mR);
+  const pyV = v => H-mB - (v/VDD)*(H-mT-mB);
+  const pyI = v => H-mB - (v/(Ipk*1.12))*(H-mT-mB);
+
+  function axis(svg, ylabel, ymax, yfmt){
+    let s='';
+    // grid + ticks x
+    for(let v=0; v<=8; v+=1){
+      s+=`<line x1="${px(v)}" y1="${mT}" x2="${px(v)}" y2="${H-mB}" stroke="#eef2f7" stroke-width="1"/>`;
+      s+=`<text x="${px(v)}" y="${H-mB+16}" font-size="10" text-anchor="middle" fill="#7a8aa0" font-family="Arial">${v}</text>`;
+    }
+    // y ticks
+    const steps=4;
+    for(let i=0;i<=steps;i++){
+      const val=ymax*i/steps;
+      const yy = (svg.id==='vtc')? pyV(val):pyI(val);
+      s+=`<line x1="${mL}" y1="${yy}" x2="${W-mR}" y2="${yy}" stroke="#eef2f7" stroke-width="1"/>`;
+      s+=`<text x="${mL-6}" y="${yy+3}" font-size="10" text-anchor="end" fill="#7a8aa0" font-family="Arial">${yfmt(val)}</text>`;
+    }
+    // axes
+    s+=`<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="#5a6b82" stroke-width="1.5"/>`;
+    s+=`<line x1="${mL}" y1="${H-mB}" x2="${W-mR}" y2="${H-mB}" stroke="#5a6b82" stroke-width="1.5"/>`;
+    s+=`<text x="${(W)/2}" y="${H-4}" font-size="11" text-anchor="middle" fill="#42526b">Vin [V]</text>`;
+    s+=`<text x="14" y="${(H)/2}" font-size="11" text-anchor="middle" fill="#42526b" transform="rotate(-90 14 ${H/2})">${ylabel}</text>`;
+    return s;
+  }
+
+  // VTC curve path
+  let vtcPath='', curPath='';
+  for(let i=0;i<=160;i++){
+    const v=i/160*VDD;
+    vtcPath += (i? 'L':'M') + px(v).toFixed(1)+' '+pyV(vout(v)).toFixed(1)+' ';
+    curPath += (i? 'L':'M') + px(v).toFixed(1)+' '+pyI(isupply(v)).toFixed(1)+' ';
+  }
+
+  const vtc=document.getElementById('vtc');
+  vtc.innerHTML = axis(vtc,'Vout [V]',VDD,x=>x.toFixed(0))
+    + `<line x1="${px(0)}" y1="${pyV(0)}" x2="${px(VDD)}" y2="${pyV(VDD)}" stroke="#9aa7ba" stroke-width="1.2" stroke-dasharray="5 4"/>`
+    + `<text x="${px(VDD)-4}" y="${pyV(VDD)+14}" font-size="10" fill="#7a8aa0" text-anchor="end">Vout = Vin</text>`
+    + `<line id="vmline" x1="${px(VM)}" y1="${pyV(VM)}" x2="${px(VM)}" y2="${H-mB}" stroke="var(--mark)" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>`
+    + `<path d="${vtcPath}" fill="none" stroke="var(--mark)" stroke-width="2.5"/>`
+    + `<circle cx="${px(VM)}" cy="${pyV(VM)}" r="4" fill="none" stroke="var(--head)" stroke-width="2"/>`
+    + `<text x="${px(VM)+6}" y="${pyV(VM)-6}" font-size="10" fill="var(--head)">V_M (Vout=Vin)</text>`
+    + `<text x="${px(VM)}" y="${H-mB+27}" font-size="10" fill="var(--mark)" text-anchor="middle" font-family="Arial">${VM}</text>`
+    + `<circle id="vtcDot" r="6" fill="var(--in)" stroke="#fff" stroke-width="2"/>`;
+
+  const cur=document.getElementById('cur');
+  cur.innerHTML = axis(cur,'電源電流（相対値）',Ipk,(val)=>{
+        if(val<=0) return '0';
+        if(Math.abs(val-Ipk)<1e-6) return '大';
+        return '';
+      })
+    + `<line x1="${px(c)}" y1="${mT}" x2="${px(c)}" y2="${H-mB}" stroke="var(--mark)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>`
+    + `<text x="${px(c)}" y="${mT+10}" font-size="10" fill="var(--mark)" text-anchor="middle">ピーク</text>`
+    + `<path d="${curPath}" fill="none" stroke="var(--nmos)" stroke-width="2.5"/>`
+    + `<path d="${curPath} L ${px(VDD)} ${pyI(0)} L ${px(0)} ${pyI(0)} Z" fill="var(--nmos)" opacity="0.08"/>`
+    + `<circle id="curDot" r="6" fill="var(--nmos)" stroke="#fff" stroke-width="2"/>`;
+
+  // ---- interactive elements ----
+  const slider=document.getElementById('vin');
+  const rVin=document.getElementById('rVin'), rVout=document.getElementById('rVout'),
+        rCur=document.getElementById('rCur'), rState=document.getElementById('rState');
+  const vouttxt=document.getElementById('vouttxt');
+  const pch=document.getElementById('pch'), nch=document.getElementById('nch');
+  const vtcDot=document.getElementById('vtcDot'), curDot=document.getElementById('curDot');
+  const shoot=document.getElementById('shoot');
+  const flowTop=[...document.querySelectorAll('#flowTop .flowdot')];
+  const flowBot=[...document.querySelectorAll('#flowBot .flowdot')];
+
+  // device "openness": NMOS opens as Vin rises, PMOS opens as Vin falls
+  function nOpen(vin){ return 1/(1+Math.exp(-(vin-1.6)*2.4)); }   // 0..1
+  function pOpen(vin){ return 1/(1+Math.exp((vin-(VDD-1.6))*2.4)); }
+
+  // color blend gray<->device color by openness
+  function chColor(open, base){
+    // base hex -> blend with gray #9E9E9E
+    const g=[158,158,158];
+    const col=base==='n'?[46,125,50]:[106,27,154];
+    const r=Math.round(g[0]+(col[0]-g[0])*open);
+    const gg=Math.round(g[1]+(col[1]-g[1])*open);
+    const b=Math.round(g[2]+(col[2]-g[2])*open);
+    return `rgb(${r},${gg},${b})`;
+  }
+
+  const flowPhase={v:0};
+  function setFlow(dots, points, intensity){
+    // points: array of {x,y} polyline; place dots along based on phase
+    dots.forEach((d,i)=>{
+      if(intensity<=0.02){ d.style.opacity=0; return; }
+      const t=( (flowPhase.v + i/dots.length) %1 );
+      const seg=t*(points.length-1);
+      const idx=Math.floor(seg), fr=seg-idx;
+      const a=points[idx], b=points[Math.min(idx+1,points.length-1)];
+      d.setAttribute('cx', a.x+(b.x-a.x)*fr);
+      d.setAttribute('cy', a.y+(b.y-a.y)*fr);
+      d.style.opacity=Math.min(1,intensity);
+    });
+  }
+  // path points (circuit coords): VDD -> PMOS(S->channel->D) -> out -> NMOS(D->channel->S) -> GND
+  const topPts=[{x:288,y:48},{x:288,y:150},{x:270,y:150},{x:270,y:158},{x:258,y:158},{x:258,y:198},{x:270,y:198},{x:270,y:206},{x:288,y:206},{x:288,y:226}];
+  const botPts=[{x:288,y:226},{x:288,y:246},{x:270,y:246},{x:270,y:254},{x:258,y:254},{x:258,y:294},{x:270,y:294},{x:270,y:302},{x:288,y:302},{x:288,y:392}];
+
+  function update(){
+    const vin=parseFloat(slider.value);
+    const vo=vout(vin), I=isupply(vin);
+    const no=nOpen(vin), po=pOpen(vin);
+
+    rVin.textContent=vin.toFixed(2);
+    rVout.textContent=vo.toFixed(2);
+    const rel=I/Ipk; // 0..1
+    rCur.textContent = rel<0.05?'ほぼ0' : rel<0.4?'少し流れる' : rel<0.8?'かなり流れる':'最大（突き抜け）';
+    vouttxt.textContent=vo.toFixed(1);
+
+    // channel colors / widths
+    pch.setAttribute('stroke', chColor(po,'p'));
+    pch.setAttribute('stroke-width', (3+po*5).toFixed(1));
+    nch.setAttribute('stroke', chColor(no,'n'));
+    nch.setAttribute('stroke-width', (3+no*5).toFixed(1));
+
+    // dots
+    vtcDot.setAttribute('cx',px(vin)); vtcDot.setAttribute('cy',pyV(vo));
+    curDot.setAttribute('cx',px(vin)); curDot.setAttribute('cy',pyI(I));
+
+    // state text (boundaries around transition center c)
+    let st;
+    if(vin < c-0.8){ st='下OFF・上ON → 出力 High'; }
+    else if(vin > c+0.8){ st='下ON・上OFF → 出力 Low'; }
+    else { st='⚡ 両方半開き → 貫通電流が突き抜ける'; }
+    rState.textContent=st;
+    rState.style.color = (vin>c-0.8 && vin<c+0.8) ? 'var(--vdd)' : 'var(--head)';
+
+    // shoot-through emphasis
+    shoot.setAttribute('opacity', I/Ipk>0.35 ? Math.min(1,(I/Ipk-0.35)/0.4).toFixed(2) : 0);
+
+    // flow: low Vin -> top path carries charging current to out (capacitive idea, show mild)
+    //       transition -> strong shoot-through both paths
+    //       high Vin -> bottom path
+    const through = I/Ipk;                  // 0..1 shoot-through
+    setFlow(flowTop, topPts, Math.max(through, po>0.6&&no<0.2?0.25:0));
+    setFlow(flowBot, botPts, Math.max(through, no>0.6&&po<0.2?0.25:0));
+  }
+
+  slider.addEventListener('input',update);
+
+  // animate flow phase
+  function tick(){ flowPhase.v=(flowPhase.v+0.02)%1; update(); requestAnimationFrame(tick); }
+  requestAnimationFrame(tick);
+
+  // auto sweep
+  let sweeping=false, dir=1;
+  const playBtn=document.getElementById('play');
+  playBtn.addEventListener('click',()=>{
+    sweeping=!sweeping; playBtn.textContent=sweeping?'⏸ 停止':'▶ 自動掃引';
+    if(sweeping) sweep();
+  });
+  function sweep(){
+    if(!sweeping) return;
+    let v=parseFloat(slider.value)+dir*0.04;
+    if(v>=8){v=8;dir=-1;} if(v<=0){v=0;dir=1;}
+    slider.value=v; update();
+    setTimeout(()=>requestAnimationFrame(sweep),16);
+  }
+  document.getElementById('reset').addEventListener('click',()=>{
+    sweeping=false;playBtn.textContent='▶ 自動掃引';dir=1;slider.value=0;update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

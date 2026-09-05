@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アナロジー対比：増幅器 vs コンパレータ</title>
+<style>
+  :root{
+    --blue:#1565C0; --orange:#E65100; --red:#D32F2F;
+    --purple:#6A1B9A; --gray:#9E9E9E; --green:#2E7D32;
+    --navy:#0D3C6E; --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;color:var(--ink);}
+  .wrap{width:1240px;margin:0 auto;padding:20px 26px 26px;}
+  h1{font-size:25px;color:var(--navy);margin:0 0 4px;font-weight:800;}
+  .lead{font-size:14.5px;color:#555;margin:0 0 14px;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .card{border-radius:14px;border:2px solid;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.05);}
+  .card.amp{border-color:#9bbbe0;}
+  .card.cmp{border-color:#c9a8de;}
+  .card-head{padding:11px 16px;font-size:17px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;}
+  .amp .card-head{background:var(--blue);}
+  .cmp .card-head{background:var(--purple);}
+  .tag{font-size:12px;font-weight:700;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:999px;}
+  .card-body{padding:14px 16px 16px;}
+  .seesaw-cap{font-size:13px;color:#666;text-align:center;margin:2px 0 6px;}
+  .keyline{font-size:14.5px;font-weight:700;text-align:center;margin:8px 0 2px;}
+  .amp .keyline{color:var(--blue);}
+  .cmp .keyline{color:var(--purple);}
+  .sub{font-size:12.5px;color:#777;text-align:center;margin:0 0 8px;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.8px;}
+  td{border-top:1px solid #eef1f4;padding:6px 6px;vertical-align:top;}
+  td.lbl{color:#888;width:34%;font-weight:700;}
+  .amp td.val{color:var(--blue);font-weight:600;}
+  .cmp td.val{color:var(--purple);font-weight:600;}
+  .footer{margin-top:16px;background:#f7f9fb;border:1px solid #e6ebef;border-radius:12px;padding:12px 16px;font-size:13.5px;color:#444;line-height:1.7;}
+  .footer b{color:var(--navy);}
+  .chip{display:inline-block;padding:1px 8px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;}
+  text{font-family:"Noto Sans CJK JP",sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>同じOPアンプ、つなぎ方で真逆 ― 「差をゼロに保つ」か「差を勝ち負けにする」か</h1>
+  <p class="lead">どちらも＋入力と−入力の差を見ています。違うのは<b>帰還があるか</b>。帰還があれば差をゼロに保ち（増幅器）、無ければ差をそのまま振り切らせます（コンパレータ）。</p>
+
+  <div class="cols">
+    <!-- 増幅器 -->
+    <div class="card amp">
+      <div class="card-head">増幅器（負帰還あり）<span class="tag">仮想短絡が成り立つ</span></div>
+      <div class="card-body">
+        <div class="seesaw-cap">シーソーを自動で水平に戻す装置</div>
+        <svg id="amp" width="540" height="250" viewBox="0 0 540 250"></svg>
+        <div class="keyline">＋入力 ＝ −入力（いつも同じ高さ）</div>
+        <div class="sub">出力を−入力へ戻して、差がゼロになるよう自分で調整する</div>
+        <table>
+          <tr><td class="lbl">入力の差</td><td class="val">ほぼ 0V に保たれる（仮想短絡）</td></tr>
+          <tr><td class="lbl">帰還</td><td class="val">負帰還（出力→−入力へ）</td></tr>
+          <tr><td class="lbl">出力</td><td class="val">入力に比例（利得倍）・連続的</td></tr>
+          <tr><td class="lbl">役割</td><td class="val">大きさを測る・増幅する</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- コンパレータ -->
+    <div class="card cmp">
+      <div class="card-head">コンパレータ（帰還なし）<span class="tag">仮想短絡は成り立たない</span></div>
+      <div class="card-body">
+        <div class="seesaw-cap">バランスを取りにいかない天秤（倒れっぱなし）</div>
+        <svg id="cmp" width="540" height="250" viewBox="0 0 540 250"></svg>
+        <div class="keyline">どちらが高いかで ＋／− レールへ倒れきる</div>
+        <div class="sub">差は残ったまま。ごく小さな差でも目いっぱい振り切る</div>
+        <table>
+          <tr><td class="lbl">入力の差</td><td class="val">そのまま残る（ゼロにしない）</td></tr>
+          <tr><td class="lbl">帰還</td><td class="val">なし（または正帰還＝ヒステリシス）</td></tr>
+          <tr><td class="lbl">出力</td><td class="val">＋レール か −レール の2値・不連続</td></tr>
+          <tr><td class="lbl">役割</td><td class="val">どちらが大きいか判定する</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <b>1行でいうと：</b> 増幅器は「差を打ち消すように出力を戻す」＝<span class="chip" style="background:var(--blue)">バランスを取る</span>　／　
+    コンパレータは「差をそのまま結果にする」＝<span class="chip" style="background:var(--purple)">勝ち負けを出す</span>。<br>
+    同じ NJM4558 でも、<b>出力を−入力へ戻す線があるか／無いか</b>だけで、増幅器にも判定器にもなります。
+  </div>
+</div>
+
+<script>
+/* 共通：シーソー／天秤を描く */
+function drawBeam(svgId, opts){
+  const s=document.getElementById(svgId);
+  const cx=270, pivotY=130, beamLen=150, color=opts.color;
+  const ang = opts.angleDeg*Math.PI/180; // 正=左下がり
+  const lx=cx-beamLen*Math.cos(ang), ly=pivotY-beamLen*Math.sin(ang);
+  const rx=cx+beamLen*Math.cos(ang), ry=pivotY+beamLen*Math.sin(ang);
+  let h='';
+  // 支柱・台
+  h+=`<rect x="${cx-7}" y="${pivotY}" width="14" height="95" fill="#b8bdc3"/>`;
+  h+=`<rect x="${cx-46}" y="225" width="92" height="12" rx="4" fill="#8a9097"/>`;
+  // 梁
+  h+=`<line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="#5a6168" stroke-width="9" stroke-linecap="round"/>`;
+  // 支点（三角）
+  h+=`<polygon points="${cx},${pivotY-2} ${cx-14},${pivotY+16} ${cx+14},${pivotY+16}" fill="#5a6168"/>`;
+  // 皿＋ラベル＋重り
+  function pan(px,py,col,lab,sub,heavy){
+    let g='';
+    g+=`<line x1="${px}" y1="${py}" x2="${px-26}" y2="${py+34}" stroke="#9aa0a6" stroke-width="2"/>`;
+    g+=`<line x1="${px}" y1="${py}" x2="${px+26}" y2="${py+34}" stroke="#9aa0a6" stroke-width="2"/>`;
+    g+=`<path d="M ${px-30} ${py+34} q 30 22 60 0" fill="none" stroke="${col}" stroke-width="3"/>`;
+    // 重り（heavyなら大きい）
+    const r = heavy? 15 : 11;
+    g+=`<circle cx="${px}" cy="${py+30}" r="${r}" fill="${col}" opacity="0.85"/>`;
+    g+=`<text x="${px}" y="${py-18}" font-size="15" font-weight="800" text-anchor="middle" fill="${col}">${lab}</text>`;
+    if(sub) g+=`<text x="${px}" y="${py+60}" font-size="11.5" text-anchor="middle" fill="#777">${sub}</text>`;
+    return g;
+  }
+  h+=pan(lx,ly,'#1565C0','＋入力',opts.lsub,opts.lheavy);
+  h+=pan(rx,ry,opts.rcolor,'−入力',opts.rsub,opts.rheavy);
+  s.innerHTML=h+(opts.extra||'');
+}
+
+/* 増幅器：水平（差ゼロ）。−入力側は出力からの「戻し矢印」で支えられている表現 */
+drawBeam('amp',{
+  angleDeg:0, color:'#1565C0', rcolor:'#1565C0',
+  lsub:'', rsub:'出力が支えて水平に',
+  lheavy:false, rheavy:false,
+  extra:(()=>{
+    // 自動調整の循環矢印（−入力側↑を出力が押し上げるイメージ）
+    let g='';
+    g+=`<path d="M 430 70 q 60 30 0 70" fill="none" stroke="#E65100" stroke-width="2.5" marker-end="url(#arO)"/>`;
+    g+=`<text x="470" y="105" font-size="12" font-weight="700" fill="#E65100">出力で</text>`;
+    g+=`<text x="470" y="120" font-size="12" font-weight="700" fill="#E65100">自動補正</text>`;
+    g+=`<defs><marker id="arO" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#E65100"/></marker></defs>`;
+    // 水平を示す破線
+    g+=`<line x1="60" y1="130" x2="480" y2="130" stroke="#bbb" stroke-dasharray="4 4"/>`;
+    g+=`<text x="64" y="124" font-size="11" fill="#999">水平＝差0</text>`;
+    return g;
+  })()
+});
+
+/* コンパレータ：左(＋入力)がわずかに重く → 大きく倒れる（倒れきり） */
+drawBeam('cmp',{
+  angleDeg:15, color:'#6A1B9A', rcolor:'#6A1B9A',
+  lsub:'', rsub:'',
+  lheavy:true, rheavy:false,
+  extra:(()=>{
+    let g='';
+    // 倒れきりを示す矢印（左の皿の外側・上方へ）
+    g+=`<path d="M 95 175 q -22 -30 -8 -66" fill="none" stroke="#E65100" stroke-width="2.5" marker-end="url(#arO2)"/>`;
+    g+=`<text x="40" y="96" font-size="13" font-weight="800" fill="#E65100">＋レールへ</text>`;
+    g+=`<text x="40" y="113" font-size="13" font-weight="800" fill="#E65100">振り切り</text>`;
+    g+=`<defs><marker id="arO2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#E65100"/></marker></defs>`;
+    // 「ほんの少し重い」を＋入力ラベルの下・皿の左に
+    g+=`<text x="120" y="210" font-size="12" text-anchor="middle" fill="#777">＋入力がほんの少し重いだけ</text>`;
+    // 「差は残ったまま」を右下の余白へ
+    g+=`<text x="470" y="230" font-size="12" text-anchor="end" fill="#777">差は残ったまま振り切る</text>`;
+    return g;
+  })()
+});
+</script>
+</body>
+</html>

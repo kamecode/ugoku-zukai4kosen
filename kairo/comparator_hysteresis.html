@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ヒステリシス / シュミットトリガ</title>
+<style>
+  :root{
+    --blue:#1565C0;     /* 入力 */
+    --orange:#E65100;   /* 出力 */
+    --red:#D32F2F;      /* 電源+ */
+    --purple:#6A1B9A;   /* しきい値・正帰還・注目 */
+    --gray:#9E9E9E;     /* 補助 */
+    --green:#2E7D32;
+    --navy:#0D3C6E;
+    --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#f4f6f8;font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;color:var(--ink);}
+  .wrap{width:1300px;margin:0 auto;padding:18px 24px 26px;}
+  h1{font-size:26px;color:var(--navy);margin:2px 0 2px;font-weight:800;}
+  .sub{font-size:15px;color:#555;margin:0 0 12px;}
+  .stage{display:grid;grid-template-columns:430px 1fr;gap:18px;}
+  .panel{background:#fff;border:1px solid #e2e6ea;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .panel-title{font-size:14px;font-weight:700;color:var(--navy);padding:8px 14px;border-bottom:1px solid #eef1f4;}
+  .circuitWrap,.vtcWrap,.wavewrap{padding:6px 10px 10px;}
+  .controls{margin-top:16px;background:#fff;border:1px solid #e2e6ea;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr auto;gap:14px 26px;align-items:center;}
+  .ctl label{font-size:14px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px;}
+  .ctl .val{font-variant-numeric:tabular-nums;font-weight:800;}
+  input[type=range]{width:100%;}
+  .noise input{accent-color:var(--green);}
+  .hys input{accent-color:var(--purple);}
+  .toggle{display:flex;gap:10px;align-items:center;}
+  .toggle button{font-size:13px;font-weight:700;border:1.5px solid #cfd6dc;background:#fff;color:#555;border-radius:8px;padding:7px 14px;cursor:pointer;}
+  .toggle button.on{background:var(--purple);color:#fff;border-color:var(--purple);}
+  .readout{font-size:13.5px;line-height:1.7;}
+  .readout b{font-variant-numeric:tabular-nums;}
+  .legend{font-size:12px;color:#666;margin-top:6px;}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  .note{grid-column:1/-1;font-size:12.5px;color:#777;border-top:1px dashed #dfe3e7;padding-top:10px;margin-top:2px;}
+  text{font-family:"Noto Sans CJK JP",sans-serif;}
+  .kpi{display:inline-block;padding:2px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ヒステリシス（シュミットトリガ）― しきい値を2つ持たせてバタつきを止める</h1>
+  <p class="sub">出力を＋入力へ少し戻す（正帰還）と、しきい値が出力の状態で動きます。上がるときと下がるときで判定点が違う＝ノイズに強い。</p>
+
+  <div class="stage">
+    <!-- 左：回路 -->
+    <div class="panel">
+      <div class="panel-title">非反転シュミットトリガ回路（出力→＋入力へ正帰還）</div>
+      <div class="circuitWrap">
+        <svg id="circuit" width="410" height="280" viewBox="0 0 410 280"></svg>
+        <div class="legend">
+          <span class="chip" style="background:var(--blue)"></span>入力 V<sub>in</sub>　
+          <span class="chip" style="background:var(--purple)"></span>正帰還 R<sub>f</sub>・しきい値　
+          <span class="chip" style="background:var(--orange)"></span>出力 V<sub>out</sub>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：VTC（ヒステリシスループ） -->
+    <div class="panel">
+      <div class="panel-title">入出力特性（V<sub>in</sub>→V<sub>out</sub>）― 矢印の向きでループになる</div>
+      <div class="vtcWrap">
+        <svg id="vtc" width="800" height="280" viewBox="0 0 800 280"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 波形（横長・ノイズ比較） -->
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-title">ノイズが乗った入力で比べる ― 上：しきい値1つ（バタつく）／下：ヒステリシス（1回で決まる）</div>
+    <div class="wavewrap">
+      <svg id="wave" width="1252" height="300" viewBox="0 0 1252 300"></svg>
+    </div>
+  </div>
+
+  <!-- コントロール -->
+  <div class="controls">
+    <div class="ctl hys">
+      <label>ヒステリシス幅　V<sub>TH</sub><sup>+</sup> − V<sub>TH</sub><sup>−</sup> ＝ <span class="val" id="hysVal" style="color:var(--purple)">2.0 V</span></label>
+      <input type="range" id="hys" min="0" max="4" step="0.2" value="2">
+    </div>
+    <div class="ctl noise">
+      <label>入力ノイズの大きさ ＝ <span class="val" id="noiseVal" style="color:var(--green)">中</span></label>
+      <input type="range" id="noise" min="0" max="3" step="1" value="2">
+    </div>
+    <div class="toggle">
+      <span style="font-size:13px;font-weight:700;color:#555;">VTC矢印アニメ：</span>
+      <button id="animBtn">再生 ▶</button>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div class="note">
+      正帰還の量で 2つのしきい値が決まります（中心 0V のとき対称）：<b>上がるとき</b>は V<sub>TH</sub><sup>+</sup> を超えるまで出力は下のまま、<b>下がるとき</b>は V<sub>TH</sub><sup>−</sup> を割るまで上のまま。
+      この「行き」と「帰り」のズレ＝ヒステリシス幅が、ノイズより大きければ出力は1回しか切り替わりません。
+    </div>
+  </div>
+</div>
+
+<script>
+const RAIL = 7;
+const hysEl = document.getElementById('hys');
+const noiseEl = document.getElementById('noise');
+let HYS = 2.0;          // ヒステリシス全幅
+let NOISE = 0.6;        // ノイズ振幅
+const NOISE_MAP = [0, 0.6, 1.2, 2.0];
+const NOISE_LBL = ['なし','小','中','大'];
+
+function thresholds(){ return {tp:+HYS/2, tm:-HYS/2}; } // 中心0V対称
+
+/* ===== 回路図 ===== */
+function drawCircuit(){
+  const s=document.getElementById('circuit');
+  const opx=180, opy=110;
+  const triL=opx, triR=opx+110, triMidY=opy+50;
+  const inMinusY=opy+24, inPlusY=opy+76;
+  let h='';
+  // 三角
+  h+=`<polygon points="${triL},${opy} ${triR},${triMidY} ${triL},${opy+100}" fill="#fff" stroke="#333" stroke-width="2.5"/>`;
+  h+=`<text x="${triL+24}" y="${inMinusY+5}" font-size="18" font-weight="800" fill="#333">−</text>`;
+  h+=`<text x="${triL+24}" y="${inPlusY+6}" font-size="17" font-weight="800" fill="#333">+</text>`;
+  h+=`<text x="${triL+38}" y="${triMidY+4}" font-size="12" fill="#555">NJM4558</text>`;
+  // 電源
+  h+=`<line x1="${opx+36}" y1="${opy-2}" x2="${opx+36}" y2="${opy-22}" stroke="#D32F2F" stroke-width="2.5"/>`;
+  h+=`<text x="${opx+42}" y="${opy-11}" font-size="12" font-weight="700" fill="#D32F2F">+8V</text>`;
+  h+=`<line x1="${opx+36}" y1="${opy+102}" x2="${opx+36}" y2="${opy+122}" stroke="#1565C0" stroke-width="2.5"/>`;
+  h+=`<text x="${opx+42}" y="${opy+120}" font-size="12" font-weight="700" fill="#1565C0">−8V</text>`;
+
+  // −入力 → Vref(=0V, GND基準)
+  const rmX=triL-60;
+  h+=`<line x1="${rmX}" y1="${inMinusY}" x2="${triL}" y2="${inMinusY}" stroke="#333" stroke-width="2"/>`;
+  h+=`<line x1="${rmX}" y1="${inMinusY}" x2="${rmX}" y2="${inMinusY+22}" stroke="#333" stroke-width="2"/>`;
+  h+=`<line x1="${rmX-10}" y1="${inMinusY+22}" x2="${rmX+10}" y2="${inMinusY+22}" stroke="#333" stroke-width="2.5"/>`;
+  h+=`<text x="${rmX+4}" y="${inMinusY-6}" font-size="11" fill="#555">基準0V</text>`;
+
+  // 入力 Vin → R1 → ＋入力ノード（青）
+  const inX=20, nodeX=triL-60;
+  h+=`<line x1="${inX+18}" y1="${inPlusY}" x2="${inX+44}" y2="${inPlusY}" stroke="#1565C0" stroke-width="2.5"/>`;
+  // FG
+  h+=`<circle cx="${inX+18}" cy="${inPlusY}" r="16" fill="#fff" stroke="#1565C0" stroke-width="2.5"/>`;
+  h+=`<path d="M ${inX+9} ${inPlusY} q 4.5 -6 9 0 q 4.5 6 9 0" fill="none" stroke="#1565C0" stroke-width="1.8"/>`;
+  h+=`<text x="${inX+18}" y="${inPlusY+30}" font-size="11" font-weight="700" text-anchor="middle" fill="#1565C0">FG</text>`;
+  // R1
+  h+=`<rect x="${inX+44}" y="${inPlusY-8}" width="34" height="16" fill="#fff" stroke="#1565C0" stroke-width="2"/>`;
+  h+=`<text x="${inX+61}" y="${inPlusY-12}" font-size="10" text-anchor="middle" fill="#1565C0">R1</text>`;
+  h+=`<line x1="${inX+78}" y1="${inPlusY}" x2="${nodeX}" y2="${inPlusY}" stroke="#1565C0" stroke-width="2.5"/>`;
+  // ＋入力ノード
+  h+=`<line x1="${nodeX}" y1="${inPlusY}" x2="${triL}" y2="${inPlusY}" stroke="#6A1B9A" stroke-width="2.5"/>`;
+  h+=`<circle cx="${nodeX}" cy="${inPlusY}" r="3.5" fill="#6A1B9A"/>`;
+
+  // 出力（橙）
+  const outX=triR+70;
+  h+=`<line x1="${triR}" y1="${triMidY}" x2="${outX}" y2="${triMidY}" stroke="#E65100" stroke-width="3"/>`;
+  h+=`<circle cx="${outX}" cy="${triMidY}" r="5" fill="#E65100"/>`;
+  h+=`<text x="${outX-2}" y="${triMidY-12}" font-size="13" font-weight="800" text-anchor="middle" fill="#E65100">V<tspan baseline-shift="sub" font-size="9">out</tspan></text>`;
+
+  // 正帰還 Rf：出力 → ＋入力ノード（紫・上を回す）
+  const topY=opy-46;
+  h+=`<line x1="${outX}" y1="${triMidY}" x2="${outX}" y2="${topY}" stroke="#6A1B9A" stroke-width="2.5"/>`;
+  h+=`<line x1="${outX}" y1="${topY}" x2="${nodeX}" y2="${topY}" stroke="#6A1B9A" stroke-width="2.5"/>`;
+  h+=`<line x1="${nodeX}" y1="${topY}" x2="${nodeX}" y2="${inPlusY}" stroke="#6A1B9A" stroke-width="2.5"/>`;
+  // Rf box（上の横線上）
+  const rfcx=(outX+nodeX)/2;
+  h+=`<rect x="${rfcx-17}" y="${topY-8}" width="34" height="16" fill="#fff" stroke="#6A1B9A" stroke-width="2"/>`;
+  h+=`<text x="${rfcx}" y="${topY-12}" font-size="10" text-anchor="middle" fill="#6A1B9A">Rf（正帰還）</text>`;
+  // 「＋入力へ戻す」注記
+  h+=`<text x="${nodeX-6}" y="${inPlusY+22}" font-size="10.5" text-anchor="end" fill="#6A1B9A">＋入力へ</text>`;
+  h+=`<text x="${nodeX-6}" y="${inPlusY+36}" font-size="10.5" text-anchor="end" fill="#6A1B9A">戻す</text>`;
+
+  s.innerHTML=h;
+}
+
+/* ===== VTC（ヒステリシスループ） ===== */
+let animOn=false, animT=0, animRAF=null;
+function drawVTC(markerVin){
+  const s=document.getElementById('vtc');
+  const W=800,H=280, padL=56,padR=24,padT=18,padB=40;
+  const x0=padL,x1=W-padR,y0=padT,y1=H-padB;
+  const cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const xspan=(x1-x0)/2-10, yspan=(y1-y0)/2-6;
+  const XR=7; // Vin 範囲 ±7
+  function X(v){return cx+(v/XR)*xspan;}
+  function Y(v){return cy-(v/RAIL)*yspan;}
+  const {tp,tm}=thresholds();
+  let h='';
+  // 軸
+  h+=`<line x1="${x0}" y1="${cy}" x2="${x1}" y2="${cy}" stroke="#ccc"/>`;
+  h+=`<line x1="${cx}" y1="${y0}" x2="${cx}" y2="${y1}" stroke="#ccc"/>`;
+  h+=`<text x="${x1-4}" y="${cy-8}" font-size="11" text-anchor="end" fill="#999">V<tspan baseline-shift="sub" font-size="8">in</tspan></text>`;
+  h+=`<text x="${cx+10}" y="${y0+14}" font-size="11" fill="#999">V<tspan baseline-shift="sub" font-size="8">out</tspan></text>`;
+  h+=`<text x="${X(0)-6}" y="${Y(RAIL)+13}" font-size="10" text-anchor="end" fill="#999">+7</text>`;
+  h+=`<text x="${X(0)-6}" y="${Y(-RAIL)-4}" font-size="10" text-anchor="end" fill="#999">−7</text>`;
+  // しきい値の縦ガイド
+  h+=`<line x1="${X(tm)}" y1="${y0}" x2="${X(tm)}" y2="${y1}" stroke="#6A1B9A" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>`;
+  h+=`<line x1="${X(tp)}" y1="${y0}" x2="${X(tp)}" y2="${y1}" stroke="#6A1B9A" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.7"/>`;
+  h+=`<text x="${X(tm)}" y="${y1+16}" font-size="11" font-weight="700" text-anchor="middle" fill="#6A1B9A">V_TH⁻=${tm.toFixed(1)}</text>`;
+  h+=`<text x="${X(tp)}" y="${y1+16}" font-size="11" font-weight="700" text-anchor="middle" fill="#6A1B9A">V_TH⁺=${tp.toFixed(1)}</text>`;
+
+  // ループ：下の枝（出力=−7、Vin<tpの間）→ tpで↑ → 上の枝（出力=+7、Vin>tmの間）→ tmで↓
+  // 下枝
+  h+=`<line x1="${X(-XR)}" y1="${Y(-RAIL)}" x2="${X(tp)}" y2="${Y(-RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+  // 上昇遷移
+  h+=`<line x1="${X(tp)}" y1="${Y(-RAIL)}" x2="${X(tp)}" y2="${Y(RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+  // 上枝
+  h+=`<line x1="${X(tp)}" y1="${Y(RAIL)}" x2="${X(XR)}" y2="${Y(RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+  h+=`<line x1="${X(tm)}" y1="${Y(RAIL)}" x2="${X(XR)}" y2="${Y(RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+  // 下降遷移
+  h+=`<line x1="${X(tm)}" y1="${Y(RAIL)}" x2="${X(tm)}" y2="${Y(-RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+  h+=`<line x1="${X(-XR)}" y1="${Y(-RAIL)}" x2="${X(tm)}" y2="${Y(-RAIL)}" stroke="#E65100" stroke-width="3"/>`;
+
+  // 行き帰りの矢印
+  function arrow(xa,ya,xb,yb,col){
+    const ang=Math.atan2(yb-ya,xb-xa);
+    const mx=(xa+xb)/2,my=(ya+yb)/2;
+    const a=8;
+    h+=`<polygon points="${mx},${my} ${mx-a*Math.cos(ang-0.5)},${my-a*Math.sin(ang-0.5)} ${mx-a*Math.cos(ang+0.5)},${my-a*Math.sin(ang+0.5)}" fill="${col}"/>`;
+  }
+  // 行き（下枝右向き＋上昇）
+  arrow(X(-3),Y(-RAIL),X(-2.9),Y(-RAIL),'#E65100');
+  arrow(X(tp),Y(0.5),X(tp),Y(0.4),'#E65100');
+  // 帰り（上枝左向き＋下降）
+  arrow(X(3),Y(RAIL),X(2.9),Y(RAIL),'#c44e00');
+  arrow(X(tm),Y(-0.5),X(tm),Y(-0.4),'#c44e00');
+  // ラベル
+  h+=`<text x="${X(-4.5)}" y="${Y(-RAIL)+16}" font-size="11" fill="#E65100">行き（上げていく）</text>`;
+  h+=`<text x="${X(4.5)}" y="${Y(RAIL)-9}" font-size="11" text-anchor="end" fill="#c44e00">帰り（下げていく）</text>`;
+
+  // 現在の動作点マーカー（アニメ時）
+  if(markerVin!==undefined){
+    // 状態は履歴依存。アニメ用に animState を使う
+    const vo = animOut;
+    h+=`<circle cx="${X(markerVin)}" cy="${Y(vo)}" r="7" fill="#6A1B9A" stroke="#fff" stroke-width="2"/>`;
+  }
+  s.innerHTML=h;
+}
+
+/* ===== 波形（ノイズ比較） ===== */
+function genInput(N){
+  // ゆっくりした山（振幅やや浅め）＋高周波ノイズ。山の頂点付近がしきい値帯を緩やかに通過し、
+  // しきい値1つだとノイズで何度も交差する状況を作る。
+  const arr=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const base = 3.0*Math.sin(2*Math.PI*1*t);
+    // 高周波の決定論的擬似ノイズ（再現性のため固定式）
+    const n = NOISE*( Math.sin(t*220.0)*0.5 + Math.sin(t*131.0+0.7)*0.3 + Math.sin(t*340.0+2.1)*0.2 );
+    arr.push(base+n);
+  }
+  return arr;
+}
+function simSingle(inp, thr){ // しきい値1つ（=0想定だがthrで）
+  return inp.map(v=> v>thr? RAIL : -RAIL);
+}
+function simHys(inp, tp, tm){
+  let st=-RAIL; const out=[];
+  for(const v of inp){
+    if(st<0 && v>tp) st=RAIL;
+    else if(st>0 && v<tm) st=-RAIL;
+    out.push(st);
+  }
+  return out;
+}
+function countEdges(o){let c=0;for(let i=1;i<o.length;i++)if(o[i]!==o[i-1])c++;return c;}
+
+function drawWave(){
+  const s=document.getElementById('wave');
+  const W=1252,H=300,padL=52,padR=20;
+  const N=600;
+  const inp=genInput(N);
+  const {tp,tm}=thresholds();
+  const oS=simSingle(inp,0);
+  const oH=simHys(inp,tp,tm);
+
+  function block(title,yTop,yBot,out,showThr){
+    let h='';
+    const x0=padL,x1=W-padR, mid=(yTop+yBot)/2, yspan=(yBot-yTop)/2-10;
+    function X(t){return x0+t*(x1-x0);}
+    function Y(v){return mid-(v/RAIL)*yspan;}
+    h+=`<line x1="${x0}" y1="${mid}" x2="${x1}" y2="${mid}" stroke="#ddd"/>`;
+    h+=`<text x="6" y="${yTop+10}" font-size="11" font-weight="700" fill="#0D3C6E">${title}</text>`;
+    // しきい値線
+    if(showThr==='single'){
+      h+=`<line x1="${x0}" y1="${Y(0)}" x2="${x1}" y2="${Y(0)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
+      h+=`<text x="${x1-2}" y="${Y(0)-5}" font-size="10" text-anchor="end" fill="#6A1B9A">しきい値（1つ・0V）</text>`;
+    }else{
+      h+=`<line x1="${x0}" y1="${Y(tp)}" x2="${x1}" y2="${Y(tp)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
+      h+=`<line x1="${x0}" y1="${Y(tm)}" x2="${x1}" y2="${Y(tm)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
+      // 帯
+      h+=`<rect x="${x0}" y="${Y(tp)}" width="${x1-x0}" height="${Y(tm)-Y(tp)}" fill="#6A1B9A" opacity="0.06"/>`;
+      h+=`<text x="${x1-2}" y="${Y(tp)-5}" font-size="10" text-anchor="end" fill="#6A1B9A">V_TH⁺</text>`;
+      h+=`<text x="${x1-2}" y="${Y(tm)+12}" font-size="10" text-anchor="end" fill="#6A1B9A">V_TH⁻</text>`;
+    }
+    // 入力
+    let pin='';for(let i=0;i<=N;i++)pin+=(i?'L':'M')+X(i/N).toFixed(1)+' '+Y(inp[i]).toFixed(1)+' ';
+    h+=`<path d="${pin}" fill="none" stroke="#1565C0" stroke-width="1.8" opacity="0.9"/>`;
+    // 出力
+    let po='';for(let i=0;i<=N;i++)po+=(i?'L':'M')+X(i/N).toFixed(1)+' '+Y(out[i]).toFixed(1)+' ';
+    h+=`<path d="${po}" fill="none" stroke="#E65100" stroke-width="2.6"/>`;
+    // エッジ数
+    const ec=countEdges(out);
+    const col = (showThr==='single' && ec>2) ? '#D32F2F' : '#2E7D32';
+    h+=`<text x="${x0+2}" y="${yBot-2}" font-size="11" font-weight="700" fill="${col}">出力の切替回数：${ec} 回</text>`;
+    return h;
+  }
+  let h='';
+  h+=block('しきい値1つ（ヒステリシスなし）', 14, 142, oS, 'single');
+  h+=block('ヒステリシスあり', 162, 290, oH, 'hys');
+  // 凡例
+  h+=`<line x1="${W-230}" y1="10" x2="${W-210}" y2="10" stroke="#1565C0" stroke-width="2"/><text x="${W-206}" y="14" font-size="10" fill="#1565C0">入力(ノイズ込み)</text>`;
+  h+=`<line x1="${W-120}" y1="10" x2="${W-100}" y2="10" stroke="#E65100" stroke-width="2.6"/><text x="${W-96}" y="14" font-size="10" fill="#E65100">出力</text>`;
+  s.innerHTML=h;
+
+  // readout用にエッジ数を返す
+  return {eS:countEdges(oS), eH:countEdges(oH)};
+}
+
+/* ===== readout ===== */
+function drawReadout(eS,eH){
+  const el=document.getElementById('readout');
+  const {tp,tm}=thresholds();
+  const safe = HYS >= NOISE*2.0; // ヒステリシス幅がノイズ全振幅を上回れば安全の目安
+  el.innerHTML =
+    `しきい値：V<sub>TH</sub><sup>+</sup>=<b>${tp.toFixed(1)}V</b> / V<sub>TH</sub><sup>−</sup>=<b>${tm.toFixed(1)}V</b><br>`+
+    `切替回数 → 1つ:<b>${eS}回</b> ／ ヒステリシス:<b>${eH}回</b>　`+
+    `<span class="kpi" style="background:${safe?'#2E7D32':'#D32F2F'}">${safe?'ノイズに勝っている':'幅が不足ぎみ'}</span>`;
+}
+
+/* ===== 更新 ===== */
+function update(){
+  HYS=parseFloat(hysEl.value);
+  const ni=parseInt(noiseEl.value);
+  NOISE=NOISE_MAP[ni];
+  document.getElementById('hysVal').textContent=HYS.toFixed(1)+' V';
+  document.getElementById('noiseVal').textContent=NOISE_LBL[ni];
+  drawCircuit();
+  drawVTC(animOn?animVin:undefined);
+  const {eS,eH}=drawWave();
+  drawReadout(eS,eH);
+}
+hysEl.addEventListener('input',update);
+noiseEl.addEventListener('input',update);
+
+/* ===== VTC矢印アニメ（動作点が一周） ===== */
+let animVin=-7, animOut=-RAIL, animDir=1;
+const animBtn=document.getElementById('animBtn');
+function animStep(){
+  const {tp,tm}=thresholds();
+  animVin += animDir*0.09;
+  if(animDir>0 && animVin>7){animDir=-1;animVin=7;}
+  if(animDir<0 && animVin<-7){animDir=1;animVin=-7;}
+  if(animOut<0 && animVin>tp) animOut=RAIL;
+  if(animOut>0 && animVin<tm) animOut=-RAIL;
+  drawVTC(animVin);
+  animRAF=requestAnimationFrame(animStep);
+}
+animBtn.addEventListener('click',()=>{
+  animOn=!animOn;
+  if(animOn){animBtn.textContent='停止 ■';animBtn.classList.add('on');animStep();}
+  else{animBtn.textContent='再生 ▶';animBtn.classList.remove('on');cancelAnimationFrame(animRAF);update();}
+});
+
+update();
+</script>
+</body>
+</html>

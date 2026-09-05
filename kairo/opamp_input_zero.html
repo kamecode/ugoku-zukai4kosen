@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>入力電流ゼロ＝見るだけで触らない</title>
+<style>
+  :root{
+    --in:#1565C0; --out:#E65100; --vplus:#D32F2F; --gnd:#9E9E9E;
+    --head:#0D3C6E; --ok:#2E7D32; --ink:#1b2733; --paper:#fbfaf6; --bad:#b00020;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Sans CJK JP","Hiragino Sans","Yu Gothic",sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 20px 28px;}
+  h1{font-size:21px;color:var(--head);margin:4px 0 2px;letter-spacing:.02em;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 14px;line-height:1.6;}
+  .tabs{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap;}
+  .tab{border:1.5px solid #c7cdd6;background:#fff;border-radius:999px;
+    padding:7px 16px;font-size:13.5px;cursor:pointer;color:#4a5560;font-weight:600;transition:.15s;}
+  .tab:hover{border-color:#9aa3ad;}
+  .tab.active{background:var(--head);color:#fff;border-color:var(--head);}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;}
+  .panel{background:#fff;border:1.5px solid #e3e1d8;border-radius:14px;
+    padding:14px 14px 8px;box-shadow:0 2px 10px rgba(30,40,60,.05);}
+  .panel.bad{border-color:#f0c9c4;}
+  .panel.good{border-color:#bfe3c4;}
+  .panel h2{font-size:14px;margin:0 0 6px;display:flex;align-items:center;gap:7px;}
+  .panel.bad h2{color:var(--bad);} .panel.good h2{color:var(--ok);}
+  .panel h2 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  svg{width:100%;height:auto;display:block;}
+  .controls{margin:16px 0 6px;background:#fff;border:1.5px solid #e3e1d8;border-radius:14px;padding:14px 18px;}
+  .ctrl-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctrl-row label{font-size:13px;font-weight:700;color:#444;min-width:150px;}
+  input[type=range]{flex:1;min-width:200px;accent-color:var(--in);height:5px;}
+  .readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+  .rcard{border:1.5px solid #eee;border-radius:10px;padding:8px 10px;text-align:center;background:#fcfcfa;}
+  .rcard .k{font-size:11.5px;color:#7a8590;margin-bottom:3px;}
+  .rcard .v{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .note{font-size:12.5px;color:#5a6573;margin:12px 2px 0;line-height:1.7;
+    background:#f4f6f9;border-left:4px solid var(--head);padding:9px 12px;border-radius:0 8px 8px 0;}
+  text{font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .modeline{font-size:13px;color:#444;margin:2px 2px 12px;min-height:20px;}
+  .hint{font-size:12px;color:#7a8590;margin-left:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>入力電流ゼロ ＝「見るだけで触らない」</h1>
+  <p class="sub">理想OPアンプの入力は<b>電圧を覗き見するだけで電流を吸い取らない</b>（入力インピーダンスが極めて高い）。<br>
+  この性質のありがたみは、<b>「弱い信号源（高い抵抗の奥にある電圧）を、乱さずに読めるか」</b>で一番はっきりします。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="compare">① 電流を吸う計測器 vs 吸わないOPアンプ</button>
+    <button class="tab" data-mode="why">② なぜフォロワを挟むと救えるのか</button>
+  </div>
+  <div class="modeline" id="modeline"></div>
+
+  <div class="stage">
+    <div class="panel bad">
+      <h2><span class="dot" style="background:var(--bad)"></span>電流を吸う負荷を直接つなぐ → 電圧が下がる</h2>
+      <svg id="left" viewBox="0 0 460 320"></svg>
+    </div>
+    <div class="panel good">
+      <h2><span class="dot" style="background:var(--ok)"></span>OPアンプで覗く → 電圧はそのまま</h2>
+      <svg id="right" viewBox="0 0 460 320"></svg>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <label for="rload">負荷の入力抵抗 R_load</label>
+      <input type="range" id="rload" min="0" max="6" step="0.05" value="2">
+      <span id="rloadval" style="font-weight:800;color:var(--bad);min-width:96px;text-align:right;">10 kΩ</span>
+      <span class="hint">右に動かすほど「電流を吸わない（高インピーダンス）」計測器</span>
+    </div>
+
+    <div class="readout">
+      <div class="rcard"><div class="k">信号源の本当の電圧</div><div class="v" id="rd-src" style="color:var(--head)">2.50 V</div></div>
+      <div class="rcard"><div class="k">電流を吸う負荷で読むと</div><div class="v" id="rd-bad" style="color:var(--bad)">—</div></div>
+      <div class="rcard"><div class="k">OPアンプで読むと</div><div class="v" id="rd-good" style="color:var(--ok)">—</div></div>
+    </div>
+
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<script>
+// 信号源：5V を 等しい2本の抵抗 Rs=100kΩ で分圧 → 開放電圧 2.50V、出力抵抗 Rout=50kΩ
+const VS=5.0, RS=100;      // kΩ（上下とも100k）
+const Vtrue=2.50;          // 開放（負荷なし）の分圧電圧
+const Rout=50;             // 信号源の出力抵抗（上下100kの並列）= 50kΩ
+let mode="compare";
+let rloadExp=2;            // スライダー値（0..6）→ R_load = 10^rloadExp kΩ?  →下で換算
+
+const $=id=>document.getElementById(id);
+
+// スライダー→負荷抵抗(kΩ)。0→10kΩ, 6→10MΩ 付近を対数で。
+function Rload(){ return 10*Math.pow(10, rloadExp/6*3); } // 10k .. 10M kΩ? 調整
+// 上式だと単位がぶれるので明示換算に変更：
+function RloadK(){
+  // rloadExp 0..6 を 10kΩ..10000kΩ(=10MΩ) に対数マップ
+  const minK=10, maxK=10000;
+  const t=rloadExp/6;
+  return minK*Math.pow(maxK/minK, t);
+}
+function fmtR(k){
+  if(k>=1000) return (k/1000).toFixed(k>=10000?0:1)+" MΩ";
+  return Math.round(k)+" kΩ";
+}
+
+function readBad(){
+  // 負荷を直接つなぐ：Vread = Vtrue * Rload/(Rout+Rload)
+  const RL=RloadK();
+  return Vtrue * RL/(Rout+RL);
+}
+function readGood(){
+  // OPアンプ入力（理想：入力電流ゼロ＝Rload→∞）：常に Vtrue
+  // ＋わずかな現実のバイアス電流の影響は無視できる
+  return Vtrue;
+}
+
+// 左：信号源＋電流を吸う負荷（電圧計/計測器）
+function drawLeft(){
+  const RL=RloadK();
+  const vread=readBad();
+  const drop=Vtrue-vread;
+  const sag = drop>0.02; // 電圧降下が目に見えるか
+  // 電流の太さ：吸う電流に比例（RLが小さいほど太い）
+  const I = vread/RL; // mA相当（V/kΩ=mA）
+  const cw = Math.max(0, Math.min(6, I*40)); // 矢印太さ
+  const flow = cw>0.4;
+  return `
+  <rect width="460" height="320" fill="#fff"/>
+  <!-- 電源 -->
+  <text x="60" y="40" font-size="11" fill="#D32F2F" font-weight="700">5V</text>
+  <line x1="60" y1="46" x2="60" y2="80" stroke="#D32F2F" stroke-width="2.5"/>
+  <!-- 上抵抗 Rs -->
+  <rect x="51" y="80" width="18" height="46" fill="#fff" stroke="#555" stroke-width="2"/>
+  <text x="36" y="106" font-size="10.5" fill="#555" text-anchor="middle">Rs</text>
+  <line x1="60" y1="126" x2="60" y2="150" stroke="#555" stroke-width="2.5"/>
+  <!-- 中点（信号源の出力ノード） -->
+  <circle cx="60" cy="150" r="4.5" fill="#0D3C6E"/>
+  <text x="60" y="143" font-size="10" fill="#0D3C6E" text-anchor="middle"></text>
+  <!-- 下抵抗 Rs -->
+  <line x1="60" y1="150" x2="60" y2="174" stroke="#555" stroke-width="2.5"/>
+  <rect x="51" y="174" width="18" height="46" fill="#fff" stroke="#555" stroke-width="2"/>
+  <text x="36" y="200" font-size="10.5" fill="#555" text-anchor="middle">Rs</text>
+  <line x1="60" y1="220" x2="60" y2="250" stroke="#555" stroke-width="2.5"/>
+  <line x1="47" y1="250" x2="73" y2="250" stroke="#9E9E9E" stroke-width="2.5"/>
+  <line x1="52" y1="256" x2="68" y2="256" stroke="#9E9E9E" stroke-width="2"/>
+  <text x="60" y="272" font-size="9.5" fill="#9E9E9E" text-anchor="middle">GND</text>
+  <text x="92" y="100" font-size="10.5" fill="#0D3C6E">弱い信号源</text>
+  <text x="92" y="114" font-size="9.5" fill="#7a8590">（高い抵抗の奥）</text>
+  <!-- 中点から右へ配線 -->
+  <line x1="60" y1="150" x2="250" y2="150" stroke="#1565C0" stroke-width="2.5"/>
+  <!-- 電流の流れ表示 -->
+  ${flow?`<line x1="115" y1="150" x2="180" y2="150" stroke="#b00020" stroke-width="${cw}" opacity="0.55"/>
+  <polygon points="180,${150-cw-2} 196,150 180,${150+cw+2}" fill="#b00020" opacity="0.7"/>
+  <text x="150" y="138" font-size="10.5" fill="#b00020" text-anchor="middle" font-weight="700">電流が流れ込む</text>`
+  :`<text x="150" y="138" font-size="10.5" fill="#9E9E9E" text-anchor="middle">電流ほぼ無し</text>`}
+  <!-- 負荷（計測器） -->
+  <rect x="250" y="120" width="120" height="60" rx="8" fill="#fdf0ee" stroke="#b00020" stroke-width="2"/>
+  <text x="310" y="146" font-size="12" fill="#b00020" text-anchor="middle" font-weight="800">計測器</text>
+  <text x="310" y="166" font-size="11" fill="#b00020" text-anchor="middle">入力抵抗 ${fmtR(RL)}</text>
+  <line x1="310" y1="180" x2="310" y2="250" stroke="#1565C0" stroke-width="2"/>
+  <line x1="297" y1="250" x2="323" y2="250" stroke="#9E9E9E" stroke-width="2.5"/>
+  <text x="310" y="270" font-size="9.5" fill="#9E9E9E" text-anchor="middle">GND</text>
+  <!-- 読めた電圧 -->
+  <rect x="252" y="208" width="170" height="44" rx="8" fill="#fff" stroke="#b00020" stroke-width="1.5"/>
+  <text x="337" y="226" font-size="10.5" fill="#7a8590" text-anchor="middle">読めた電圧</text>
+  <text x="337" y="244" font-size="16" fill="#b00020" text-anchor="middle" font-weight="800">${vread.toFixed(2)} V ${sag?"↓":""}</text>
+  ${sag?`<text x="230" y="300" font-size="11.5" fill="#b00020" text-anchor="middle" font-weight="700">本当は2.50Vなのに、吸われて ${drop.toFixed(2)}V 下がった</text>`
+  :`<text x="230" y="300" font-size="11.5" fill="#2E7D32" text-anchor="middle" font-weight="700">吸う電流が小さければ、ほぼ正しく読める</text>`}
+  `;
+}
+
+// 右：同じ信号源＋OPアンプ（フォロワ）で覗く
+function drawRight(){
+  const vread=readGood();
+  return `
+  <rect width="460" height="320" fill="#fff"/>
+  <!-- 電源 -->
+  <text x="60" y="40" font-size="11" fill="#D32F2F" font-weight="700">5V</text>
+  <line x1="60" y1="46" x2="60" y2="80" stroke="#D32F2F" stroke-width="2.5"/>
+  <rect x="51" y="80" width="18" height="46" fill="#fff" stroke="#555" stroke-width="2"/>
+  <text x="36" y="106" font-size="10.5" fill="#555" text-anchor="middle">Rs</text>
+  <line x1="60" y1="126" x2="60" y2="150" stroke="#555" stroke-width="2.5"/>
+  <circle cx="60" cy="150" r="4.5" fill="#0D3C6E"/>
+  <line x1="60" y1="150" x2="60" y2="174" stroke="#555" stroke-width="2.5"/>
+  <rect x="51" y="174" width="18" height="46" fill="#fff" stroke="#555" stroke-width="2"/>
+  <text x="36" y="200" font-size="10.5" fill="#555" text-anchor="middle">Rs</text>
+  <line x1="60" y1="220" x2="60" y2="250" stroke="#555" stroke-width="2.5"/>
+  <line x1="47" y1="250" x2="73" y2="250" stroke="#9E9E9E" stroke-width="2.5"/>
+  <line x1="52" y1="256" x2="68" y2="256" stroke="#9E9E9E" stroke-width="2"/>
+  <text x="60" y="272" font-size="9.5" fill="#9E9E9E" text-anchor="middle">GND</text>
+  <text x="92" y="100" font-size="10.5" fill="#0D3C6E">同じ弱い信号源</text>
+  <!-- 中点 → OPアンプ ＋入力 -->
+  <line x1="60" y1="150" x2="250" y2="130" stroke="#1565C0" stroke-width="2.5"/>
+  <circle cx="250" cy="130" r="3.5" fill="#1565C0"/>
+  <text x="150" y="120" font-size="10.5" fill="#2E7D32" text-anchor="middle" font-weight="700">電流を吸わない（≈0）</text>
+  <text x="150" y="178" font-size="9.5" fill="#9E9E9E" text-anchor="middle">＝信号源を乱さない</text>
+  <!-- OPアンプ三角（フォロワ） -->
+  <polygon points="250,108 250,200 320,154" fill="#fff" stroke="#0D3C6E" stroke-width="2.5"/>
+  <text x="262" y="134" font-size="13" fill="#1565C0" font-weight="800">+</text>
+  <text x="262" y="186" font-size="13" fill="#D32F2F" font-weight="800">−</text>
+  <text x="288" y="158" font-size="10" fill="#0D3C6E">∞</text>
+  <!-- 出力ノード -->
+  <line x1="320" y1="154" x2="370" y2="154" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="358" cy="154" r="4.5" fill="#E65100"/>
+  <text x="385" y="150" font-size="11" fill="#E65100" font-weight="800">Vout</text>
+  <!-- フォロワ帰還：出力ノード→下→−入力 -->
+  <line x1="358" y1="154" x2="358" y2="100" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="358" y1="100" x2="232" y2="100" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="232" y1="100" x2="232" y2="178" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="232" y1="178" x2="250" y2="178" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="250" cy="178" r="3.5" fill="#E65100"/>
+  <text x="295" y="92" font-size="9.5" fill="#E65100" text-anchor="middle">フォロワ（出力を−入力へ直結・利得1）</text>
+  <!-- 読めた電圧 -->
+  <rect x="250" y="212" width="172" height="44" rx="8" fill="#fff" stroke="#2E7D32" stroke-width="1.5"/>
+  <text x="336" y="230" font-size="10.5" fill="#7a8590" text-anchor="middle">出力＝読めた電圧</text>
+  <text x="336" y="248" font-size="16" fill="#2E7D32" text-anchor="middle" font-weight="800">${vread.toFixed(2)} V ✓</text>
+  <text x="230" y="300" font-size="11.5" fill="#2E7D32" text-anchor="middle" font-weight="700">電流を吸わないから、2.50Vをそのまま読める</text>
+  `;
+}
+
+function noteText(){
+  const RL=RloadK(); const vbad=readBad(); const drop=Vtrue-vbad;
+  if(mode==="compare"){
+    return `信号源は「100kΩの抵抗2本で5Vを分けた中点（本当は2.50V）」という<b>弱い信号源</b>です。`
+      +`ここに入力抵抗 ${fmtR(RL)} の計測器を直接つなぐと、電流を吸われて読み値は <b style="color:#b00020">${vbad.toFixed(2)}V（−${drop.toFixed(2)}V）</b> に下がります。`
+      +`一方、入力電流ゼロのOPアンプで覗けば、信号源から電流を取らないので <b style="color:#2E7D32">2.50V がそのまま</b>読めます。`
+      +`スライダーで負荷抵抗を上げる（電流を吸わない計測器にする）と、左の誤差も小さくなる＝<b>「触らないほど正確」</b>がわかります。`;
+  }
+  // why
+  return `なぜフォロワ（前回の利得1バッファ）で救えるのか。OPアンプの＋入力は電流をほぼ吸わないので、`
+    +`<b>信号源から見ると「何もつながっていないのと同じ」</b>＝電圧が乱れません。`
+    +`そしてフォロワの出力は同じ電圧を、こんどは<b>たっぷり電流を出せる低い出力抵抗</b>で送り出せます。`
+    +`つまり「電圧はそのまま・駆動力だけ強くする」緩衝役。センサやマイクなど“か弱い信号源”を測る前段に必ず登場します。`;
+}
+
+function render(){
+  $("left").innerHTML=drawLeft();
+  $("right").innerHTML=drawRight();
+  $("rloadval").textContent=fmtR(RloadK());
+  $("rd-bad").textContent=readBad().toFixed(2)+" V";
+  $("rd-good").textContent=readGood().toFixed(2)+" V";
+  $("note").innerHTML=noteText();
+}
+
+const modeLines={
+  compare:"スライダーで負荷の入力抵抗を変えてみてください。抵抗が小さい（電流を吸う）ほど、左の読み値が本当の2.50Vから下がります。",
+  why:"フォロワを前段に挟むと、なぜ信号源を乱さずに測れるのか。入力電流ゼロと低出力抵抗の合わせ技です。"
+};
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active"); mode=t.dataset.mode;
+    $("modeline").textContent=modeLines[mode]; render();
+  });
+});
+$("rload").addEventListener("input",e=>{rloadExp=parseFloat(e.target.value);render();});
+$("modeline").textContent=modeLines.compare;
+render();
+
+window.__setState=function(o){
+  if(o.mode){ document.querySelector(`.tab[data-mode="${o.mode}"]`).click(); }
+  if(o.rloadExp!==undefined){ rloadExp=o.rloadExp; $("rload").value=o.rloadExp; }
+  render();
+};
+</script>
+</body>
+</html>

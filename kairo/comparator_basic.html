@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基本コンパレータの振り切り</title>
+<style>
+  :root{
+    --blue:#1565C0;     /* 入力・電源- */
+    --orange:#E65100;   /* 出力 */
+    --red:#D32F2F;      /* 電源+ */
+    --purple:#6A1B9A;   /* 基準・注目 */
+    --gray:#9E9E9E;     /* 補助 */
+    --green:#2E7D32;
+    --navy:#0D3C6E;
+    --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#f4f6f8;font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;color:var(--ink);}
+  .wrap{width:1280px;margin:0 auto;padding:18px 24px 26px;}
+  h1{font-size:26px;color:var(--navy);margin:2px 0 2px;font-weight:800;}
+  .sub{font-size:15px;color:#555;margin:0 0 12px;}
+  .stage{display:grid;grid-template-columns:300px 1fr;gap:18px;}
+  .panel{background:#fff;border:1px solid #e2e6ea;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .panel-title{font-size:14px;font-weight:700;color:var(--navy);padding:8px 14px;border-bottom:1px solid #eef1f4;}
+  /* 天秤エリア */
+  #balanceWrap{padding:6px 10px 10px;}
+  /* 回路エリア */
+  #circuitWrap{padding:4px 6px 6px;}
+  /* 波形エリア */
+  .wavewrap{padding:6px 10px 10px;}
+  /* 下段コントロール */
+  .controls{margin-top:16px;background:#fff;border:1px solid #e2e6ea;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr auto;gap:18px 28px;align-items:center;}
+  .ctl label{font-size:14px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px;}
+  .ctl .val{font-variant-numeric:tabular-nums;font-weight:800;}
+  input[type=range]{width:100%;}
+  .vin input{accent-color:var(--blue);}
+  .vref input{accent-color:var(--purple);}
+  .readout{font-size:14px;line-height:1.7;}
+  .readout b{font-variant-numeric:tabular-nums;}
+  .verdict{display:inline-block;padding:3px 12px;border-radius:999px;color:#fff;font-weight:800;font-size:15px;}
+  .legend{font-size:12px;color:#666;margin-top:8px;}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  .note{grid-column:1/-1;font-size:12.5px;color:#777;border-top:1px dashed #dfe3e7;padding-top:10px;margin-top:2px;}
+  text{font-family:"Noto Sans CJK JP",sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>基本コンパレータ ― 「比べて一気に振り切る」</h1>
+  <p class="sub">入力 V<sub>in</sub> が基準 V<sub>ref</sub> を上下に跨ぐと、出力は ＋レール／−レールへ一気に振り切ります（増幅ではなく「勝ち負けの判定」）。</p>
+
+  <div class="stage">
+    <!-- 左：天秤アナロジー -->
+    <div class="panel">
+      <div class="panel-title">天秤のアナロジー（＋と−を比べる）</div>
+      <div id="balanceWrap">
+        <svg id="balance" width="280" height="250" viewBox="0 0 280 250"></svg>
+        <div class="legend">
+          <span class="chip" style="background:var(--blue)"></span>V<sub>in</sub>（＋入力）　
+          <span class="chip" style="background:var(--purple)"></span>V<sub>ref</sub>（−入力）
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：回路＋波形 -->
+    <div class="panel">
+      <div class="panel-title">コンパレータ回路と出力波形</div>
+      <div id="circuitWrap">
+        <svg id="circuit" width="940" height="290" viewBox="0 0 940 290"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 波形（横長） -->
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-title">入力（青）と出力（橙）の時間波形 ― 跨いだ瞬間に出力が反転</div>
+    <div class="wavewrap">
+      <svg id="wave" width="1232" height="200" viewBox="0 0 1232 200"></svg>
+    </div>
+  </div>
+
+  <!-- コントロール -->
+  <div class="controls">
+    <div class="ctl vin">
+      <label>入力 V<sub>in</sub> ＝ <span class="val" id="vinVal" style="color:var(--blue)">+1.0 V</span></label>
+      <input type="range" id="vin" min="-7" max="7" step="0.1" value="1">
+    </div>
+    <div class="ctl vref">
+      <label>基準 V<sub>ref</sub> ＝ <span class="val" id="vrefVal" style="color:var(--purple)">0.0 V</span></label>
+      <input type="range" id="vref" min="-6" max="6" step="0.1" value="0">
+    </div>
+    <div class="readout" id="readout"></div>
+    <div class="note">
+      コンパレータでは「仮想短絡」は成り立ちません。OPアンプは差をゼロに保とうとしますが、帰還が無いので
+      ごくわずかな差でも巨大な利得で増幅し、出力は電源近く（ここでは ±7V）に張り付きます。＝<b>差をそのまま勝ち負けにする</b>。
+    </div>
+  </div>
+</div>
+
+<script>
+const RAIL = 7;          // 飽和レール ±7V（±8V電源・NJM4558）
+const vinEl = document.getElementById('vin');
+const vrefEl = document.getElementById('vref');
+
+function vout(vin, vref){ return (vin > vref) ? +RAIL : ( (vin < vref) ? -RAIL : 0 ); }
+// この回路は Vin=+入力, Vref=−入力（非反転コンパレータ）。Vin>Vref → 出力 +レール。
+
+/* ---------- 天秤 ---------- */
+function drawBalance(vin, vref){
+  const s = document.getElementById('balance');
+  const cx=140, pivotY=120, beamLen=95, panH=46;
+  // 傾き：vin(左)が重い(大きい)ほど左が下がる。差で角度を決める（飽和）
+  const diff = vin - vref;
+  const ang = Math.max(-22, Math.min(22, diff*5)) * Math.PI/180; // 左下がりが正
+  const lx = cx - beamLen*Math.cos(ang), ly = pivotY - beamLen*Math.sin(ang);
+  const rx = cx + beamLen*Math.cos(ang), ry = pivotY + beamLen*Math.sin(ang);
+  let h='';
+  // 支柱
+  h += `<rect x="${cx-6}" y="${pivotY}" width="12" height="110" fill="#b0b6bc"/>`;
+  h += `<rect x="${cx-34}" y="228" width="68" height="10" rx="3" fill="#8a9097"/>`;
+  // 梁
+  h += `<line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="#5a6168" stroke-width="7" stroke-linecap="round"/>`;
+  // 支点
+  h += `<circle cx="${cx}" cy="${pivotY}" r="9" fill="#5a6168"/>`;
+  // 皿（左=Vin 青 / 右=Vref 紫）
+  function pan(px,py,color,label,valTxt){
+    let g='';
+    g += `<line x1="${px}" y1="${py}" x2="${px-22}" y2="${py+30}" stroke="#9aa0a6" stroke-width="2"/>`;
+    g += `<line x1="${px}" y1="${py}" x2="${px+22}" y2="${py+30}" stroke="#9aa0a6" stroke-width="2"/>`;
+    g += `<rect x="${px-26}" y="${py+30}" width="52" height="14" rx="6" fill="${color}" opacity="0.85"/>`;
+    g += `<text x="${px}" y="${py+24}" font-size="13" font-weight="700" text-anchor="middle" fill="${color}">${label}</text>`;
+    g += `<text x="${px}" y="${py+72}" font-size="13" font-weight="800" text-anchor="middle" fill="${color}">${valTxt}</text>`;
+    return g;
+  }
+  h += pan(lx,ly,'#1565C0','V<tspan baseline-shift="sub" font-size="9">in</tspan>', (vin>=0?'+':'')+vin.toFixed(1)+'V');
+  h += pan(rx,ry,'#6A1B9A','V<tspan baseline-shift="sub" font-size="9">ref</tspan>', (vref>=0?'+':'')+vref.toFixed(1)+'V');
+  // 勝敗ラベル
+  let win = Math.abs(diff)<1e-6 ? 'つり合い' : (diff>0 ? 'V<tspan baseline-shift="sub" font-size="9">in</tspan> が重い' : 'V<tspan baseline-shift="sub" font-size="9">ref</tspan> が重い');
+  h += `<text x="${cx}" y="22" font-size="14" font-weight="800" text-anchor="middle" fill="#0D3C6E">${win}</text>`;
+  s.innerHTML = h;
+}
+
+/* ---------- 回路 ---------- */
+function drawCircuit(vin, vref, vo){
+  const s = document.getElementById('circuit');
+  const opx=430, opy=130;          // OPアンプ三角の左上基準
+  const triL=opx, triR=opx+120, triMidY=opy+55;
+  const inMinusY = opy+28, inPlusY = opy+82;
+  let h='';
+  // OPアンプ三角（上が−入力、下が＋入力）
+  h += `<polygon points="${triL},${opy} ${triR},${triMidY} ${triL},${opy+110}" fill="#fff" stroke="#333" stroke-width="2.5"/>`;
+  h += `<text x="${triL+26}" y="${inMinusY+5}" font-size="20" font-weight="800" fill="#333">−</text>`;
+  h += `<text x="${triL+26}" y="${inPlusY+6}" font-size="18" font-weight="800" fill="#333">+</text>`;
+  h += `<text x="${triL+42}" y="${triMidY+5}" font-size="13" fill="#555">NJM4558</text>`;
+  // 電源 +8 / -8
+  h += `<line x1="${opx+40}" y1="${opy-4}" x2="${opx+40}" y2="${opy-26}" stroke="#D32F2F" stroke-width="2.5"/>`;
+  h += `<text x="${opx+48}" y="${opy-15}" font-size="13" font-weight="700" fill="#D32F2F">+8V</text>`;
+  h += `<line x1="${opx+40}" y1="${opy+114}" x2="${opx+40}" y2="${opy+136}" stroke="#1565C0" stroke-width="2.5"/>`;
+  h += `<text x="${opx+48}" y="${opy+135}" font-size="13" font-weight="700" fill="#1565C0">−8V</text>`;
+
+  // 入力 Vin → ＋入力（青）＝下側
+  const inNodeX = triL-170;
+  h += `<line x1="${inNodeX+20}" y1="${inPlusY}" x2="${triL}" y2="${inPlusY}" stroke="#1565C0" stroke-width="2.5"/>`;
+  // FGシンボル（円に〜）
+  h += `<circle cx="${inNodeX}" cy="${inPlusY}" r="20" fill="#fff" stroke="#1565C0" stroke-width="2.5"/>`;
+  h += `<path d="M ${inNodeX-11} ${inPlusY} q 5.5 -8 11 0 q 5.5 8 11 0" fill="none" stroke="#1565C0" stroke-width="2"/>`;
+  h += `<text x="${inNodeX}" y="${inPlusY+38}" font-size="13" font-weight="700" text-anchor="middle" fill="#1565C0">FG（入力）</text>`;
+  h += `<text x="${triL-95}" y="${inPlusY-8}" font-size="13" font-weight="800" fill="#1565C0">V<tspan baseline-shift="sub" font-size="9">in</tspan>=${(vin>=0?'+':'')+vin.toFixed(1)}V</text>`;
+
+  // 基準 Vref → −入力（紫・正負分圧：+8V〜−8Vの間）＝上側
+  const refNodeX = triL-170;
+  h += `<line x1="${refNodeX}" y1="${inMinusY}" x2="${triL}" y2="${inMinusY}" stroke="#6A1B9A" stroke-width="2.5"/>`;
+  // 上側抵抗 → +8V
+  h += `<line x1="${refNodeX}" y1="${inMinusY}" x2="${refNodeX}" y2="${inMinusY-30}" stroke="#6A1B9A" stroke-width="2"/>`;
+  h += `<rect x="${refNodeX-9}" y="${inMinusY-66}" width="18" height="36" fill="#fff" stroke="#6A1B9A" stroke-width="2"/>`;
+  h += `<line x1="${refNodeX}" y1="${inMinusY-66}" x2="${refNodeX}" y2="${inMinusY-86}" stroke="#D32F2F" stroke-width="2"/>`;
+  h += `<text x="${refNodeX-2}" y="${inMinusY-91}" font-size="11" font-weight="700" text-anchor="middle" fill="#D32F2F">+8V</text>`;
+  h += `<text x="${refNodeX+14}" y="${inMinusY-44}" font-size="10" fill="#888">R</text>`;
+  // 下側抵抗 → −8V（＋入力線をまたがないよう左へオフセット）
+  const refDownX = refNodeX-44;
+  h += `<line x1="${refNodeX}" y1="${inMinusY}" x2="${refDownX}" y2="${inMinusY}" stroke="#6A1B9A" stroke-width="2"/>`;
+  h += `<line x1="${refDownX}" y1="${inMinusY}" x2="${refDownX}" y2="${inMinusY+34}" stroke="#6A1B9A" stroke-width="2"/>`;
+  h += `<rect x="${refDownX-9}" y="${inMinusY+34}" width="18" height="36" fill="#fff" stroke="#6A1B9A" stroke-width="2"/>`;
+  h += `<line x1="${refDownX}" y1="${inMinusY+70}" x2="${refDownX}" y2="${inMinusY+90}" stroke="#1565C0" stroke-width="2"/>`;
+  h += `<text x="${refDownX-2}" y="${inMinusY+104}" font-size="11" font-weight="700" text-anchor="middle" fill="#1565C0">−8V</text>`;
+  h += `<text x="${refDownX+14}" y="${inMinusY+56}" font-size="10" fill="#888">R</text>`;
+  // ノードドット＋ラベル
+  h += `<circle cx="${refNodeX}" cy="${inMinusY}" r="3.5" fill="#6A1B9A"/>`;
+  h += `<text x="${triL-95}" y="${inMinusY-8}" font-size="13" font-weight="800" fill="#6A1B9A">V<tspan baseline-shift="sub" font-size="9">ref</tspan>=${(vref>=0?'+':'')+vref.toFixed(1)}V</text>`;
+
+  // 出力（橙）
+  const outX = triR+150;
+  h += `<line x1="${triR}" y1="${triMidY}" x2="${outX}" y2="${triMidY}" stroke="#E65100" stroke-width="3"/>`;
+  h += `<circle cx="${outX}" cy="${triMidY}" r="5" fill="#E65100"/>`;
+  h += `<text x="${outX-2}" y="${triMidY-16}" font-size="14" font-weight="800" text-anchor="middle" fill="#E65100">V<tspan baseline-shift="sub" font-size="10">out</tspan></text>`;
+  // 出力レベルバー
+  const barX=outX+40, barTop=opy-26, barH=160, barW=46, mid=barTop+barH/2;
+  h += `<rect x="${barX}" y="${barTop}" width="${barW}" height="${barH}" rx="6" fill="#faf6ef" stroke="#e0d7c8"/>`;
+  h += `<line x1="${barX}" y1="${mid}" x2="${barX+barW}" y2="${mid}" stroke="#bbb" stroke-dasharray="3 3"/>`;
+  h += `<text x="${barX+barW+6}" y="${barTop+12}" font-size="11" fill="#888">+7V</text>`;
+  h += `<text x="${barX+barW+6}" y="${barTop+barH}" font-size="11" fill="#888">−7V</text>`;
+  // 出力位置（vo は ±7 or 0）
+  const oy = mid - (vo/RAIL)*(barH/2-8);
+  h += `<rect x="${barX+4}" y="${Math.min(mid,oy)}" width="${barW-8}" height="${Math.abs(oy-mid)}" fill="#E65100" opacity="0.78"/>`;
+  h += `<circle cx="${barX+barW/2}" cy="${oy}" r="6" fill="#E65100"/>`;
+  h += `<text x="${barX+barW/2}" y="${barTop+barH+24}" font-size="15" font-weight="800" text-anchor="middle" fill="#E65100">${(vo>=0?'+':'')+vo.toFixed(0)}V</text>`;
+
+  s.innerHTML = h;
+}
+
+/* ---------- 波形 ---------- */
+function drawWave(vref){
+  const s = document.getElementById('wave');
+  const W=1232,H=200, padL=46, padR=20, padT=14, padB=24;
+  const x0=padL, x1=W-padR, y0=padT, y1=H-padB, midY=(y0+y1)/2;
+  const yspan=(y1-y0)/2-6;
+  function Y(v){ return midY - (v/RAIL)*yspan; }
+  function X(t){ return x0 + t*(x1-x0); } // t:0..1
+  let h='';
+  // 軸
+  h += `<line x1="${x0}" y1="${midY}" x2="${x1}" y2="${midY}" stroke="#ccc"/>`;
+  h += `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="#ccc"/>`;
+  h += `<text x="6" y="${Y(RAIL)+4}" font-size="10" fill="#999">+7</text>`;
+  h += `<text x="6" y="${Y(-RAIL)+4}" font-size="10" fill="#999">−7</text>`;
+  h += `<text x="6" y="${midY+4}" font-size="10" fill="#999">0</text>`;
+  // Vref 線（紫破線）
+  h += `<line x1="${x0}" y1="${Y(vref)}" x2="${x1}" y2="${Y(vref)}" stroke="#6A1B9A" stroke-width="1.6" stroke-dasharray="6 4"/>`;
+  h += `<text x="${x1-2}" y="${Y(vref)-5}" font-size="11" font-weight="700" text-anchor="end" fill="#6A1B9A">V_ref=${(vref>=0?'+':'')+vref.toFixed(1)}V</text>`;
+  // 入力 = 振幅5Vの正弦（青）
+  const A=5, N=300;
+  let pin='', pout='';
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const vi = A*Math.sin(2*Math.PI*2*t); // 2周期
+    const vo = (vi> vref)? +RAIL : ((vi<vref)? -RAIL : 0); // Vin=+入力（非反転）
+    pin += (i?'L':'M')+X(t).toFixed(1)+' '+Y(vi).toFixed(1)+' ';
+    pout+= (i?'L':'M')+X(t).toFixed(1)+' '+Y(vo).toFixed(1)+' ';
+  }
+  h += `<path d="${pout}" fill="none" stroke="#E65100" stroke-width="3"/>`;
+  h += `<path d="${pin}" fill="none" stroke="#1565C0" stroke-width="2.4"/>`;
+  // 凡例
+  h += `<rect x="${x1-210}" y="${y0+2}" width="200" height="20" rx="4" fill="#fff" opacity="0.85"/>`;
+  h += `<line x1="${x1-200}" y1="${y0+12}" x2="${x1-180}" y2="${y0+12}" stroke="#1565C0" stroke-width="2.4"/>`;
+  h += `<text x="${x1-176}" y="${y0+16}" font-size="11" fill="#1565C0">入力 V_in</text>`;
+  h += `<line x1="${x1-110}" y1="${y0+12}" x2="${x1-90}" y2="${y0+12}" stroke="#E65100" stroke-width="3"/>`;
+  h += `<text x="${x1-86}" y="${y0+16}" font-size="11" fill="#E65100">出力 V_out</text>`;
+  s.innerHTML=h;
+}
+
+/* ---------- readout ---------- */
+function drawReadout(vin,vref,vo){
+  const el=document.getElementById('readout');
+  const win = vin>vref ? '＋入力(V<sub>in</sub>)が高い' : (vin<vref?'−入力(V<sub>ref</sub>)が高い':'つり合い');
+  const col = vo>0?'#E65100':(vo<0?'#1565C0':'#9E9E9E');
+  const txt = vo>0?'＋レールへ振り切り':(vo<0?'−レールへ振り切り':'境界（不定）');
+  el.innerHTML =
+    `判定：<b>${win}</b><br>`+
+    `出力 V<sub>out</sub> = <span class="verdict" style="background:${col}">${(vo>=0?'+':'')+vo.toFixed(0)}V ・ ${txt}</span>`;
+}
+
+function update(){
+  const vin=parseFloat(vinEl.value), vref=parseFloat(vrefEl.value);
+  document.getElementById('vinVal').textContent=(vin>=0?'+':'')+vin.toFixed(1)+' V';
+  document.getElementById('vrefVal').textContent=(vref>=0?'+':'')+vref.toFixed(1)+' V';
+  const vo=vout(vin,vref);
+  drawBalance(vin,vref);
+  drawCircuit(vin,vref,vo);
+  drawWave(vref);
+  drawReadout(vin,vref,vo);
+}
+vinEl.addEventListener('input',update);
+vrefEl.addEventListener('input',update);
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:'Noto Sans CJK JP',sans-serif;}
+  #stage{width:1180px;height:760px;position:relative;background:#fff;}
+  svg{display:block;}
+  .ttl{font-size:27px;font-weight:700;fill:#0D3C6E;}
+  .sub{font-size:15px;fill:#555;}
+  .lab{font-size:15px;fill:#222;}
+  .labb{font-size:16px;font-weight:700;fill:#222;}
+  .blue{fill:#1565C0;}.orange{fill:#E65100;}.gray{fill:#9E9E9E;}
+  .small{font-size:13px;fill:#666;}
+  .mono{font-family:'DejaVu Sans Mono',monospace;}
+  .bar{position:absolute;left:40px;top:30px;}
+  .tab{display:inline-block;padding:7px 20px;margin-right:8px;border-radius:18px;border:2px solid #0D3C6E;
+       color:#0D3C6E;background:#fff;font-size:15px;font-weight:700;cursor:pointer;user-select:none;}
+  .tab.on{background:#0D3C6E;color:#fff;}
+  .seg{display:inline-block;margin-left:24px;font-size:14px;color:#333;}
+  .seg button{margin-left:4px;padding:5px 12px;border-radius:14px;border:1.5px solid #888;background:#fff;cursor:pointer;font-size:13px;}
+  .seg button.on{background:#1565C0;color:#fff;border-color:#1565C0;}
+  .panel{position:absolute;left:40px;top:78px;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="panel">
+    <span class="tab on" id="tabInt" onclick="setMode('int')">積分回路（integrator）</span>
+    <span class="tab" id="tabDif" onclick="setMode('dif')">微分回路（differentiator）</span>
+    <span class="seg">入力波形：
+      <button class="on" id="wSq" onclick="setWave('sq')">方形波</button>
+      <button id="wTr" onclick="setWave('tr')">三角波</button>
+      <button id="wSi" onclick="setWave('si')">正弦波</button>
+    </span>
+  </div>
+
+<svg id="svg" width="1180" height="700" viewBox="0 0 1180 700" xmlns="http://www.w3.org/2000/svg">
+  <text x="40" y="36" class="ttl" id="title">積分回路：入力をためた量が出力になる</text>
+  <line x1="40" y1="50" x2="1140" y2="50" stroke="#0D3C6E" stroke-width="2"/>
+  <text x="40" y="160" class="sub" id="formula">Vout = −(1/RC)∫Vin dt　（R=10kΩ, C=0.01µF, τ=0.1ms）入力 +1V の間、出力は一定の傾きで下がる（反転）</text>
+
+  <!-- 入力波形パネル -->
+  <text x="60" y="210" class="labb blue">入力 Vin</text>
+  <rect x="60" y="220" width="1040" height="180" fill="#fafbfc" stroke="#ddd" stroke-width="1"/>
+  <line x1="60" y1="310" x2="1100" y2="310" stroke="#ccc" stroke-width="1"/>
+  <text x="40" y="246" class="small blue">+</text>
+  <text x="42" y="384" class="small blue">−</text>
+  <path id="inPath" fill="none" stroke="#1565C0" stroke-width="2.8"/>
+  <circle id="inHead" r="6" fill="#1565C0"/>
+
+  <!-- 出力波形パネル -->
+  <text x="60" y="440" class="labb orange">出力 Vout</text>
+  <rect x="60" y="450" width="1040" height="180" fill="#fff8f3" stroke="#f0d6c0" stroke-width="1"/>
+  <line x1="60" y1="540" x2="1100" y2="540" stroke="#e3c4ad" stroke-width="1"/>
+  <text x="40" y="476" class="small orange">+</text>
+  <text x="42" y="614" class="small orange">−</text>
+  <path id="outPath" fill="none" stroke="#E65100" stroke-width="2.8"/>
+  <circle id="outHead" r="6" fill="#E65100"/>
+
+  <!-- 走査線 -->
+  <line id="scan" x1="60" y1="220" x2="60" y2="630" stroke="#999" stroke-width="1.2" stroke-dasharray="4 4"/>
+
+  <!-- アナロジー注記 -->
+  <text x="60" y="664" class="small gray" id="analogy">アナロジー：積分＝水をためる（たまった量が出力）。入力が続くほど出力がたまっていく。</text>
+  <text x="60" y="686" class="small gray" id="hint">いま出力が動いている理由：入力が一定 → 一定の傾きで変化中</text>
+</svg>
+</div>
+
+<script>
+const X0=60,X1=1100,W=X1-X0;     // 波形描画範囲
+const inY0=310, inAmp=78;        // 入力ゼロ線・振幅px
+const outY0=540, outAmp=78;      // 出力ゼロ線・振幅px
+const PERIODS=3;                 // 表示periods
+let mode='int', wave='sq';
+let t=0; // 0..1 走査進行
+
+// 入力関数 f(x): x=0..1（全幅）→ 値 -1..1
+function inputVal(x){
+  const ph=(x*PERIODS)%1; // 0..1 1周期内位相
+  if(wave==='sq') return ph<0.5? 1:-1;
+  if(wave==='tr'){ // 三角波：0で-1から上昇、0.5で+1、1で-1
+    return ph<0.5? (-1+4*ph) : (1-4*(ph-0.5));
+  }
+  // sine
+  return Math.sin(2*Math.PI*ph);
+}
+// 出力：積分 or 微分（反転）。数値積分/微分で連続的に。
+function buildOut(){
+  // sample N点で in を作り、積分/微分を数値計算→正規化して描画
+  const N=600; let xs=[],ins=[];
+  for(let i=0;i<=N;i++){const x=i/N;xs.push(x);ins.push(inputVal(x));}
+  let outs=[];
+  if(mode==='int'){
+    // 反転積分：out = -k * ∫in。1周期で振幅が見やすいkに正規化
+    let acc=0; const dx=1/N;
+    // スケール：方形波1周期(PERIODS分)で三角の山が振幅程度になるよう係数
+    const k = PERIODS*2.2;
+    for(let i=0;i<=N;i++){acc += -ins[i]*dx*k; outs.push(acc);}
+    // DC安定（Rf）相当：平均を引いてセンタリング（ドリフト除去の見栄え）
+    const mean=outs.reduce((a,b)=>a+b,0)/outs.length;
+    outs=outs.map(v=>v-mean);
+  } else {
+    // 反転微分：out = -k * d(in)/dx
+    const k=1/(PERIODS*2.0);
+    for(let i=0;i<=N;i++){
+      const ip=ins[Math.min(N,i+1)], im=ins[Math.max(0,i-1)];
+      let d=(ip-im)/(2/N);
+      outs.push(-d*k);
+    }
+    // 方形/三角の微分はスパイク/段になる。クリップして見やすく
+    outs=outs.map(v=>Math.max(-1,Math.min(1,v)));
+  }
+  // 正規化（±1に収める）
+  let mx=Math.max(...outs.map(Math.abs))||1;
+  outs=outs.map(v=>v/mx*0.92);
+  return {xs,ins,outs};
+}
+
+let DATA=buildOut();
+
+function pathStr(xs,vals,y0,amp,uptoFrac){
+  let d='';
+  for(let i=0;i<xs.length;i++){
+    if(xs[i]>uptoFrac+1e-9) break;
+    const px=X0+xs[i]*W, py=y0-vals[i]*amp;
+    d+=(i===0?'M':'L')+px.toFixed(1)+' '+py.toFixed(1)+' ';
+  }
+  return d;
+}
+function valAt(xs,vals,frac){
+  let idx=0; for(let i=0;i<xs.length;i++){if(xs[i]<=frac)idx=i;else break;}
+  return vals[idx];
+}
+
+function render(){
+  const sx=X0+t*W;
+  document.getElementById('scan').setAttribute('x1',sx);
+  document.getElementById('scan').setAttribute('x2',sx);
+  document.getElementById('inPath').setAttribute('d',pathStr(DATA.xs,DATA.ins,inY0,inAmp,t));
+  document.getElementById('outPath').setAttribute('d',pathStr(DATA.xs,DATA.outs,outY0,outAmp,t));
+  const iv=valAt(DATA.xs,DATA.ins,t), ov=valAt(DATA.xs,DATA.outs,t);
+  const ih=document.getElementById('inHead'), oh=document.getElementById('outHead');
+  ih.setAttribute('cx',sx);ih.setAttribute('cy',inY0-iv*inAmp);
+  oh.setAttribute('cx',sx);oh.setAttribute('cy',outY0-ov*outAmp);
+  // ヒント
+  updateHint(iv);
+}
+function updateHint(iv){
+  const h=document.getElementById('hint');
+  if(mode==='int'){
+    if(iv>0.2) h.textContent='いま出力が動いている理由：入力が正 → 出力は下り坂（反転積分で「ためる」）';
+    else if(iv<-0.2) h.textContent='いま出力が動いている理由：入力が負 → 出力は上り坂';
+    else h.textContent='いま出力が動いている理由：入力が小 → 傾きはゆるやか';
+  }else{
+    h.textContent='いま出力が動いている理由：入力の「変化の急さ（傾き）」に反応。坂が急なほど大きく出る';
+  }
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('tabInt').classList.toggle('on',m==='int');
+  document.getElementById('tabDif').classList.toggle('on',m==='dif');
+  document.getElementById('title').textContent = m==='int'
+    ? '積分回路：入力をためた量が出力になる'
+    : '微分回路：入力の変化の急さに反応して出力になる';
+  document.getElementById('formula').textContent = m==='int'
+    ? 'Vout = −(1/RC)∫Vin dt　（R=10kΩ, C=0.01µF, τ=0.1ms）入力 +1V の間、出力は一定の傾きで下がる（反転）'
+    : 'Vout = −RC(dVin/dt)　（R=10kΩ, C=0.01µF, τ=0.1ms）入力が上り坂の間、出力は一定値に張り付く（反転）';
+  document.getElementById('analogy').textContent = m==='int'
+    ? 'アナロジー：積分＝水をためる（たまった量が出力）。入力が続くほど出力がたまっていく。'
+    : 'アナロジー：微分＝変化の急さに反応（急に動いたときだけ大きく出る）。坂が一定なら出力は一定。';
+  DATA=buildOut(); t=0;
+}
+function setWave(w){
+  wave=w;
+  document.getElementById('wSq').classList.toggle('on',w==='sq');
+  document.getElementById('wTr').classList.toggle('on',w==='tr');
+  document.getElementById('wSi').classList.toggle('on',w==='si');
+  DATA=buildOut(); t=0;
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=(now-last)/1000; last=now;
+  t+=dt*0.28;            // 走査速度
+  if(t>1) t=0;           // ループ
+  render();
+  requestAnimationFrame(loop);
+}
+setMode('int'); setWave('sq');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

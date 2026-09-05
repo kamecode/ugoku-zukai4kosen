@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;
+    font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .card{width:1040px;padding:22px 28px;}
+  h1{font-size:21px;color:#0D3C6E;margin:0 0 2px;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 12px;line-height:1.6;}
+  svg{width:100%;height:auto;display:block;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>反転増幅 と 非反転増幅 ― 同じOPアンプ・同じ仮想短絡から</h1>
+  <p class="sub">使う素子も抵抗値も同じ（NJM4558 / Rin=1kΩ, Rf=10kΩ）。<b>入力をどちらの端子へ入れるか</b>だけで、利得式・符号・入力インピーダンスが変わる。</p>
+  <svg id="cmp" viewBox="0 0 1040 720"></svg>
+</div>
+<script>
+const IN="#1565C0",OUT="#E65100",VP="#D32F2F",GND="#9E9E9E",HEAD="#0D3C6E",OK="#2E7D32",INK="#2b2b2b",PUR="#6A1B9A";
+let s=`<rect width="1040" height="720" fill="#fff"/>`;
+
+// 中央分割線
+s+=`<line x1="520" y1="40" x2="520" y2="470" stroke="#e3e1d8" stroke-width="1.5"/>`;
+
+// ===== 見出し =====
+s+=`<rect x="20" y="20" width="480" height="34" rx="8" fill="#1565C0"/>`;
+s+=`<text x="260" y="43" text-anchor="middle" font-size="16" fill="#fff" font-weight="800">反転増幅  Inverting</text>`;
+s+=`<rect x="540" y="20" width="480" height="34" rx="8" fill="#E65100"/>`;
+s+=`<text x="780" y="43" text-anchor="middle" font-size="16" fill="#fff" font-weight="800">非反転増幅  Non-inverting</text>`;
+
+// ===== OPアンプ簡略回路 =====
+function opTriangle(cx, top, bot, tip, mid){
+  return `<polygon points="${cx},${top} ${cx},${bot} ${tip},${mid}" fill="#fff" stroke="${HEAD}" stroke-width="2"/>`;
+}
+
+// --- 反転（左）---
+(function(){
+  const ax=300, top=120, bot=200, tip=380, mid=160;
+  let g="";
+  // 入力源
+  g+=`<text x="60" y="${mid-30}" font-size="12" fill="${IN}" font-weight="800">Vin</text>`;
+  g+=`<circle cx="60" cy="${mid}" r="5" fill="${IN}"/>`;
+  // Rin → −入力
+  g+=`<line x1="60" y1="${mid}" x2="150" y2="${mid}" stroke="${IN}" stroke-width="2.5"/>`;
+  g+=`<rect x="150" y="${mid-9}" width="40" height="18" fill="#fff" stroke="${IN}" stroke-width="2"/>`;
+  g+=`<text x="170" y="${mid-15}" text-anchor="middle" font-size="10.5" fill="${IN}" font-weight="700">Rin</text>`;
+  g+=`<line x1="190" y1="${mid}" x2="240" y2="${mid}" stroke="${IN}" stroke-width="2.5"/>`;
+  // −入力ノード
+  const ndx=240;
+  g+=`<circle cx="${ndx}" cy="${mid}" r="4" fill="${OK}"/>`;
+  // −入力(上)へ
+  g+=`<line x1="${ndx}" y1="${mid}" x2="${ax}" y2="${top+18}" stroke="${INK}" stroke-width="1.8"/>`;
+  // Rf 帰還
+  g+=`<line x1="${ndx}" y1="${mid}" x2="${ndx}" y2="90" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<line x1="${ndx}" y1="90" x2="410" y2="90" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<rect x="290" y="81" width="40" height="18" fill="#fff" stroke="${OUT}" stroke-width="2"/>`;
+  g+=`<text x="310" y="76" text-anchor="middle" font-size="10.5" fill="${OUT}" font-weight="700">Rf</text>`;
+  // +入力→GND
+  g+=`<line x1="${ax-55}" y1="${bot-18}" x2="${ax}" y2="${bot-18}" stroke="${GND}" stroke-width="2"/>`;
+  g+=`<line x1="${ax-55}" y1="${bot-18}" x2="${ax-55}" y2="${bot+6}" stroke="${GND}" stroke-width="2"/>`;
+  g+=`<line x1="${ax-65}" y1="${bot+6}" x2="${ax-45}" y2="${bot+6}" stroke="${GND}" stroke-width="2.5"/>`;
+  g+=`<line x1="${ax-60}" y1="${bot+11}" x2="${ax-50}" y2="${bot+11}" stroke="${GND}" stroke-width="2"/>`;
+  g+=`<text x="${ax-55}" y="${bot+26}" text-anchor="middle" font-size="9" fill="${GND}">+入力=0V</text>`;
+  // 三角
+  g+=opTriangle(ax, top, bot, tip, mid);
+  g+=`<text x="${ax+10}" y="${top+22}" font-size="12" fill="${IN}" font-weight="800">−</text>`;
+  g+=`<text x="${ax+10}" y="${bot-10}" font-size="12" fill="${VP}" font-weight="800">+</text>`;
+  // 出力
+  g+=`<line x1="${tip}" y1="${mid}" x2="450" y2="${mid}" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<line x1="410" y1="90" x2="410" y2="${mid}" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<circle cx="410" cy="${mid}" r="4" fill="${OUT}"/>`;
+  g+=`<text x="465" y="${mid+5}" font-size="12" fill="${OUT}" font-weight="800">Vout</text>`;
+  s+=g;
+})();
+
+// --- 非反転（右）---
+(function(){
+  const ax=820, top=120, bot=200, tip=900, mid=160;
+  let g="";
+  // 入力源 → +入力
+  g+=`<text x="580" y="${bot-18-18}" font-size="12" fill="${IN}" font-weight="800">Vin</text>`;
+  g+=`<circle cx="580" cy="${bot-18}" r="5" fill="${IN}"/>`;
+  g+=`<line x1="580" y1="${bot-18}" x2="${ax}" y2="${bot-18}" stroke="${IN}" stroke-width="2.5"/>`;
+  // −入力ノード：Rin→GND, Rf→出力
+  const ndx=740;
+  g+=`<line x1="${ax}" y1="${top+18}" x2="${ndx}" y2="${top+18}" stroke="${INK}" stroke-width="1.8"/>`;
+  g+=`<circle cx="${ndx}" cy="${top+18}" r="4" fill="${OK}"/>`;
+  // Rin→GND（下）短め
+  g+=`<line x1="${ndx}" y1="${top+18}" x2="${ndx}" y2="${top+18+30}" stroke="${IN}" stroke-width="2.5"/>`;
+  g+=`<rect x="${ndx-9}" y="${top+18+30}" width="18" height="32" fill="#fff" stroke="${IN}" stroke-width="2"/>`;
+  g+=`<text x="${ndx-26}" y="${top+18+50}" text-anchor="middle" font-size="10.5" fill="${IN}" font-weight="700">Rin</text>`;
+  g+=`<line x1="${ndx}" y1="${top+18+62}" x2="${ndx}" y2="${top+18+76}" stroke="${IN}" stroke-width="2.5"/>`;
+  g+=`<line x1="${ndx-12}" y1="${top+18+76}" x2="${ndx+12}" y2="${top+18+76}" stroke="${GND}" stroke-width="2.5"/>`;
+  g+=`<line x1="${ndx-7}" y1="${top+18+81}" x2="${ndx+7}" y2="${top+18+81}" stroke="${GND}" stroke-width="2"/>`;
+  g+=`<text x="${ndx+24}" y="${top+18+80}" font-size="9" fill="${GND}">GND</text>`;
+  // Rf→出力（上）
+  g+=`<line x1="${ndx}" y1="${top+18}" x2="${ndx}" y2="90" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<line x1="${ndx}" y1="90" x2="930" y2="90" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<rect x="800" y="81" width="40" height="18" fill="#fff" stroke="${OUT}" stroke-width="2"/>`;
+  g+=`<text x="820" y="76" text-anchor="middle" font-size="10.5" fill="${OUT}" font-weight="700">Rf</text>`;
+  // 三角
+  g+=opTriangle(ax, top, bot, tip, mid);
+  g+=`<text x="${ax+10}" y="${top+22}" font-size="12" fill="${IN}" font-weight="800">−</text>`;
+  g+=`<text x="${ax+10}" y="${bot-10}" font-size="12" fill="${VP}" font-weight="800">+</text>`;
+  // 出力
+  g+=`<line x1="${tip}" y1="${mid}" x2="970" y2="${mid}" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<line x1="930" y1="90" x2="930" y2="${mid}" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<circle cx="930" cy="${mid}" r="4" fill="${OUT}"/>`;
+  g+=`<text x="985" y="${mid+5}" font-size="12" fill="${OUT}" font-weight="800">Vout</text>`;
+  s+=g;
+})();
+
+// ===== 入出力波形 =====
+function waveBox(x0, y0, w, h, inverting){
+  const cy=y0+h/2;
+  let g=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="8" fill="#fcfcfa" stroke="#e3e1d8"/>`;
+  g+=`<line x1="${x0+12}" y1="${cy}" x2="${x0+w-12}" y2="${cy}" stroke="#cfd6de" stroke-width="1" stroke-dasharray="3 3"/>`;
+  // 入力正弦（小・青）
+  let din="", dout="";
+  const N=60, amp_in=14, amp_out=34;
+  for(let i=0;i<=N;i++){
+    const x=x0+20+(w-40)*i/N;
+    const ph=2*Math.PI*i/N*1.5;
+    const yi=cy - amp_in*Math.sin(ph);
+    const yo=cy - (inverting?-1:1)*amp_out*Math.sin(ph);
+    din+=(i?"L":"M")+x.toFixed(1)+" "+yi.toFixed(1)+" ";
+    dout+=(i?"L":"M")+x.toFixed(1)+" "+yo.toFixed(1)+" ";
+  }
+  g+=`<path d="${dout}" fill="none" stroke="${OUT}" stroke-width="2.5"/>`;
+  g+=`<path d="${din}" fill="none" stroke="${IN}" stroke-width="2"/>`;
+  g+=`<text x="${x0+12}" y="${y0+16}" font-size="10.5" fill="${IN}" font-weight="700">Vin（入力）</text>`;
+  g+=`<text x="${x0+w-12}" y="${y0+16}" text-anchor="end" font-size="10.5" fill="${OUT}" font-weight="700">Vout（出力）</text>`;
+  return g;
+}
+s+=`<text x="260" y="258" text-anchor="middle" font-size="12.5" fill="${HEAD}" font-weight="700">入出力波形：出力は入力と逆向き（反転）</text>`;
+s+=waveBox(60, 268, 400, 110, true);
+s+=`<text x="780" y="258" text-anchor="middle" font-size="12.5" fill="${HEAD}" font-weight="700">入出力波形：出力は入力と同じ向き（同符号）</text>`;
+s+=waveBox(580, 268, 400, 110, false);
+
+// ===== 比較表 =====
+const rows=[
+  ["利得 A", "A = −Rf/Rin = −10", "A = 1 + Rf/Rin = 11"],
+  ["符号", "逆符号（反転する）", "同符号（反転しない）"],
+  ["利得の範囲", "0 ～ ∞（1未満も作れる）", "必ず 1 以上"],
+  ["−入力の電位", "0V に張り付く（仮想GND）", "Vin に張り付く"],
+  ["入力インピーダンス", "Rin（やや低め）", "非常に高い（信号源を乱さない）"],
+  ["向く用途", "信号の反転・加算など", "センサ等の高入力抵抗な受け"],
+];
+const tx=40, ty=400, tw=960, rh=40, c0=tx, c1=tx+220, c2=tx+590;
+s+=`<rect x="${tx}" y="${ty}" width="${tw}" height="${rh*(rows.length+1)}" rx="10" fill="#fff" stroke="#cdd5df"/>`;
+// ヘッダ
+s+=`<rect x="${tx}" y="${ty}" width="${tw}" height="${rh}" rx="10" fill="#0D3C6E"/>`;
+s+=`<rect x="${tx}" y="${ty+10}" width="${tw}" height="${rh-10}" fill="#0D3C6E"/>`;
+s+=`<text x="${c0+16}" y="${ty+26}" font-size="13" fill="#fff" font-weight="800">比較項目</text>`;
+s+=`<text x="${c1+16}" y="${ty+26}" font-size="13" fill="#fff" font-weight="800">反転増幅</text>`;
+s+=`<text x="${c2+16}" y="${ty+26}" font-size="13" fill="#fff" font-weight="800">非反転増幅</text>`;
+// 縦罫
+s+=`<line x1="${c1}" y1="${ty}" x2="${c1}" y2="${ty+rh*(rows.length+1)}" stroke="#e3e1d8" stroke-width="1"/>`;
+s+=`<line x1="${c2}" y1="${ty}" x2="${c2}" y2="${ty+rh*(rows.length+1)}" stroke="#e3e1d8" stroke-width="1"/>`;
+rows.forEach((r,i)=>{
+  const ry=ty+rh*(i+1);
+  if(i%2===1) s+=`<rect x="${tx}" y="${ry}" width="${tw}" height="${rh}" fill="#f7f9fb"/>`;
+  s+=`<line x1="${tx}" y1="${ry}" x2="${tx+tw}" y2="${ry}" stroke="#eee" stroke-width="1"/>`;
+  s+=`<text x="${c0+16}" y="${ry+25}" font-size="12.5" fill="#333" font-weight="700">${r[0]}</text>`;
+  s+=`<text x="${c1+16}" y="${ry+25}" font-size="12.5" fill="${IN}">${r[1]}</text>`;
+  s+=`<text x="${c2+16}" y="${ry+25}" font-size="12.5" fill="${OUT}">${r[2]}</text>`;
+});
+// 締めの一言
+s+=`<text x="520" y="${ty+rh*(rows.length+1)+30}" text-anchor="middle" font-size="13" fill="${OK}" font-weight="800">どちらも「仮想短絡＋入力電流ゼロ」から導ける。違いは入力をどちらの端子へ入れるか、それだけ。</text>`;
+document.getElementById("cmp").innerHTML=s;
+</script>
+</body>
+</html>

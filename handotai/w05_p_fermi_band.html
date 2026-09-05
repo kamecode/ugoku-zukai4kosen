@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第5週｜p型のフェルミ準位</title>
+<style>
+  :root{--navy:#1C3A5E;--ink:#222222;--blue:#1F6FB2;--red:#C0392B;--purple:#7E3FA0;--green:#2E8B57;--line:#cfd6dd;--panebg:#f6f8fa;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;color:var(--ink);font-family:"メイリオ","Meiryo",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 60px;}
+  h1{color:var(--navy);font-size:24px;margin:0 0 4px;}
+  .sub{color:#5a6b7b;font-size:15px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .stage{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 14px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stage-title{color:var(--navy);font-size:19px;font-weight:bold;margin:2px 4px 8px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 4px;align-items:center;}
+  .btn{font-family:inherit;font-size:15px;cursor:pointer;border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:9px 15px;}
+  .btn:hover{background:#eef3f8;} .btn.active{background:var(--navy);color:#fff;}
+  .desc{background:var(--panebg);border-radius:10px;padding:12px 14px;margin:10px 4px 6px;font-size:16px;line-height:1.7;}
+  .desc b.blue{color:var(--blue);} .desc b.red{color:var(--red);} .desc b.purple{color:var(--purple);} .desc b.green{color:var(--green);}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:6px 6px 2px;font-size:14px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .sw{width:16px;height:16px;border-radius:50%;display:inline-block;}
+  .sw.h{background:#fff;border:2.5px solid var(--red);} .sw.f{width:22px;height:0;border-top:3px dashed var(--purple);}
+  svg{display:block;width:100%;height:auto;} .hint{font-size:13.5px;color:#6a7785;margin:4px 6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第5週｜p型の「フェルミ準位」</h1>
+  <p class="sub">正孔が多いp型では、フェルミ準位が価電子帯の近くまで下がります。n型と対称です。（式は使いません）</p>
+
+  <div class="stage">
+    <div class="stage-title" id="title">① 真性半導体：フェルミ準位はちょうど真ん中</div>
+    <svg id="svg" viewBox="0 0 1000 540" aria-label="p型のフェルミ準位アニメ"></svg>
+    <div class="controls">
+      <button class="btn active" id="b0">真性（混ぜる前）</button>
+      <button class="btn" id="b1">p型（正孔を増やす）</button>
+    </div>
+    <div class="desc" id="desc">
+      バンド図のお約束：<b class="purple">上ほどエネルギーが高い</b>。伝導帯（上・青）と価電子帯（下・赤）があります。
+      <b class="purple">フェルミ準位</b>は「電子の平均的な居場所」を示す目印。純粋な半導体（真性）では、ちょうど<b class="purple">真ん中</b>にあります。
+    </div>
+    <div class="legend">
+      <span><i class="sw h"></i> 正孔（＋）＝空席</span>
+      <span><i class="sw f"></i> フェルミ準位＝紫の点線</span>
+    </div>
+    <p class="hint" id="hint">「p型」を押すと、正孔が増えてフェルミ準位が価電子帯の近くへ下がります。</p>
+  </div>
+</div>
+
+<script>
+const NAVY="#1C3A5E",BLUE="#1F6FB2",RED="#C0392B",PURPLE="#7E3FA0",GREEN="#2E8B57",LINE="#cfd6dd";
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function txt(s,x,y,str,o={}){const t=el("text",{x,y,"font-size":o.size||15,"font-family":'"メイリオ",Meiryo,sans-serif',
+  fill:o.fill||"#222","text-anchor":o.anchor||"middle","font-weight":o.weight||"normal"});t.textContent=str;s.appendChild(t);return t;}
+function hole(s,cx,cy,r=10){const g=el("g",{});g.appendChild(el("circle",{cx,cy,r,fill:"#fff",stroke:RED,"stroke-width":2.8}));
+  const m=el("text",{x:cx,y:cy+5,"font-size":13,fill:RED,"text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="+";g.appendChild(m);s.appendChild(g);return g;}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+const svg=document.getElementById("svg");
+// レイアウト（上＝高エネ・標準形）：伝導帯=上, 価電子帯=下
+const BX=230, BW=560, CTOP=90, CBOT=190, VTOP=350, VBOT=450;
+const fermiMid=(CBOT+VTOP)/2;
+const fermiP=VTOP-28; // p型（価電子帯のすぐ上＝近く）
+let state=0, anim=null, t0=0;
+
+function drawBands(){
+  svg.appendChild(el("rect",{x:BX,y:CTOP,width:BW,height:CBOT-CTOP,rx:8,fill:"#e3eff8",stroke:BLUE,"stroke-width":1.5}));
+  txt(svg,BX-12,(CTOP+CBOT)/2+5,"伝導帯",{anchor:"end",fill:BLUE,weight:"bold",size:16});
+  svg.appendChild(el("rect",{x:BX,y:VTOP,width:BW,height:VBOT-VTOP,rx:8,fill:"#fbe6e3",stroke:RED,"stroke-width":1.5}));
+  txt(svg,BX-12,(VTOP+VBOT)/2+5,"価電子帯",{anchor:"end",fill:RED,weight:"bold",size:16});
+  svg.appendChild(el("rect",{x:BX,y:CBOT,width:BW,height:VTOP-CBOT,fill:"#f2f4f7","fill-opacity":0.5}));
+  txt(svg,BX+70,(CBOT+VTOP)/2-8,"バンドギャップ",{size:13,fill:NAVY,weight:"bold"});
+  txt(svg,BX+70,(CBOT+VTOP)/2+12,"（禁制帯）",{size:12,fill:"#5a6b7b"});
+  svg.appendChild(el("line",{x1:BX+BW+70,y1:CTOP,x2:BX+BW+70,y2:VBOT,stroke:"#9aa7b3","stroke-width":2}));
+  svg.appendChild(el("path",{d:`M${BX+BW+64},${CTOP+12} L${BX+BW+76},${CTOP+12} L${BX+BW+70},${CTOP} z`,fill:"#9aa7b3"}));
+  txt(svg,BX+BW+70,CTOP-12,"エネルギー高い",{size:12,fill:"#7a8794"});
+  txt(svg,BX+BW+70,VBOT+18,"↑",{size:14,fill:"#7a8794"});
+}
+function fermiLine(y,label){
+  svg.appendChild(el("line",{x1:BX-20,y1:y,x2:BX+BW+20,y2:y,stroke:PURPLE,"stroke-width":3,"stroke-dasharray":"8 5"}));
+  txt(svg,BX+BW+30,y+5,label||"フェルミ準位",{anchor:"start",fill:PURPLE,weight:"bold",size:14});
+}
+function draw(progress=1){
+  clear(svg);
+  drawBands();
+  // 正孔（価電子帯の中）：真性=ごく少数(1), p型=多数
+  const nHole = state===0 ? 1 : Math.round(1+5*easeIO(progress));
+  for(let i=0;i<nHole;i++){
+    const cx=BX+80+i*((BW-120)/5), cy=(VTOP+VBOT)/2;
+    hole(svg,cx,cy,11);
+  }
+  const fy = state===0 ? fermiMid : fermiMid+(fermiP-fermiMid)*easeIO(progress);
+  fermiLine(fy, "フェルミ準位");
+  if(state===0){
+    txt(svg,BX+BW/2,VBOT+90,"真性：正孔が少なく、フェルミ準位は真ん中",{size:15,fill:NAVY,weight:"bold"});
+  }else if(progress>=1){
+    txt(svg,BX+BW/2,VBOT+90,"p型：正孔が多い → フェルミ準位が価電子帯の近く（低い）",{size:15,fill:RED,weight:"bold"});
+  }
+}
+function setState(n){
+  state=n;
+  document.getElementById("b0").classList.toggle("active",n===0);
+  document.getElementById("b1").classList.toggle("active",n===1);
+  const title=document.getElementById("title"),desc=document.getElementById("desc"),hint=document.getElementById("hint");
+  if(anim){cancelAnimationFrame(anim);anim=null;}
+  if(n===0){
+    title.textContent="① 真性半導体：フェルミ準位はちょうど真ん中";
+    desc.innerHTML='バンド図のお約束：<b class="purple">上ほどエネルギーが高い</b>。伝導帯（上・青）と価電子帯（下・赤）があります。<b class="purple">フェルミ準位</b>は「電子の平均的な居場所」を示す目印。純粋な半導体（真性）では、ちょうど<b class="purple">真ん中</b>にあります。';
+    hint.textContent="「p型」を押すと、正孔が増えてフェルミ準位が価電子帯の近くへ下がります。";
+    draw();
+  }else{
+    title.textContent="② p型：正孔が増えて、フェルミ準位が価電子帯の近くへ";
+    desc.innerHTML='ホウ素などを混ぜて<b class="red">正孔をどっと増やす</b>と、電子の平均的な居場所が価電子帯（下）の近くに寄ります。つまり<b class="purple">フェルミ準位が価電子帯の近く＝「低い」</b>状態に。「正孔が多い→フェルミ準位が低い」と覚えましょう。n型（高い）とちょうど対称です。この高低差が、第6週pn接合で崖を作ります。';
+    hint.textContent="フェルミ準位が真ん中から価電子帯の近くへ下がりました。";
+    t0=performance.now();
+    const run=(now)=>{const p=Math.min(1,(now-t0)/1300); draw(p); if(p<1)anim=requestAnimationFrame(run);};
+    anim=requestAnimationFrame(run);
+  }
+}
+document.getElementById("b0").addEventListener("click",()=>setState(0));
+document.getElementById("b1").addEventListener("click",()=>setState(1));
+setState(0);
+</script>
+</body>
+</html>

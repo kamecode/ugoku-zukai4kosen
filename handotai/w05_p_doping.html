@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第5週｜p型ドーピング：結合の手（手が3本＝1本足りない）</title>
+<style>
+  :root{--navy:#1C3A5E;--ink:#222222;--blue:#1F6FB2;--red:#C0392B;--purple:#7E3FA0;--green:#2E8B57;--line:#cfd6dd;--panebg:#f6f8fa;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;color:var(--ink);font-family:"メイリオ","Meiryo",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 60px;}
+  h1{color:var(--navy);font-size:24px;margin:0 0 4px;}
+  .sub{color:#5a6b7b;font-size:15px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .stage{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 14px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stage-title{color:var(--navy);font-size:19px;font-weight:bold;margin:2px 4px 8px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 4px;align-items:center;}
+  .btn{font-family:inherit;font-size:15px;cursor:pointer;border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:9px 15px;}
+  .btn:hover{background:#eef3f8;} .btn.active{background:var(--navy);color:#fff;} .btn:disabled{opacity:.4;cursor:default;}
+  .desc{background:var(--panebg);border-radius:10px;padding:12px 14px;margin:10px 4px 6px;font-size:16px;line-height:1.7;}
+  .desc b.blue{color:var(--blue);} .desc b.red{color:var(--red);} .desc b.purple{color:var(--purple);} .desc b.green{color:var(--green);}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:6px 6px 2px;font-size:14px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .sw{width:18px;height:18px;border-radius:50%;display:inline-block;}
+  .sw.si{background:#dfe6ee;border:1.5px solid #8a93a0;} .sw.b{background:#fbe6e3;border:1.5px solid var(--red);}
+  .sw.e{background:var(--blue);} .sw.h{background:#fff;border:2.5px solid var(--red);}
+  svg{display:block;width:100%;height:auto;} .hint{font-size:13.5px;color:#6a7785;margin:4px 6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第5週｜p型ドーピング：結合の「手」で見る</h1>
+  <p class="sub">手が3本の不純物（ホウ素）を1個混ぜると、手が1本足りず「空席（正孔）」ができます。</p>
+
+  <div class="stage">
+    <div class="stage-title" id="title">① 純粋なシリコン：手が4本ずつ、ぴったり噛み合う</div>
+    <svg id="svg" viewBox="0 0 1000 520" aria-label="p型ドーピングのアニメ"></svg>
+    <div class="controls">
+      <button class="btn active" id="b0">純粋なSi</button>
+      <button class="btn" id="b1">ホウ素(B)を置く</button>
+      <button class="btn" id="b2">空席（正孔）が動く</button>
+    </div>
+    <div class="desc" id="desc">
+      シリコン（Si）は結合の手が<b class="purple">4本</b>。隣どうしで手をつなぎ合い、すべての手がふさがって安定しています。
+      この状態では自由に動ける電子も空席もほとんどありません（＝第4週の真性半導体）。
+    </div>
+    <div class="legend">
+      <span><i class="sw si"></i> シリコン（Si・手4本）</span>
+      <span><i class="sw b"></i> ホウ素（B・手3本）</span>
+      <span><i class="sw h"></i> 正孔（＋）＝空席</span>
+      <span>━━ ＝ 共有結合（電子2個）／<span style="color:#C0392B">- - -</span> ＝ 1個足りない</span>
+    </div>
+    <p class="hint" id="hint">ボタンで「純Si → ホウ素を置く → 空席が動く」と進めてください。</p>
+  </div>
+</div>
+
+<script>
+const NAVY="#1C3A5E",BLUE="#1F6FB2",RED="#C0392B",PURPLE="#7E3FA0",GREEN="#2E8B57",LINE="#cfd6dd",SIFILL="#dfe6ee",SISTROKE="#8a93a0";
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function txt(s,x,y,str,o={}){const t=el("text",{x,y,"font-size":o.size||15,"font-family":'"メイリオ",Meiryo,sans-serif',
+  fill:o.fill||"#222","text-anchor":o.anchor||"middle","font-weight":o.weight||"normal"});t.textContent=str;s.appendChild(t);return t;}
+function atom(s,cx,cy,label,kind){ // 'si' | 'b'
+  const r=34, fill=kind==="b"?"#fbe6e3":SIFILL, stroke=kind==="b"?RED:SISTROKE;
+  s.appendChild(el("circle",{cx,cy,r,fill,stroke,"stroke-width":2}));
+  txt(s,cx,cy+6,label,{size:18,weight:"bold",fill:kind==="b"?RED:NAVY});
+}
+function electron(s,cx,cy,r=11){const g=el("g",{});g.appendChild(el("circle",{cx,cy,r,fill:BLUE}));
+  const m=el("text",{x:cx,y:cy+5,"font-size":14,fill:"#fff","text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="−";g.appendChild(m);s.appendChild(g);return g;}
+function hole(s,cx,cy,r=11){const g=el("g",{});g.appendChild(el("circle",{cx,cy,r,fill:"#fff",stroke:RED,"stroke-width":3}));
+  const m=el("text",{x:cx,y:cy+5,"font-size":14,fill:RED,"text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="+";g.appendChild(m);s.appendChild(g);return g;}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+const svg=document.getElementById("svg");
+const COLS=3,ROWS=3, X0=210,Y0=130, DX=290,DY=150;
+function gx(c){return X0+c*DX;} function gy(r){return Y0+r*DY;}
+const centerC=1,centerR=1;
+function bonds(){const list=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  if(c<COLS-1)list.push([[c,r],[c+1,r]]); if(r<ROWS-1)list.push([[c,r],[c,r+1]]);}return list;}
+let state=0, anim=null, t0=0;
+
+// 共有結合＝電子対（平行2本線）。missing=true のとき電子対の片方が欠ける（実線+点線）。
+function drawBondLine(a,b,missing){
+  const x1=gx(a[0]),y1=gy(a[1]),x2=gx(b[0]),y2=gy(b[1]);
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len,R=36;
+  const sx=x1+ux*R,sy=y1+uy*R,ex=x2-ux*R,ey=y2-uy*R;
+  const nx=-uy, ny=ux, off=5;
+  const mx=(sx+ex)/2, my=(sy+ey)/2;
+  if(!missing){
+    // 完全な電子対：2本実線＋電子2個
+    svg.appendChild(el("line",{x1:sx+nx*off,y1:sy+ny*off,x2:ex+nx*off,y2:ey+ny*off,stroke:"#aab3bd","stroke-width":3}));
+    svg.appendChild(el("line",{x1:sx-nx*off,y1:sy-ny*off,x2:ex-nx*off,y2:ey-ny*off,stroke:"#aab3bd","stroke-width":3}));
+    svg.appendChild(el("circle",{cx:mx+nx*off,cy:my+ny*off,r:3.2,fill:"#6a7785"}));
+    svg.appendChild(el("circle",{cx:mx-nx*off,cy:my-ny*off,r:3.2,fill:"#6a7785"}));
+  }else{
+    // 片方が欠ける：一方は実線+電子1個、もう一方は赤点線+電子なし（足りない1個＝正孔）
+    svg.appendChild(el("line",{x1:sx+nx*off,y1:sy+ny*off,x2:ex+nx*off,y2:ey+ny*off,stroke:"#aab3bd","stroke-width":3}));
+    svg.appendChild(el("circle",{cx:mx+nx*off,cy:my+ny*off,r:3.2,fill:"#6a7785"}));
+    svg.appendChild(el("line",{x1:sx-nx*off,y1:sy-ny*off,x2:ex-nx*off,y2:ey-ny*off,stroke:RED,"stroke-width":3,"stroke-dasharray":"5 5"}));
+  }
+}
+
+// ホウ素は中央。足りない手＝中央と「右隣」の結合が欠ける、と表現
+function draw(progress=1){
+  clear(svg);
+  const bl=bonds();
+  // どのボンドが「足りない手＝正孔の現在位置」か。state2では正孔が動く
+  // 正孔位置：中央(1,1)と右隣(2,1)の間 → 進行で隣の結合へ移っていく
+  bl.forEach(([a,b])=>{
+    let missing=false;
+    if(state>=1){
+      // 足りない手の現在の「ボンド」を決める
+      if(state===1){ missing = (a[0]===centerC&&a[1]===centerR&&b[0]===centerC+1&&b[1]===centerR); }
+    }
+    drawBondLine(a,b,missing);
+  });
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const isCenter=(c===centerC&&r===centerR);
+    if(isCenter&&state>=1) atom(svg,gx(c),gy(r),"B","b");
+    else atom(svg,gx(c),gy(r),"Si","si");
+  }
+  if(state===1){
+    // 足りない手（欠けた電子対の点線側）に空席(正孔)
+    const a=[centerC,centerR], b=[centerC+1,centerR];
+    const x1=gx(a[0]),y1=gy(a[1]),x2=gx(b[0]),y2=gy(b[1]);
+    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len;
+    const nx=-uy,ny=ux,off=5;
+    const hx=(x1+ux*36 + x2-ux*36)/2 - nx*off, hy=(y1+uy*36 + y2-uy*36)/2 - ny*off;
+    hole(svg,hx,hy,11);
+    txt(svg,hx,hy-26,"電子対が1個足りない＝空席（正孔）",{size:14,fill:RED,weight:"bold"});
+    txt(svg,gx(centerC),gy(centerR)+52,"B（手が3本）",{size:13,fill:RED});
+  }
+  if(state===2){
+    // 正孔が右へ動く：中央右→右上→…と隣のボンド中点を渡り歩く（電子が逆向きに詰める）
+    const mids=[
+      {x:(gx(1)+gx(2))/2,y:gy(1)},
+      {x:gx(2),y:(gy(1)+gy(0))/2},
+      {x:(gx(1)+gx(2))/2,y:gy(0)},
+      {x:(gx(0)+gx(1))/2,y:gy(0)},
+      {x:gx(0),y:(gy(0)+gy(1))/2},
+      {x:(gx(0)+gx(1))/2,y:gy(1)},
+    ];
+    const seg=mids.length, tt=(progress*seg)%seg, i=Math.floor(tt), f=tt-i;
+    const p0=mids[i], p1=mids[(i+1)%seg];
+    const hx=p0.x+(p1.x-p0.x)*easeIO(f), hy=p0.y+(p1.y-p0.y)*easeIO(f);
+    hole(svg,hx,hy,12);
+    txt(svg,gx(1),gy(1)+95,"空席（正孔）が動き回る＝プラスを運ぶ主役（多数キャリア）",{size:15,fill:RED,weight:"bold"});
+    txt(svg,gx(centerC),gy(centerR)+52,"B⁻（電子を1個受け取る）",{size:13,fill:RED});
+  }
+}
+
+function setState(n){
+  state=n;
+  ["b0","b1","b2"].forEach((id,i)=>document.getElementById(id).classList.toggle("active",i===n));
+  const title=document.getElementById("title"),desc=document.getElementById("desc"),hint=document.getElementById("hint");
+  if(anim){cancelAnimationFrame(anim);anim=null;}
+  if(n===0){
+    title.textContent="① 純粋なシリコン：手が4本ずつ、ぴったり噛み合う";
+    desc.innerHTML='シリコン（Si）は結合の手が<b class="purple">4本</b>。隣どうしが電子を1個ずつ出し合い、<b class="purple">電子2個を共有する結合（共有結合）</b>を作ります。図の2本線が1組の結合（電子対）です。すべての手がふさがって安定し、自由に動ける電子も空席もほとんどありません（＝第4週の真性半導体）。';
+    hint.textContent="ボタンで「純Si → ホウ素を置く → 空席が動く」と進めてください。";
+    draw();
+  }else if(n===1){
+    title.textContent="② ホウ素(B)を1個置く：手が3本＝1本足りない";
+    desc.innerHTML='中央のSiを、手が<b class="red">3本</b>のホウ素（B）に置き換えました。3本ぶんは隣と電子対を作れますが、<b class="red">1か所だけ電子が1個足りず、電子対が片方欠けます</b>（図の赤い点線）。この足りない1個ぶんのすき間が、第4週で学んだ<b class="red">正孔（＋）</b>です。';
+    hint.textContent="次の「空席（正孔）が動く」を押すと、隣から電子が詰めて空席が動き出します。";
+    draw();
+  }else{
+    title.textContent="③ 空席（正孔）が動く：p型のできあがり";
+    desc.innerHTML='足りない場所（空席）に隣の電子が詰めると、その電子がいた場所が新しい空席に。これをくり返して<b class="red">正孔が動き回ります</b>（満員電車の空席と同じ）。混ぜたぶんだけ正孔が増える＝<b class="red">正孔が多数キャリア</b>。これが<b class="red">p型</b>（positive＝プラスを運ぶ）です。電子を受け取ったホウ素は<b class="red">−イオン</b>として格子に残りますが、動きません。';
+    hint.textContent="空席（正孔）が1個、格子の中をぐるぐる動き続けます（=電気を運べる状態）。";
+    t0=performance.now();
+    const loop=(now)=>{const prog=((now-t0)/4800)%1; draw(prog); anim=requestAnimationFrame(loop);};
+    anim=requestAnimationFrame(loop);
+  }
+}
+document.getElementById("b0").addEventListener("click",()=>setState(0));
+document.getElementById("b1").addEventListener("click",()=>setState(1));
+document.getElementById("b2").addEventListener("click",()=>setState(2));
+setState(0);
+</script>
+</body>
+</html>

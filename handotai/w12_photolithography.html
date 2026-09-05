@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フォトリソグラフィの1サイクル｜第12週</title>
+<style>
+  :root{
+    --ink:#1b2733;
+    --sub:#5a6b7a;
+    --line:#cfd8e0;
+    --paper:#f4f1ea;
+    --card:#ffffff;
+    --pos:#1F6FB2;   /* ポジティブ＝青 */
+    --neg:#C0392B;   /* ネガティブ＝赤 */
+    --emph:#7E3FA0;  /* 強調＝紫 */
+    --task:#2E8B57;  /* 課題＝緑 */
+    /* 断面の素材色 */
+    --si:#7d8794;      /* シリコン基板 */
+    --film:#e0a44a;    /* 成膜した薄膜（酸化膜など） */
+    --resist:#3aa6c9;  /* レジスト（感光材） */
+    --resist-exp:#9fd6e6; /* 露光されたレジスト */
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),
+      var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    padding:24px 16px 56px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+  .eyebrow{
+    font-size:13px;letter-spacing:.18em;color:var(--emph);
+    font-weight:700;margin-bottom:6px;
+  }
+  h1{
+    font-size:26px;margin:0 0 4px;line-height:1.3;
+  }
+  .lead{color:var(--sub);font-size:15px;margin:0 0 22px;line-height:1.7;}
+  .analogy{
+    display:inline-block;background:#fff7e8;border:1px solid #f0d9a8;
+    color:#8a6a1f;font-size:13px;padding:6px 12px;border-radius:999px;
+    margin-bottom:20px;
+  }
+  .stage{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 18px 8px;
+    box-shadow:0 10px 30px -18px rgba(20,40,60,.4);
+  }
+  .svgbox{width:100%;height:auto;display:block;}
+  .stepinfo{
+    display:flex;gap:16px;align-items:flex-start;
+    padding:14px 6px 18px;
+  }
+  .stepnum{
+    flex:0 0 auto;width:46px;height:46px;border-radius:12px;
+    background:var(--emph);color:#fff;font-weight:800;font-size:22px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .steptext h2{margin:0 0 4px;font-size:19px;}
+  .steptext p{margin:0;color:var(--sub);font-size:14px;line-height:1.7;}
+  .steptext .en{color:#93a1ad;font-size:12px;font-weight:600;letter-spacing:.04em;}
+  .controls{
+    display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px;
+  }
+  .controls button{
+    border:1px solid var(--line);background:#fff;color:var(--sub);
+    padding:8px 12px;border-radius:10px;font-size:13px;cursor:pointer;
+    font-family:inherit;transition:.15s;font-weight:600;
+  }
+  .controls button:hover{border-color:var(--emph);color:var(--emph);}
+  .controls button.active{
+    background:var(--emph);border-color:var(--emph);color:#fff;
+  }
+  .nav{display:flex;justify-content:space-between;gap:10px;margin-top:10px;}
+  .nav button{
+    flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;
+    font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .prev{background:#e7edf2;color:var(--ink);}
+  .next{background:var(--pos);color:#fff;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+  .legend{
+    display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--sub);
+    margin:4px 6px 0;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:16px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.15);}
+  .progress{display:flex;gap:6px;margin:14px 6px 0;}
+  .dot{flex:1;height:5px;border-radius:3px;background:#dde4ea;}
+  .dot.on{background:var(--emph);}
+  .repeat{
+    text-align:center;color:var(--task);font-weight:700;font-size:14px;
+    margin-top:18px;padding:12px;background:#eef7f1;border-radius:12px;
+    border:1px solid #c7e6d4;
+  }
+  .repeat.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第12週 ｜ 砂からチップへ ①</div>
+  <h1>フォトリソグラフィの1サイクル</h1>
+  <p class="lead">シリコンの板（ウェハ）の上に、光で模様を焼きつけて立体構造を作っていきます。<br>下のボタンで工程を1つずつ進めて、断面がどう変わるかを見てみましょう。</p>
+  <div class="analogy">🎨 イメージは「版画を何色も刷り重ねる」── この6工程を何十回もくり返します</div>
+
+  <div class="stage">
+    <svg class="svgbox" viewBox="0 0 760 360" role="img" aria-label="フォトリソグラフィの断面図">
+      <!-- 定義：マスク・光 -->
+      <defs>
+        <linearGradient id="lightg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffe98a" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#ffe98a" stop-opacity="0.05"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 光（露光時のみ表示） -->
+      <g id="g-light" opacity="0">
+        <!-- マスクの開口部から下りる光。マスクの「窓」は x=250-330, x=470-540 が開いている想定 -->
+        <rect x="250" y="40" width="80" height="120" fill="url(#lightg)"/>
+        <rect x="470" y="40" width="70" height="120" fill="url(#lightg)"/>
+        <!-- 光の矢印 -->
+        <g stroke="#e8b400" stroke-width="2">
+          <line x1="270" y1="48" x2="270" y2="150"/><line x1="290" y1="48" x2="290" y2="150"/><line x1="310" y1="48" x2="310" y2="150"/>
+          <line x1="488" y1="48" x2="488" y2="150"/><line x1="508" y1="48" x2="508" y2="150"/><line x1="528" y1="48" x2="528" y2="150"/>
+        </g>
+      </g>
+
+      <!-- マスク（露光時のみ表示） -->
+      <g id="g-mask" opacity="0">
+        <rect x="120" y="20" width="520" height="20" rx="3" fill="#3a4654"/>
+        <!-- 開口部（窓）を白抜きで表現 -->
+        <rect x="250" y="20" width="80" height="20" fill="#ffe98a"/>
+        <rect x="470" y="20" width="70" height="20" fill="#ffe98a"/>
+        <text x="130" y="15" font-size="12" fill="#3a4654" font-weight="700">マスク（型紙）</text>
+      </g>
+
+      <!-- 断面スタック。基準の床 y=300、ウェハ上面 y=240 -->
+      <!-- 影 -->
+      <ellipse cx="380" cy="318" rx="300" ry="14" fill="#000" opacity="0.06"/>
+
+      <!-- シリコン基板（常時表示） -->
+      <g>
+        <rect x="120" y="240" width="520" height="60" rx="4" fill="var(--si)"/>
+        <text x="380" y="277" text-anchor="middle" font-size="15" fill="#fff" font-weight="700">シリコン基板（ウェハ）</text>
+      </g>
+
+      <!-- 薄膜（成膜後に表示） -->
+      <g id="g-film" opacity="0">
+        <rect id="film-rect" x="120" y="210" width="520" height="30" rx="3" fill="var(--film)"/>
+      </g>
+
+      <!-- レジスト（塗布後に表示） -->
+      <g id="g-resist" opacity="0">
+        <rect id="resist-rect" x="120" y="180" width="520" height="30" rx="3" fill="var(--resist)"/>
+      </g>
+
+      <!-- 露光されたレジストの印（露光後） -->
+      <g id="g-exposed" opacity="0">
+        <rect x="250" y="180" width="80" height="30" fill="var(--resist-exp)"/>
+        <rect x="470" y="180" width="70" height="30" fill="var(--resist-exp)"/>
+      </g>
+
+      <!-- ラベル（右側の素材名・状態に応じて差し替え） -->
+      <g id="labels" font-size="12.5" font-weight="700"></g>
+    </svg>
+  </div>
+
+  <div class="stepinfo">
+    <div class="stepnum" id="stepnum">1</div>
+    <div class="steptext">
+      <h2 id="steptitle"></h2>
+      <div class="en" id="stepen"></div>
+      <p id="stepdesc"></p>
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="nav">
+    <button class="prev" id="prev">← 前へ</button>
+    <button class="next" id="next">次へ →</button>
+  </div>
+
+  <div class="repeat hidden" id="repeat">🔁 これを何十回もくり返して、立体的な回路を積み上げます</div>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:var(--si)"></span>シリコン基板</span>
+    <span><span class="sw" style="background:var(--film)"></span>薄膜（酸化膜など）</span>
+    <span><span class="sw" style="background:var(--resist)"></span>レジスト（感光材）</span>
+    <span><span class="sw" style="background:var(--resist-exp)"></span>光が当たったレジスト</span>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    n:1, title:"成膜", en:"Deposition",
+    desc:"シリコンの上に、薄い膜を一層ぬります。料理でいう「重ね塗り・ラミネート」。この膜が、あとで回路の材料になります。",
+    show:{film:1}, filmW:520, filmX:120, exposed:0, mask:0, light:0,
+    label:"薄い膜をのせた"
+  },
+  {
+    n:2, title:"レジスト塗布", en:"Coating",
+    desc:"膜の上に、光に反応する「レジスト（感光材）」をぬります。写真のフィルムのように、光が当たると性質が変わる材料です。",
+    show:{film:1,resist:1}, exposed:0, mask:0, light:0,
+    label:"感光材をぬった"
+  },
+  {
+    n:3, title:"露光", en:"Exposure",
+    desc:"マスク（型紙）を通して光を当てます。窓が開いた部分だけ光が通り、レジストに模様が焼きつきます。光の波長が短いほど細かく描けます（EUV＝超細ペン先）。",
+    show:{film:1,resist:1}, exposed:1, mask:1, light:1,
+    label:"光で模様を焼いた"
+  },
+  {
+    n:4, title:"現像", en:"Development",
+    desc:"薬品で洗うと、光が当たった部分のレジストだけが溶けて流れます。型紙の模様が、レジストの「穴」として残りました。",
+    show:{film:1,resist:1}, removeExposed:1, exposed:0, mask:0, light:0,
+    label:"光が当たった所が溶けた"
+  },
+  {
+    n:5, title:"エッチング", en:"Etching",
+    desc:"レジストの穴から、下の膜を溶かして削ります。彫刻刀や型抜きのイメージ。レジストで守られた所だけ膜が残ります。",
+    show:{film:1,resist:1}, removeExposed:1, etch:1, exposed:0, mask:0, light:0,
+    label:"守られた所だけ膜が残った"
+  },
+  {
+    n:6, title:"レジスト剥離", en:"Strip",
+    desc:"役目を終えたレジストを全部はがします。すると、膜が思いどおりの模様（パターン）になっています。これで1サイクル完了です。",
+    show:{film:1}, etch:1, exposed:0, mask:0, light:0, repeat:1,
+    label:"模様どおりに膜が残った"
+  },
+];
+
+let cur = 0;
+
+const $ = id => document.getElementById(id);
+const gFilm=$("g-film"), gResist=$("g-resist"), gExposed=$("g-exposed"),
+      gMask=$("g-mask"), gLight=$("g-light"),
+      filmRect=$("film-rect"), resistRect=$("resist-rect");
+
+function render(i){
+  const s = steps[i];
+  // 表示ON/OFF
+  gFilm.style.opacity   = s.show.film   ? 1 : 0;
+  gResist.style.opacity = s.show.resist ? 1 : 0;
+  gExposed.style.opacity= s.exposed     ? 1 : 0;
+  gMask.style.opacity   = s.mask        ? 1 : 0;
+  gLight.style.opacity  = s.light       ? 1 : 0;
+
+  // 現像でレジストに穴をあける（露光部分を消す）→ クリップ風に矩形分割
+  if(s.removeExposed){
+    resistRect.setAttribute("opacity","0");
+    drawResistWithHoles();
+  } else {
+    resistRect.setAttribute("opacity","1");
+    clearResistHoles();
+  }
+
+  // エッチングで膜にも穴をあける
+  if(s.etch){
+    filmRect.setAttribute("opacity","0");
+    drawFilmWithHoles();
+  } else {
+    filmRect.setAttribute("opacity","1");
+    clearFilmHoles();
+  }
+
+  // テキスト
+  $("stepnum").textContent = s.n;
+  $("steptitle").textContent = s.title;
+  $("stepen").textContent = s.en;
+  $("stepdesc").textContent = s.desc;
+
+  // 進捗
+  document.querySelectorAll(".dot").forEach((d,idx)=>d.classList.toggle("on",idx<=i));
+  // くり返し表示
+  $("repeat").classList.toggle("hidden", !s.repeat);
+  // ナビ
+  $("prev").disabled = i===0;
+  $("next").disabled = i===steps.length-1;
+  // コントロール active
+  document.querySelectorAll("#controls button").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+}
+
+// 穴あきレジスト（窓 x250-330, x470-540 を抜く）
+function drawResistWithHoles(){
+  clearResistHoles();
+  const segs=[[120,250],[330,470],[540,640]];
+  segs.forEach(([x1,x2])=>{
+    const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    r.setAttribute("x",x1); r.setAttribute("y",180);
+    r.setAttribute("width",x2-x1); r.setAttribute("height",30);
+    r.setAttribute("rx",3); r.setAttribute("fill","var(--resist)");
+    r.setAttribute("class","resist-seg");
+    gResist.appendChild(r);
+  });
+}
+function clearResistHoles(){ document.querySelectorAll(".resist-seg").forEach(e=>e.remove()); }
+
+function drawFilmWithHoles(){
+  clearFilmHoles();
+  const segs=[[120,250],[330,470],[540,640]];
+  segs.forEach(([x1,x2])=>{
+    const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    r.setAttribute("x",x1); r.setAttribute("y",210);
+    r.setAttribute("width",x2-x1); r.setAttribute("height",30);
+    r.setAttribute("rx",3); r.setAttribute("fill","var(--film)");
+    r.setAttribute("class","film-seg");
+    gFilm.appendChild(r);
+  });
+}
+function clearFilmHoles(){ document.querySelectorAll(".film-seg").forEach(e=>e.remove()); }
+
+// コントロールボタン生成
+const ctr=$("controls");
+steps.forEach((s,i)=>{
+  const b=document.createElement("button");
+  b.textContent=`${s.n}. ${s.title}`;
+  b.onclick=()=>{cur=i;render(cur);};
+  ctr.appendChild(b);
+});
+// 進捗ドット
+const pg=$("progress");
+steps.forEach(()=>{const d=document.createElement("div");d.className="dot";pg.appendChild(d);});
+
+$("prev").onclick=()=>{if(cur>0){cur--;render(cur);}};
+$("next").onclick=()=>{if(cur<steps.length-1){cur++;render(cur);}};
+
+render(0);
+</script>
+</body>
+</html>

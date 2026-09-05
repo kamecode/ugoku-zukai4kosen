@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>コンパレータ測定回路図</title>
+<style>
+  :root{
+    --blue:#1565C0; --orange:#E65100; --red:#D32F2F;
+    --purple:#6A1B9A; --gray:#9E9E9E; --green:#2E7D32;
+    --navy:#0D3C6E; --ink:#1a1a1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;color:var(--ink);}
+  .wrap{width:1240px;margin:0 auto;padding:18px 24px 22px;}
+  h1{font-size:23px;color:var(--navy);margin:0 0 3px;font-weight:800;}
+  .lead{font-size:13.5px;color:#555;margin:0 0 12px;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .card{border:2px solid #dfe4e9;border-radius:13px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .card-head{padding:9px 15px;font-size:15.5px;font-weight:800;color:#fff;}
+  .card.basic .card-head{background:var(--navy);}
+  .card.hys .card-head{background:var(--purple);}
+  .card-body{padding:6px 8px 10px;}
+  .note{font-size:12px;color:#666;padding:0 8px 6px;line-height:1.6;}
+  .pin{font-size:11px;color:#888;padding:6px 12px;border-top:1px dashed #e3e7eb;}
+  .pin b{color:var(--navy);}
+  text{font-family:"Noto Sans CJK JP",sans-serif;}
+  .common{margin-top:14px;background:#f7f9fb;border:1px solid #e6ebef;border-radius:11px;padding:10px 15px;font-size:12.8px;color:#444;line-height:1.7;}
+  .common b{color:var(--navy);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>コンパレータ 測定回路図 ― 基本コンパレータ ／ ヒステリシス（第13週実験用）</h1>
+  <p class="lead">NJM4558 の A回路・両電源 ±8V・入力はファンクションジェネレータ。オシロ CH1＝入力、CH2＝出力。色：<span style="color:var(--blue)">入力=青</span> / <span style="color:var(--purple)">基準・帰還=紫</span> / <span style="color:var(--orange)">出力=橙</span> / <span style="color:var(--red)">電源+=赤</span>。</p>
+
+  <div class="cols">
+    <!-- 基本コンパレータ -->
+    <div class="card basic">
+      <div class="card-head">① 基本コンパレータ（帰還なし）</div>
+      <div class="card-body">
+        <svg id="basic" width="600" height="330" viewBox="0 0 600 330"></svg>
+      </div>
+      <div class="note">入力 V<sub>in</sub> を ＋入力(pin3) へ、基準 V<sub>ref</sub> を分圧で −入力(pin2) へ。V<sub>in</sub>＞V<sub>ref</sub> で出力 ＋レール、V<sub>in</sub>＜V<sub>ref</sub> で −レール。R<sub>a</sub>=R<sub>b</sub>=10kΩ で V<sub>ref</sub>＝0V。</div>
+      <div class="pin"><b>使用ピン：</b>3=＋入力(V<sub>in</sub>) / 2=−入力(V<sub>ref</sub>) / 1=出力 / 8=V+ / 4=V−</div>
+    </div>
+
+    <!-- ヒステリシス -->
+    <div class="card hys">
+      <div class="card-head">② ヒステリシス（非反転シュミットトリガ・正帰還あり）</div>
+      <div class="card-body">
+        <svg id="hys" width="600" height="330" viewBox="0 0 600 330"></svg>
+      </div>
+      <div class="note">出力を R<sub>f</sub> で ＋入力(pin3) へ戻す（正帰還）。＋入力＝V<sub>in</sub> と V<sub>out</sub> の重ね合わせ。R1=10kΩ, Rf=100kΩ で しきい値 ±V<sub>sat</sub>·(R1/Rf)≈±0.7V、ヒステリシス幅≈1.4V。</div>
+      <div class="pin"><b>使用ピン：</b>3=＋入力(V<sub>in</sub>＋帰還) / 2=−入力(基準0V) / 1=出力 / 8=V+ / 4=V−</div>
+    </div>
+  </div>
+
+  <div class="common">
+    <b>共通の配線メモ：</b> NJM4558 は2回路入り。今回使う A回路は 1=出力 / 2=−入力 / 3=＋入力。電源は 8=V+(+8V) / 4=V−(−8V)。
+    <b>未使用の B回路</b>（5=＋入力, 6=−入力, 7=出力）は放置せず、<b>5番→GND、7番→6番を直結（フォロワ化）</b>で安定させる。
+    オシロは GND を電源の 0V（中点）に合わせる。
+  </div>
+</div>
+
+<script>
+const C={blue:'#1565C0',orange:'#E65100',red:'#D32F2F',purple:'#6A1B9A',gray:'#9E9E9E',ink:'#333'};
+
+/* OPアンプ三角（ピン番号付き） */
+function opamp(triL,opy){
+  const triR=triL+120, triMidY=opy+58;
+  const inMinusY=opy+30, inPlusY=opy+86;
+  let h='';
+  h+=`<polygon points="${triL},${opy} ${triR},${triMidY} ${triL},${opy+116}" fill="#fff" stroke="#333" stroke-width="2.5"/>`;
+  h+=`<text x="${triL+26}" y="${inMinusY+6}" font-size="20" font-weight="800" fill="#333">−</text>`;
+  h+=`<text x="${triL+26}" y="${inPlusY+7}" font-size="18" font-weight="800" fill="#333">+</text>`;
+  h+=`<text x="${triL+44}" y="${triMidY+4}" font-size="12" fill="#555">NJM4558</text>`;
+  h+=`<text x="${triL+48}" y="${triMidY+18}" font-size="10.5" fill="#888">(A回路)</text>`;
+  // ピン番号
+  h+=`<text x="${triL-2}" y="${inMinusY+15}" font-size="10.5" text-anchor="end" fill="#666">pin2</text>`;
+  h+=`<text x="${triL-4}" y="${inPlusY+18}" font-size="10.5" text-anchor="end" fill="#666">pin3</text>`;
+  h+=`<text x="${triR+6}" y="${triMidY-8}" font-size="10.5" fill="#666">pin1</text>`;
+  // 電源
+  h+=`<line x1="${triL+44}" y1="${opy+2}" x2="${triL+44}" y2="${opy-24}" stroke="${C.red}" stroke-width="2.5"/>`;
+  h+=`<text x="${triL+50}" y="${opy-12}" font-size="11.5" font-weight="700" fill="${C.red}">+8V (pin8)</text>`;
+  h+=`<line x1="${triL+44}" y1="${opy+114}" x2="${triL+44}" y2="${opy+140}" stroke="${C.blue}" stroke-width="2.5"/>`;
+  h+=`<text x="${triL+50}" y="${opy+138}" font-size="11.5" font-weight="700" fill="${C.blue}">−8V (pin4)</text>`;
+  return {h,triR,triMidY,inMinusY,inPlusY};
+}
+function fg(cx,cy,col){
+  let h='';
+  h+=`<circle cx="${cx}" cy="${cy}" r="20" fill="#fff" stroke="${col}" stroke-width="2.5"/>`;
+  h+=`<path d="M ${cx-11} ${cy} q 5.5 -8 11 0 q 5.5 8 11 0" fill="none" stroke="${col}" stroke-width="2"/>`;
+  return h;
+}
+function gnd(x,y){
+  return `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+12}" stroke="#333" stroke-width="2"/>`+
+         `<line x1="${x-10}" y1="${y+12}" x2="${x+10}" y2="${y+12}" stroke="#333" stroke-width="2.5"/>`+
+         `<line x1="${x-6}" y1="${y+16}" x2="${x+6}" y2="${y+16}" stroke="#333" stroke-width="2"/>`+
+         `<line x1="${x-3}" y1="${y+20}" x2="${x+3}" y2="${y+20}" stroke="#333" stroke-width="2"/>`;
+}
+function res(x,y,w,h_,col,vert){ // 抵抗ボックス
+  if(vert) return `<rect x="${x-9}" y="${y}" width="18" height="${h_}" fill="#fff" stroke="${col}" stroke-width="2"/>`;
+  return `<rect x="${x}" y="${y-9}" width="${w}" height="18" fill="#fff" stroke="${col}" stroke-width="2"/>`;
+}
+
+/* ① 基本コンパレータ */
+function drawBasic(){
+  const s=document.getElementById('basic');
+  const triL=300, opy=92;
+  const o=opamp(triL,opy);
+  let h=o.h;
+
+  // --- Vref 分圧（Ra:+8V〜中点, Rb:中点〜−8V）を −入力の左上にまとめる ---
+  // 分圧の縦ラインのx座標（Vin線とは別領域）
+  const divX=triL-130;
+  const midY=o.inMinusY;            // 分圧中点＝−入力と同じ高さ
+  // +8V → Ra → 中点
+  h+=`<line x1="${divX}" y1="${midY-86}" x2="${divX}" y2="${midY-86}" stroke="${C.red}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${midY-86}" x2="${divX}" y2="${midY-74}" stroke="${C.red}" stroke-width="2"/>`;
+  h+=`<text x="${divX}" y="${midY-90}" font-size="10.5" text-anchor="middle" font-weight="700" fill="${C.red}">+8V</text>`;
+  h+=res(divX,midY-74,0,38,C.purple,true);          // Ra
+  h+=`<text x="${divX+13}" y="${midY-52}" font-size="10.5" fill="${C.purple}">Ra=10k</text>`;
+  h+=`<line x1="${divX}" y1="${midY-36}" x2="${divX}" y2="${midY}" stroke="${C.purple}" stroke-width="2"/>`;
+  // 中点 → Rb → −8V
+  h+=res(divX,midY+14,0,38,C.purple,true);          // Rb
+  h+=`<text x="${divX+13}" y="${midY+36}" font-size="10.5" fill="${C.purple}">Rb=10k</text>`;
+  h+=`<line x1="${divX}" y1="${midY}" x2="${divX}" y2="${midY+14}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${midY+52}" x2="${divX}" y2="${midY+72}" stroke="${C.blue}" stroke-width="2"/>`;
+  h+=`<text x="${divX}" y="${midY+86}" font-size="10.5" text-anchor="middle" font-weight="700" fill="${C.blue}">−8V</text>`;
+  // 中点ノード → −入力(pin2)（水平・紫）
+  h+=`<circle cx="${divX}" cy="${midY}" r="3.4" fill="${C.purple}"/>`;
+  h+=`<line x1="${divX}" y1="${midY}" x2="${triL}" y2="${midY}" stroke="${C.purple}" stroke-width="2.5"/>`;
+  h+=`<text x="${divX+8}" y="${midY-7}" font-size="12" font-weight="800" fill="${C.purple}">V<tspan baseline-shift="sub" font-size="8">ref</tspan>=0V</text>`;
+
+  // --- 入力 Vin → ＋入力(pin3)（下側を通す・青）---
+  const fgx=56;
+  h+=fg(fgx,o.inPlusY,C.blue);
+  h+=`<text x="${fgx}" y="${o.inPlusY+38}" font-size="11" font-weight="700" text-anchor="middle" fill="${C.blue}">FG</text>`;
+  h+=`<line x1="${fgx+20}" y1="${o.inPlusY}" x2="${triL}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.5"/>`;
+  h+=`<text x="${fgx+44}" y="${o.inPlusY-9}" font-size="12.5" font-weight="800" fill="${C.blue}">V<tspan baseline-shift="sub" font-size="9">in</tspan></text>`;
+  // CH1タップ（＋入力線上・三角寄り）
+  const ch1x=triL-40;
+  h+=`<circle cx="${ch1x}" cy="${o.inPlusY}" r="3" fill="${C.blue}"/>`;
+  h+=`<line x1="${ch1x}" y1="${o.inPlusY}" x2="${ch1x}" y2="${o.inPlusY+30}" stroke="${C.blue}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  h+=`<text x="${ch1x}" y="${o.inPlusY+44}" font-size="10.5" text-anchor="middle" fill="${C.blue}">CH1</text>`;
+
+  // --- 出力(pin1) ---
+  const outX=o.triR+96;
+  h+=`<line x1="${o.triR}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY}" stroke="${C.orange}" stroke-width="3"/>`;
+  h+=`<circle cx="${outX}" cy="${o.triMidY}" r="5" fill="${C.orange}"/>`;
+  h+=`<text x="${outX-2}" y="${o.triMidY-14}" font-size="13" font-weight="800" text-anchor="middle" fill="${C.orange}">V<tspan baseline-shift="sub" font-size="9">out</tspan></text>`;
+  h+=`<line x1="${outX}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY+38}" stroke="${C.orange}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  h+=`<text x="${outX}" y="${o.triMidY+52}" font-size="10.5" text-anchor="middle" fill="${C.orange}">CH2</text>`;
+  s.innerHTML=h;
+}
+
+/* ② ヒステリシス（非反転シュミットトリガ） */
+function drawHys(){
+  const s=document.getElementById('hys');
+  const triL=290, opy=92;
+  const o=opamp(triL,opy);
+  let h=o.h;
+
+  // ＋入力 合流ノード（Vin/R1・Rf正帰還が集まる）＝三角に近い位置
+  const nodeX=triL-44;
+
+  // 入力 Vin → R1 → ＋入力合流ノード(pin3)
+  const fgx=46;
+  h+=fg(fgx,o.inPlusY,C.blue);
+  h+=`<text x="${fgx}" y="${o.inPlusY+38}" font-size="11" font-weight="700" text-anchor="middle" fill="${C.blue}">FG</text>`;
+  h+=`<line x1="${fgx+20}" y1="${o.inPlusY}" x2="${fgx+44}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.5"/>`;
+  h+=res(fgx+44,o.inPlusY,36,0,C.blue,false);
+  h+=`<text x="${fgx+62}" y="${o.inPlusY-13}" font-size="10.5" text-anchor="middle" fill="${C.blue}">R1=10k</text>`;
+  h+=`<line x1="${fgx+80}" y1="${o.inPlusY}" x2="${nodeX}" y2="${o.inPlusY}" stroke="${C.blue}" stroke-width="2.5"/>`;
+  // CH1タップ（R1の前＝Vin）
+  h+=`<circle cx="${fgx+34}" cy="${o.inPlusY}" r="3" fill="${C.blue}"/>`;
+  h+=`<line x1="${fgx+34}" y1="${o.inPlusY}" x2="${fgx+34}" y2="${o.inPlusY+30}" stroke="${C.blue}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  h+=`<text x="${fgx+34}" y="${o.inPlusY+44}" font-size="10.5" text-anchor="middle" fill="${C.blue}">CH1</text>`;
+  h+=`<text x="${fgx+10}" y="${o.inPlusY-10}" font-size="12" font-weight="800" fill="${C.blue}">V<tspan baseline-shift="sub" font-size="8">in</tspan></text>`;
+  // 合流ノード → ＋入力(pin3)（紫の短い線）
+  h+=`<line x1="${nodeX}" y1="${o.inPlusY}" x2="${triL}" y2="${o.inPlusY}" stroke="${C.purple}" stroke-width="2.5"/>`;
+  h+=`<circle cx="${nodeX}" cy="${o.inPlusY}" r="3.6" fill="${C.purple}"/>`;
+  h+=`<text x="${nodeX-14}" y="${o.inPlusY+22}" font-size="10.5" text-anchor="end" fill="${C.purple}">＋入力へ戻す</text>`;
+
+  // −入力(pin2) → 基準0V(GND)　※＋入力ノードと別x座標（左寄り）
+  const gndX=triL-96;
+  h+=`<line x1="${gndX}" y1="${o.inMinusY}" x2="${triL}" y2="${o.inMinusY}" stroke="#333" stroke-width="2"/>`;
+  h+=`<line x1="${gndX}" y1="${o.inMinusY}" x2="${gndX}" y2="${o.inMinusY-22}" stroke="#333" stroke-width="2"/>`;
+  // GNDは上方向へ（−入力線の上に空きがあるため重なりにくい）
+  h+=`<line x1="${gndX-10}" y1="${o.inMinusY-22}" x2="${gndX+10}" y2="${o.inMinusY-22}" stroke="#333" stroke-width="2.5"/>`;
+  h+=`<line x1="${gndX-6}" y1="${o.inMinusY-26}" x2="${gndX+6}" y2="${o.inMinusY-26}" stroke="#333" stroke-width="2"/>`;
+  h+=`<line x1="${gndX-3}" y1="${o.inMinusY-30}" x2="${gndX+3}" y2="${o.inMinusY-30}" stroke="#333" stroke-width="2"/>`;
+  h+=`<text x="${gndX+14}" y="${o.inMinusY-6}" font-size="11" fill="#555">基準0V</text>`;
+
+  // 出力(pin1)
+  const outX=o.triR+110;
+  h+=`<line x1="${o.triR}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY}" stroke="${C.orange}" stroke-width="3"/>`;
+  h+=`<circle cx="${outX}" cy="${o.triMidY}" r="5" fill="${C.orange}"/>`;
+  h+=`<text x="${outX-2}" y="${o.triMidY-14}" font-size="13" font-weight="800" text-anchor="middle" fill="${C.orange}">V<tspan baseline-shift="sub" font-size="9">out</tspan></text>`;
+  h+=`<line x1="${outX}" y1="${o.triMidY}" x2="${outX}" y2="${o.triMidY+38}" stroke="${C.orange}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  h+=`<text x="${outX}" y="${o.triMidY+52}" font-size="10.5" text-anchor="middle" fill="${C.orange}">CH2</text>`;
+
+  // 正帰還 Rf：出力 → ＋入力合流ノード（上を回す・紫）
+  const topY=opy-44;
+  h+=`<line x1="${outX}" y1="${o.triMidY}" x2="${outX}" y2="${topY}" stroke="${C.purple}" stroke-width="2.6"/>`;
+  h+=`<line x1="${outX}" y1="${topY}" x2="${nodeX}" y2="${topY}" stroke="${C.purple}" stroke-width="2.6"/>`;
+  h+=`<line x1="${nodeX}" y1="${topY}" x2="${nodeX}" y2="${o.inPlusY}" stroke="${C.purple}" stroke-width="2.6"/>`;
+  const rfx=(outX+nodeX)/2;
+  h+=res(rfx-18,topY,36,0,C.purple,false);
+  h+=`<text x="${rfx}" y="${topY-12}" font-size="10.5" text-anchor="middle" font-weight="700" fill="${C.purple}">Rf=100k（正帰還）</text>`;
+  s.innerHTML=h;
+}
+
+drawBasic();
+drawHys();
+</script>
+</body>
+</html>

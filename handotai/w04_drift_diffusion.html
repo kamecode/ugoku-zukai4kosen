@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第4週｜キャリアの動き方：ドリフトと拡散</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222;
+    --blue:#1F6FB2; --red:#C0392B; --purple:#7E3FA0; --green:#2E8B57;
+    --line:#cfd6dd; --panebg:#f6f8fa;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;color:var(--ink);font-family:"メイリオ","Meiryo",sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 60px;}
+  h1{color:var(--navy);font-size:24px;margin:0 0 4px;}
+  .sub{color:#5a6b7b;font-size:15px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;}
+  .tab{font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;border:1.5px solid var(--navy);
+    background:#fff;color:var(--navy);border-radius:8px;padding:10px 16px;transition:.15s;}
+  .tab:hover{background:#eef3f8;}
+  .tab.active{background:var(--navy);color:#fff;}
+  .stage{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 14px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stage-title{color:var(--navy);font-size:19px;font-weight:bold;margin:2px 4px 8px;}
+  .desc{background:var(--panebg);border-radius:10px;padding:12px 14px;margin:10px 4px 6px;font-size:16px;line-height:1.7;}
+  .desc b.blue{color:var(--blue);} .desc b.red{color:var(--red);} .desc b.purple{color:var(--purple);} .desc b.green{color:var(--green);}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 4px;align-items:center;}
+  .btn{font-family:inherit;font-size:15px;cursor:pointer;border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:8px 14px;}
+  .btn:hover{background:#eef3f8;} .btn.primary{background:var(--navy);color:#fff;} .btn:disabled{opacity:.4;cursor:default;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:6px 6px 2px;font-size:14px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .swatch{width:16px;height:16px;border-radius:50%;display:inline-block;}
+  .swatch.e{background:var(--blue);} .swatch.h{background:#fff;border:2.5px solid var(--red);}
+  svg{display:block;width:100%;height:auto;}
+  .hidden{display:none;} .hint{font-size:13.5px;color:#6a7785;margin:4px 6px 0;}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 4px 4px;}
+  .ccard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.6;}
+  .ccard h3{margin:0 0 6px;font-size:16px;}
+  .ccard.d h3{color:var(--blue);} .ccard.f h3{color:var(--green);}
+  @media(max-width:680px){.compare{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第4週｜キャリアの動き方：ドリフトと拡散</h1>
+  <p class="sub">生まれた電子と正孔は、2つのしくみで動きます。電圧で動く「ドリフト」と、濃さの差で動く「拡散」。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-view="drift">① ドリフト（電圧＝坂で動く）</button>
+    <button class="tab" data-view="diff">② 拡散（濃さの差で広がる）</button>
+  </div>
+
+  <div class="stage">
+    <!-- ===== DRIFT ===== -->
+    <div id="view-drift" class="viewpane">
+      <div class="stage-title">電圧をかける＝坂をつける。電子は坂を転がり、正孔は逆へ。そろって流れる＝電流</div>
+      <svg id="svg-drift" viewBox="0 0 1040 380" aria-label="ドリフトのアニメ"></svg>
+      <div class="controls">
+        <button class="btn primary" id="drift-go">▶ 電圧をかける（流し続ける）</button>
+        <button class="btn" id="drift-stop">■ 止める</button>
+        <button class="btn" id="drift-reset">↺ もとに戻す</button>
+      </div>
+      <div class="desc">
+        電圧をかけると、材料の中に<b class="purple">坂（電界）</b>ができます。
+        <b class="blue">電子（−）は坂を低い方へ流れ</b>、<b class="red">正孔（＋）は反対向きに流れます</b>。
+        向きは逆でも、運ぶ電気の符号も逆なので<b class="purple">電流としては同じ向きに足し合わさります</b>。これがドリフト（drift）です。
+      </div>
+      <p class="hint">ポイント：電圧をかけ続けるかぎり流れ続けます（だからループ再生）。これが「電気が流れている」状態。</p>
+    </div>
+
+    <!-- ===== DIFFUSION ===== -->
+    <div id="view-diff" class="viewpane hidden">
+      <div class="stage-title">混んでいる所から空いている所へ。電圧がなくても、濃さの差だけで自然に広がる</div>
+      <svg id="svg-diff" viewBox="0 0 1040 380" aria-label="拡散のアニメ"></svg>
+      <div class="controls">
+        <button class="btn primary" id="diff-go">▶ 仕切りを外す（広がる）</button>
+        <button class="btn" id="diff-reset">↺ もとに戻す</button>
+      </div>
+      <div class="desc">
+        左にキャリアがぎゅっと<b class="red">密集</b>、右は<b class="green">スカスカ</b>。仕切りを外すと、押し合いへし合いの結果、
+        <b class="purple">濃い方から薄い方へ自然に広がって</b>いきます。インクを水に落とすと勝手に広がるのと同じ。
+        電圧（坂）がなくても起きる動きで、これが拡散（diffusion）です。
+      </div>
+      <p class="hint">第6週への伏線：pn接合では、この「拡散」と「坂による戻し（ドリフト）」がせめぎ合って空乏層ができます。</p>
+    </div>
+  </div>
+
+  <div class="compare">
+    <div class="ccard d"><h3>ドリフト</h3>原因＝<b style="color:var(--purple)">電圧（坂・電界）</b>。<br>向き＝坂に沿って。電圧を切ると止まる。</div>
+    <div class="ccard f"><h3>拡散</h3>原因＝<b style="color:var(--purple)">濃さの差</b>。<br>向き＝濃い→薄い。均一になると止まる。電圧は不要。</div>
+  </div>
+  <div class="legend">
+    <span><i class="swatch e"></i> 電子（−）</span>
+    <span><i class="swatch h"></i> 正孔（＋）</span>
+  </div>
+</div>
+
+<script>
+const NAVY="#1C3A5E",BLUE="#1F6FB2",RED="#C0392B",PURPLE="#7E3FA0",GREEN="#2E8B57",LINE="#cfd6dd";
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function txt(s,x,y,str,o={}){const t=el("text",{x,y,"font-size":o.size||16,"font-family":'"メイリオ",Meiryo,sans-serif',
+  fill:o.fill||"#222","text-anchor":o.anchor||"middle","font-weight":o.weight||"normal"});t.textContent=str;s.appendChild(t);return t;}
+function electron(s,x,y,r=10){const g=el("g",{});g.appendChild(el("circle",{cx:x,cy:y,r,fill:BLUE}));
+  const m=el("text",{x,y:y+5,"font-size":14,fill:"#fff","text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="−";g.appendChild(m);s.appendChild(g);return g;}
+function hole(s,x,y,r=10){const g=el("g",{});g.appendChild(el("circle",{cx:x,cy:y,r,fill:"#fff",stroke:RED,"stroke-width":2.8}));
+  const m=el("text",{x,y:y+5,"font-size":14,fill:RED,"text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="+";g.appendChild(m);s.appendChild(g);return g;}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+const tabs=document.querySelectorAll(".tab");
+const panes={drift:document.getElementById("view-drift"),diff:document.getElementById("view-diff")};
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  tabs.forEach(x=>x.classList.remove("active"));t.classList.add("active");
+  for(const k in panes)panes[k].classList.add("hidden");
+  panes[t.dataset.view].classList.remove("hidden");
+  if(t.dataset.view==="drift")drawDrift(); else {stopDrift();drawDiff(0);}
+}));
+
+/* ================= DRIFT ================= */
+const svgD=document.getElementById("svg-drift");
+const D={left:120,right:920,eY:135,hY:255,n:5,speed:170/* px/s */};
+let driftRun=false, driftRAF=null, driftLast=0;
+// 電子・正孔の x 位置（電子は右→左、正孔は左→右、と仮置き。坂は右が低いと定義）
+let eXs=[], hXs=[];
+function driftInit(){
+  eXs=[]; hXs=[];
+  for(let i=0;i<D.n;i++){ eXs.push(D.left+ (D.right-D.left)*(i+0.5)/D.n ); hXs.push(D.left+ (D.right-D.left)*(i+0.5)/D.n ); }
+}
+function drawDrift(){
+  clear(svgD);
+  // 坂（電界）：右が低い＝右下がりの三角で示す
+  svgD.appendChild(el("rect",{x:D.left-40,y:60,width:(D.right-D.left)+80,height:280,rx:12,fill:"#f6f8fa",stroke:LINE,"stroke-width":1.5}));
+  // 電圧の電極
+  svgD.appendChild(el("rect",{x:D.left-60,y:90,width:18,height:220,rx:3,fill:RED}));      txt(svgD,D.left-51,330,"＋",{fill:RED,weight:"bold",size:18});
+  svgD.appendChild(el("rect",{x:D.right+42,y:90,width:18,height:220,rx:3,fill:BLUE}));     txt(svgD,D.right+51,330,"−",{fill:BLUE,weight:"bold",size:18});
+  // 坂の矢印（電界 E：＋から−へ＝右向き、塗り三角で）
+  if(driftRun){
+    svgD.appendChild(el("line",{x1:D.left,y1:48,x2:D.right-14,y2:48,stroke:PURPLE,"stroke-width":2.5}));
+    svgD.appendChild(el("path",{d:`M${D.right-18},${42} L${D.right-18},${54} L${D.right-4},${48} z`,fill:PURPLE}));
+    txt(svgD,(D.left+D.right)/2,40,"電界 E（坂：＋→−）",{fill:PURPLE,size:14,weight:"bold"});
+  }else{
+    txt(svgD,(D.left+D.right)/2,44,"電圧オフ：坂がないので流れない",{fill:"#7a8794",size:14});
+  }
+  // 電子の行（青）：坂で −極側（右）へは行かない。電子は＋極（左）へ引かれる → 左へ流れる
+  txt(svgD,D.left-95,D.eY+5,"電子",{fill:BLUE,size:14,weight:"bold",anchor:"middle"});
+  for(const x of eXs) electron(svgD,x,D.eY,11);
+  // 正孔の行（赤）：＋極から離れ −極（右）へ → 右へ流れる
+  txt(svgD,D.left-95,D.hY+5,"正孔",{fill:RED,size:14,weight:"bold",anchor:"middle"});
+  for(const x of hXs) hole(svgD,x,D.hY,11);
+  // 電流の向き表示
+  if(driftRun){
+    txt(svgD,(D.left+D.right)/2,D.eY-34,"電子は ← 左（＋極）へ",{fill:BLUE,size:14});
+    txt(svgD,(D.left+D.right)/2,D.hY+40,"正孔は → 右（−極）へ",{fill:RED,size:14});
+    txt(svgD,(D.left+D.right)/2,360,"電子と正孔は逆向き。でも電流（I）としては同じ向きに足し合わさる",{fill:PURPLE,size:14,weight:"bold"});
+  }
+}
+function driftTick(now){
+  if(!driftRun) return;
+  const dt=driftLast? (now-driftLast)/1000 : 0; driftLast=now;
+  const span=D.right-D.left;
+  for(let i=0;i<D.n;i++){
+    eXs[i]-=D.speed*dt; if(eXs[i]<D.left+10){ eXs[i]=D.right-10; } // 電子は左へ、端で右へワープ（流れ続ける）
+    hXs[i]+=D.speed*dt; if(hXs[i]>D.right-10){ hXs[i]=D.left+10; } // 正孔は右へ
+  }
+  drawDrift();
+  driftRAF=requestAnimationFrame(driftTick);
+}
+function startDrift(){ if(driftRun)return; driftRun=true; driftLast=0; document.getElementById("drift-go").disabled=true; driftRAF=requestAnimationFrame(driftTick); }
+function stopDrift(){ driftRun=false; if(driftRAF)cancelAnimationFrame(driftRAF); document.getElementById("drift-go").disabled=false; drawDrift(); }
+document.getElementById("drift-go").addEventListener("click",startDrift);
+document.getElementById("drift-stop").addEventListener("click",stopDrift);
+document.getElementById("drift-reset").addEventListener("click",()=>{stopDrift();driftInit();drawDrift();});
+
+/* ================= DIFFUSION ================= */
+const svgF=document.getElementById("svg-diff");
+const F={left:120,right:920,top:80,bot:320,n:18};
+let diffParticles=[], diffRAF=null;
+function diffInit(){
+  diffParticles=[];
+  const w=F.right-F.left, h=F.bot-F.top;
+  // 全粒子を左1/3に密集して配置。target は最終的に全域へ均一散布
+  for(let i=0;i<F.n;i++){
+    const sx=F.left+ Math.random()*w*0.30 + 6;
+    const sy=F.top+ 20 + Math.random()*(h-40);
+    const tx=F.left+ Math.random()*(w-12) +6;
+    const ty=F.top+ 20 + Math.random()*(h-40);
+    const isE = i%2===0;
+    diffParticles.push({sx,sy,tx,ty,isE});
+  }
+}
+function drawDiff(p){ // p:0..1
+  clear(svgF);
+  // 容器
+  svgF.appendChild(el("rect",{x:F.left-10,y:F.top-10,width:(F.right-F.left)+20,height:(F.bot-F.top)+20,rx:12,fill:"#f6f8fa",stroke:LINE,"stroke-width":1.5}));
+  // 仕切り（p=0で見える、外すと消える）
+  const midX=F.left+(F.right-F.left)*0.33;
+  if(p<0.06){
+    svgF.appendChild(el("line",{x1:midX,y1:F.top-6,x2:midX,y2:F.bot+6,stroke:NAVY,"stroke-width":4}));
+    txt(svgF,midX,F.top-18,"仕切り",{fill:NAVY,size:13});
+    txt(svgF,(F.left+midX)/2,F.bot+30,"密集（濃い）",{fill:RED,size:14,weight:"bold"});
+    txt(svgF,(midX+F.right)/2,F.bot+30,"スカスカ（薄い）",{fill:GREEN,size:14,weight:"bold"});
+  }else{
+    txt(svgF,(F.left+F.right)/2,F.bot+30,"濃い方から薄い方へ広がって、やがて均一に",{fill:PURPLE,size:14,weight:"bold"});
+  }
+  const e=easeIO(p);
+  for(const pt of diffParticles){
+    const x=pt.sx+(pt.tx-pt.sx)*e;
+    const y=pt.sy+(pt.ty-pt.sy)*e;
+    if(pt.isE) electron(svgF,x,y,9); else hole(svgF,x,y,9);
+  }
+}
+function diffRun(){
+  if(diffRAF)cancelAnimationFrame(diffRAF);
+  const dur=2000,t0=performance.now();
+  document.getElementById("diff-go").disabled=true;
+  function step(now){const p=Math.min(1,(now-t0)/dur);drawDiff(p);
+    if(p<1)diffRAF=requestAnimationFrame(step); else document.getElementById("diff-go").disabled=false;}
+  diffRAF=requestAnimationFrame(step);
+}
+document.getElementById("diff-go").addEventListener("click",diffRun);
+document.getElementById("diff-reset").addEventListener("click",()=>{if(diffRAF)cancelAnimationFrame(diffRAF);document.getElementById("diff-go").disabled=false;diffInit();drawDiff(0);});
+
+/* 初期化 */
+driftInit(); drawDrift();
+diffInit();
+</script>
+</body>
+</html>

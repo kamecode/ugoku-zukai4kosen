@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うごく図解 for 高専 — 半導体・電子回路のアニメーション教材</title>
+<meta name="description" content="半導体工学・電子回路の学習用インタラクティブ図解集。スライダーやタブで動かしながら、pn接合・MOSFET・CMOS・OPアンプ・コンパレータのしくみを直感的に理解できます。">
+<style>
+  :root {
+    --ink: #1a2230; --sub: #5a6b82; --bg: #f7f8fa; --card: #ffffff;
+    --blue: #1565c0; --green: #2e7d32; --line: #e3e7ee;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Yu Gothic", sans-serif;
+         color: var(--ink); background: var(--bg); line-height: 1.7; }
+  header { background: #0d3c6e; color: #fff; padding: 40px 20px 32px; text-align: center; }
+  header h1 { margin: 0 0 8px; font-size: 1.9rem; }
+  header p { margin: 0; opacity: .85; font-size: .95rem; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  .subject { margin-top: 40px; }
+  .subject > h2 { font-size: 1.35rem; border-left: 6px solid var(--blue); padding-left: 12px; margin-bottom: 4px; }
+  .subject.kairo > h2 { border-color: var(--green); }
+  .subject > p.lead { color: var(--sub); font-size: .92rem; margin: 4px 0 16px 18px; }
+  h3 { font-size: 1.02rem; margin: 26px 0 10px; color: var(--ink); }
+  ul.cards { list-style: none; padding: 0; margin: 0; display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  ul.cards li a { display: block; background: var(--card); border: 1px solid var(--line);
+                  border-radius: 10px; padding: 12px 14px; text-decoration: none; color: var(--ink);
+                  transition: box-shadow .15s, transform .15s; }
+  ul.cards li a:hover { box-shadow: 0 3px 10px rgba(13,60,110,.12); transform: translateY(-1px); }
+  ul.cards .t { font-weight: 600; font-size: .95rem; }
+  ul.cards .d { color: var(--sub); font-size: .82rem; margin-top: 2px; }
+  .badge { display: inline-block; font-size: .72rem; padding: 1px 8px; border-radius: 99px;
+           background: #e8f0fb; color: var(--blue); margin-left: 6px; vertical-align: 1px; }
+  .kairo .badge { background: #e9f4ea; color: var(--green); }
+  footer { text-align: center; color: var(--sub); font-size: .82rem; padding: 28px 16px 40px;
+           border-top: 1px solid var(--line); }
+  .howto { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+           padding: 14px 18px; font-size: .9rem; color: var(--sub); margin-top: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>うごく図解 for 高専</h1>
+  <p>半導体・電子回路のしくみを、動かしながら理解するインタラクティブ教材集</p>
+</header>
+<main>
+
+<div class="howto">
+  各図解はスライダー・タブ・ボタンで操作できます。PCでもスマホでも動きます（アプリ不要・その場で動作）。
+  授業の予習・復習、レポート作成時の確認にどうぞ。
+</div>
+
+<section class="subject">
+  <h2>半導体工学</h2>
+  <p class="lead">キャリア・pn接合からMOSFET、製造プロセスまで。授業の週順に並んでいます。</p>
+
+  <h3>キャリア（自由電子と正孔）</h3>
+  <ul class="cards">
+    <li><a href="handotai/w04_carrier_generation.html"><span class="t">キャリアの発生と移動<span class="badge">アニメ</span></span><span class="d">熱・光で電子と正孔のペアが生まれるようす</span></a></li>
+    <li><a href="handotai/w04_drift_diffusion.html"><span class="t">ドリフトと拡散<span class="badge">アニメ</span></span><span class="d">キャリアが動く2つのしくみを見比べる</span></a></li>
+  </ul>
+
+  <h3>ドーピングとフェルミ準位</h3>
+  <ul class="cards">
+    <li><a href="handotai/w05_n_doping.html"><span class="t">n型ドーピング（結合の手）<span class="badge">アニメ</span></span><span class="d">リンを入れると余る「手」＝自由電子</span></a></li>
+    <li><a href="handotai/w05_p_doping.html"><span class="t">p型ドーピング（結合の手）<span class="badge">アニメ</span></span><span class="d">ホウ素を入れると足りない「手」＝正孔</span></a></li>
+    <li><a href="handotai/w05_n_fermi_band.html"><span class="t">n型のバンド図とフェルミ準位<span class="badge">アニメ</span></span><span class="d">ドナー準位とEfの位置</span></a></li>
+    <li><a href="handotai/w05_p_fermi_band.html"><span class="t">p型のバンド図とフェルミ準位<span class="badge">アニメ</span></span><span class="d">アクセプタ準位とEfの位置</span></a></li>
+  </ul>
+
+  <h3>pn接合・ダイオード</h3>
+  <ul class="cards">
+    <li><a href="handotai/w06_pn_junction.html"><span class="t">pn接合のしくみ（本編）<span class="badge">アニメ</span></span><span class="d">接合→平衡→順方向→逆方向を通しで</span></a></li>
+    <li><a href="handotai/w06_pn_band.html"><span class="t">pn接合のバンド図<span class="badge">アニメ</span></span><span class="d">電圧でバンドの坂がどう変わるか</span></a></li>
+    <li><a href="handotai/w06_led_solar.html"><span class="t">LEDと太陽電池<span class="badge">アニメ</span></span><span class="d">同じpn接合の「逆再生」の関係</span></a></li>
+    <li><a href="handotai/w07_diode_rectify.html"><span class="t">ダイオードの整流特性<span class="badge">アニメ</span></span><span class="d">一方通行になる理由とI-V特性</span></a></li>
+  </ul>
+
+  <h3>MOSFET</h3>
+  <ul class="cards">
+    <li><a href="handotai/w08_mos_structure.html"><span class="t">MOSの構造<span class="badge">アニメ</span></span><span class="d">金属・酸化膜・半導体の3層構造</span></a></li>
+    <li><a href="handotai/w09_mos_operation.html"><span class="t">MOSの動作<span class="badge">アニメ</span></span><span class="d">ゲート電圧でチャネルができるまで</span></a></li>
+    <li><a href="handotai/w09_mos_pinchoff.html"><span class="t">構造とピンチオフ<span class="badge">アニメ</span></span><span class="d">チャネルが楔形に細り、途切れるようす</span></a></li>
+    <li><a href="handotai/w09_mos_curves.html"><span class="t">特性カーブ<span class="badge">アニメ</span></span><span class="d">VGS-ID・VDS-IDをスライダーで体感</span></a></li>
+    <li><a href="handotai/w10_pmos.html"><span class="t">pMOSの動作<span class="badge">アニメ</span></span><span class="d">nMOSの鏡像として理解する</span></a></li>
+    <li><a href="handotai/w10_cmos_inverter.html"><span class="t">CMOSインバータと低消費電力<span class="badge">アニメ</span></span><span class="d">相補動作でふだん電流が流れない理由</span></a></li>
+    <li><a href="handotai/w11_scaling.html"><span class="t">スケーリング則と短チャネル効果<span class="badge">アニメ</span></span><span class="d">小さくすると何が良くなり、何に困るか</span></a></li>
+    <li><a href="handotai/w11_finfet_gaa.html"><span class="t">平面から立体へ（FinFET・GAA）<span class="badge">アニメ</span></span><span class="d">ゲートがチャネルを包み込む進化</span></a></li>
+  </ul>
+
+  <h3>半導体ができるまで（製造プロセス）</h3>
+  <ul class="cards">
+    <li><a href="handotai/w12_sand_to_wafer.html"><span class="t">砂からウェハまで<span class="badge">アニメ</span></span><span class="d">シリコンの旅の全体フロー</span></a></li>
+    <li><a href="handotai/w12_cz_method.html"><span class="t">単結晶シリコンの育て方（CZ法）<span class="badge">アニメ</span></span><span class="d">回しながら引き上げる単結晶づくり</span></a></li>
+    <li><a href="handotai/w12_photolithography.html"><span class="t">フォトリソグラフィの1サイクル<span class="badge">アニメ</span></span><span class="d">塗る→焼き付ける→現像→加工→剥がす</span></a></li>
+    <li><a href="handotai/w12_cmos_36steps.html"><span class="t">CMOSができるまで 36ステップ<span class="badge">アニメ</span></span><span class="d">フルプロセスをステップ送りで</span></a></li>
+    <li><a href="handotai/w13_backend.html"><span class="t">後工程の流れ<span class="badge">アニメ</span></span><span class="d">ダイシングからパッケージ・検査まで</span></a></li>
+    <li><a href="handotai/w13_cowos.html"><span class="t">CoWoS — AIチップの作り方<span class="badge">アニメ</span></span><span class="d">チップレットを載せる先端パッケージ</span></a></li>
+    <li><a href="handotai/w15_overall_map.html"><span class="t">総まとめ 全体マップ<span class="badge">アニメ</span></span><span class="d">科目全体のつながりを1枚で振り返る</span></a></li>
+  </ul>
+</section>
+
+<section class="subject kairo">
+  <h2>電子回路</h2>
+  <p class="lead">MOSの実測からCMOS・OPアンプ・コンパレータまで。実験で使う回路がそのまま動きます。</p>
+
+  <h3>MOSFETの特性</h3>
+  <ul class="cards">
+    <li><a href="kairo/mos_structure_pinchoff.html"><span class="t">MOS構造とピンチオフ<span class="badge">アニメ</span></span><span class="d">ゲート電圧とチャネルの関係</span></a></li>
+    <li><a href="kairo/mos_curves_equation.html"><span class="t">MOS特性カーブと式<span class="badge">アニメ</span></span><span class="d">3領域とIdの式をスライダーで</span></a></li>
+  </ul>
+
+  <h3>CMOSインバータ</h3>
+  <ul class="cards">
+    <li><a href="kairo/cmos_3way.html"><span class="t">回路・VTC・貫通電流の3点連動<span class="badge">アニメ</span></span><span class="d">Vinを動かすと3つのグラフが同時に動く</span></a></li>
+    <li><a href="kairo/cmos_door_analogy.html"><span class="t">自動ドアのアナロジー<span class="badge">アニメ</span></span><span class="d">切り替わりの一瞬に両方が半開きになる</span></a></li>
+    <li><a href="kairo/cmos_measure.html"><span class="t">測定回路図<span class="badge">図解</span></span><span class="d">貫通電流をどう測るか</span></a></li>
+  </ul>
+
+  <h3>OPアンプの基本</h3>
+  <ul class="cards">
+    <li><a href="kairo/opamp_virtual_short.html"><span class="t">仮想短絡（バーチャルショート）<span class="badge">アニメ</span></span><span class="d">シーソーの自動バランスで理解する</span></a></li>
+    <li><a href="kairo/opamp_input_zero.html"><span class="t">入力電流ゼロ<span class="badge">アニメ</span></span><span class="d">もう一つの「理想の約束」</span></a></li>
+    <li><a href="kairo/opamp_noninverting.html"><span class="t">非反転増幅<span class="badge">アニメ</span></span><span class="d">利得 1+Rf/Rin になる理由</span></a></li>
+    <li><a href="kairo/opamp_inv_vs_noninv.html"><span class="t">反転 vs 非反転<span class="badge">図解</span></span><span class="d">同じ素子・同じ抵抗で利得式が変わる</span></a></li>
+    <li><a href="kairo/opamp_inv_measure.html"><span class="t">反転増幅の測定回路<span class="badge">図解</span></span><span class="d">実験で組む回路（実ピン対応）</span></a></li>
+    <li><a href="kairo/opamp_noninv_measure.html"><span class="t">非反転増幅の測定回路<span class="badge">図解</span></span><span class="d">実験で組む回路（実ピン対応）</span></a></li>
+    <li><a href="kairo/njm4558_pinout.html"><span class="t">NJM4558のピン配置<span class="badge">図解</span></span><span class="d">実験で使うOPアンプIC</span></a></li>
+  </ul>
+
+  <h3>OPアンプの応用</h3>
+  <ul class="cards">
+    <li><a href="kairo/opamp_adder.html"><span class="t">加算回路<span class="badge">アニメ</span></span><span class="d">信号を足し合わせるようすを動かして見る</span></a></li>
+    <li><a href="kairo/opamp_subtractor.html"><span class="t">減算回路<span class="badge">アニメ</span></span><span class="d">差だけを取り出すしくみ</span></a></li>
+    <li><a href="kairo/opamp_int_diff.html"><span class="t">積分・微分回路<span class="badge">アニメ</span></span><span class="d">方形波→三角波、三角波→方形波</span></a></li>
+  </ul>
+
+  <h3>コンパレータ</h3>
+  <ul class="cards">
+    <li><a href="kairo/comparator_basic.html"><span class="t">基本コンパレータ<span class="badge">アニメ</span></span><span class="d">しきい値で出力がパタンと切り替わる</span></a></li>
+    <li><a href="kairo/comparator_hysteresis.html"><span class="t">ヒステリシス（シュミットトリガ）<span class="badge">アニメ</span></span><span class="d">チャタリングを防ぐ2つのしきい値</span></a></li>
+    <li><a href="kairo/amp_vs_comparator.html"><span class="t">増幅器 vs コンパレータ<span class="badge">図解</span></span><span class="d">同じOPアンプの使い分け</span></a></li>
+    <li><a href="kairo/comparator_balance.html"><span class="t">天秤のアナロジー<span class="badge">図解</span></span><span class="d">どちらが重いかだけを答える回路</span></a></li>
+    <li><a href="kairo/comparator_measure.html"><span class="t">測定回路図<span class="badge">図解</span></span><span class="d">実験で組む回路（実ピン対応）</span></a></li>
+  </ul>
+</section>
+
+<footer>
+  うごく図解 for 高専 — 教育目的での利用を歓迎します
+</footer>
+</main>
+</body>
+</html>

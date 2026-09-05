@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第7週 ダイオード 整流特性アニメ図解</title>
+<style>
+  :root{
+    --navy:#1C3A5E;
+    --ink:#222222;
+    --flow:#1F6FB2;   /* 流れる・電子・ポジティブ青 */
+    --stop:#C0392B;   /* 止まる・正孔・ネガティブ赤 */
+    --emph:#7E3FA0;   /* 強調・フェルミ準位 紫 */
+    --line:#cfd6df;
+    --panel:#f4f6f9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"メイリオ","Meiryo",sans-serif;
+    background:#FFFFFF;
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 60px;}
+  header.title{
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;margin-bottom:18px;
+  }
+  header.title .week{
+    font-size:14px;color:var(--flow);font-weight:bold;letter-spacing:.04em;
+  }
+  header.title h1{
+    font-size:26px;color:var(--navy);margin:6px 0 4px;font-weight:bold;
+  }
+  header.title p.sub{font-size:15px;color:#555;margin:0;}
+
+  /* タブ */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .tab{
+    font-family:inherit;font-size:15px;font-weight:bold;
+    border:1px solid var(--navy);background:#fff;color:var(--navy);
+    border-radius:7px;padding:9px 14px;cursor:pointer;line-height:1.3;
+    transition:all .12s;
+  }
+  .tab .num{
+    display:inline-block;background:var(--panel);color:var(--navy);
+    border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;
+    font-size:13px;margin-right:7px;
+  }
+  .tab.active{background:var(--navy);color:#fff;}
+  .tab.active .num{background:#fff;color:var(--navy);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .stage{
+    border:1px solid var(--line);border-radius:10px;background:#fff;
+    padding:14px;margin-bottom:14px;
+  }
+  svg{display:block;width:100%;height:auto;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 14px;}
+  .controls .ctrl{
+    font-family:inherit;font-size:15px;font-weight:bold;
+    border:1px solid var(--navy);background:#fff;color:var(--navy);
+    border-radius:7px;padding:8px 14px;cursor:pointer;
+  }
+  .controls .ctrl.on{background:var(--navy);color:#fff;}
+  .controls .ctrl.stop{border-color:var(--stop);color:var(--stop);}
+  .controls .ctrl.stop.on{background:var(--stop);color:#fff;}
+  .controls .ctrl.flow{border-color:var(--flow);color:var(--flow);}
+  .controls .ctrl.flow.on{background:var(--flow);color:#fff;}
+
+  .note{
+    background:var(--panel);border-left:4px solid var(--navy);
+    border-radius:0 8px 8px 0;padding:12px 14px;font-size:15px;color:var(--ink);
+  }
+  .note b{color:var(--navy);}
+  .note .pos{color:var(--flow);font-weight:bold;}
+  .note .neg{color:var(--stop);font-weight:bold;}
+  .note .emp{color:var(--emph);font-weight:bold;}
+  .panel h2{
+    font-size:19px;color:var(--navy);margin:2px 0 10px;
+    border-bottom:1px solid var(--line);padding-bottom:6px;
+  }
+  .legend{font-size:13px;color:#555;margin:8px 0 0;}
+  .legend span{margin-right:16px;white-space:nowrap;}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px;}
+  .ring{display:inline-block;width:12px;height:12px;border-radius:50%;border:3px solid var(--stop);box-sizing:border-box;vertical-align:-1px;margin-right:5px;}
+
+  .foot{font-size:12px;color:#888;margin-top:24px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <div class="week">第7週　ダイオード：一方通行の電気</div>
+    <h1>ダイオードの整流特性</h1>
+    <p class="sub">順方向は流れて、逆方向は流れない。「電気の一方通行」を4つの見方でつかむ</p>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="t1"><span class="num">1</span>一方通行の改札</button>
+    <button class="tab" data-tab="t2"><span class="num">2</span>交流→整流（半波）</button>
+    <button class="tab" data-tab="t3"><span class="num">3</span>I-Vカーブ</button>
+    <button class="tab" data-tab="t4"><span class="num">4</span>崖でキャリア（発展）</button>
+  </div>
+
+  <!-- ============ タブ1：一方通行の改札 ============ -->
+  <section class="panel active" id="t1">
+    <h2>① 一方通行の改札 ― 電池の向きで点灯／消灯</h2>
+    <div class="controls">
+      <button class="ctrl flow on" id="t1-fwd">順方向（つなぐ向き）</button>
+      <button class="ctrl stop" id="t1-rev">逆方向（さかさま）</button>
+    </div>
+    <div class="stage">
+      <svg id="svg1" viewBox="0 0 920 420" role="img" aria-label="ダイオード回路アニメーション"></svg>
+    </div>
+    <p class="legend">
+      <span><span class="dot" style="background:#1F6FB2"></span>電子（流れる向きに動く）</span>
+      <span>電池の向きを切り替えると、電球が点いたり消えたりします</span>
+    </p>
+    <div class="note" id="note1"></div>
+  </section>
+
+  <!-- ============ タブ2：半波整流 ============ -->
+  <section class="panel" id="t2">
+    <h2>② 交流→整流 ― ぐにゃぐにゃの波が「片側だけ」になる</h2>
+    <div class="controls">
+      <button class="ctrl flow on" id="t2-play">再生／一時停止</button>
+      <button class="ctrl" id="t2-reset">最初から</button>
+      <span style="width:14px"></span>
+      <button class="ctrl on" id="t2-ideal">理想（しきいなし）</button>
+      <button class="ctrl" id="t2-07">0.7V近似モデル</button>
+    </div>
+    <div class="stage">
+      <svg id="svg2" viewBox="0 0 920 440" role="img" aria-label="半波整流の波形アニメーション"></svg>
+    </div>
+    <p class="legend">
+      <span><span class="dot" style="background:#1F6FB2"></span>入力（交流：プラスとマイナスを行き来）</span>
+      <span><span class="dot" style="background:#7E3FA0"></span>出力（ダイオード通過後）</span>
+    </p>
+    <div class="note">
+      ダイオードは<b>順方向（＋側）だけ通し、逆方向（−側）は止めます</b>。
+      だから上下に揺れる交流が、<span class="emp">山だけ残った片側の波</span>になります。
+      これが<b>整流</b>＝交流を直流に近づける最初の一歩。
+      コンセントの交流をスマホやPCが使える直流に変える「電源アダプタ」の中で、まさにこれが起きています。
+      <br><b>0.7V近似モデル</b>：本物のダイオードは、<b>順方向に約0.7Vかからないと通り始めません</b>。
+      だから出力は入力より<span class="neg">0.7Vぶん低く（てっぺんが少し削れて）</span>、
+      <b>0.7Vに届かない小さな山は出てきません</b>。この「0.7Vの段差」を見込むのが回路設計での定番の近似です。
+    </div>
+  </section>
+
+  <!-- ============ タブ3：I-Vカーブ ============ -->
+  <section class="panel" id="t3">
+    <h2>③ I-Vカーブ ― 電圧を上げ下げすると電流はどう動く？</h2>
+    <div class="controls">
+      <button class="ctrl flow on" id="t3-play">再生／一時停止</button>
+      <button class="ctrl" id="t3-reset">最初から</button>
+    </div>
+    <div class="stage">
+      <svg id="svg3" viewBox="0 0 920 540" role="img" aria-label="ダイオードのI-V特性カーブ"></svg>
+    </div>
+    <div class="note">
+      横軸＝かけた電圧、縦軸＝流れた電流。点が左右に動きます。
+      <span class="pos">順方向（右）</span>は、<b>しきい電圧を超えたところから電流が流れ始め、一気に立ち上がります</b>。
+      しきい電圧より手前では、電圧をかけても<b>ほとんど流れません（カーブが地面に張り付いている）</b>。
+      <span class="neg">逆方向（左）</span>も<b>ほとんど流れず横ばい</b>。
+      この「しきいを境に、急に流れ出す」非対称な形こそ、ダイオードの整流のしくみそのものです。
+      （「あるラインを超えると一気に」は、第9週MOSの<span class="emp">しきい値</span>にもつながる感覚です）
+    </div>
+  </section>
+
+  <!-- ============ タブ4：崖でキャリア（発展） ============ -->
+  <section class="panel" id="t4">
+    <h2>④ 崖でキャリア ― なぜ一方通行になるのか（第6週の発展）</h2>
+    <div class="controls">
+      <button class="ctrl flow on" id="t4-fwd">順方向（崖が低い）</button>
+      <button class="ctrl stop" id="t4-rev">逆方向（崖が高い）</button>
+    </div>
+    <div class="stage">
+      <svg id="svg4" viewBox="0 0 920 430" role="img" aria-label="pn接合の崖をキャリアが越えるアニメーション"></svg>
+    </div>
+    <p class="legend">
+      <span><span class="dot" style="background:#1F6FB2"></span>電子</span>
+      <span><span class="ring"></span>正孔</span>
+      <span>上ほどエネルギーが高い（標準形・電子は沈むボール）</span>
+    </p>
+    <div class="note">
+      第6週の崖をそのまま使います。<span class="pos">順方向</span>＝<b>崖が低くなり、キャリアが越えて流れ続ける</b>。
+      <span class="neg">逆方向</span>＝<b>崖が高くそびえ、登れずに跳ね返る</b>。
+      ダイオードの一方通行は、この「崖を越えられる向き／越えられない向き」の差から生まれます。
+      崖は垂直ではなく<b>空乏層の幅のぶん、なだらかな坂</b>になっています（順方向は空乏層がせまく坂も短い／逆方向は空乏層がひろく坂も長い）。
+      （得意な人向け：平衡でそろっていた左右の<span class="emp">フェルミ準位</span>は、かけた電圧のぶんだけ上下にずれます。順方向はp側が低く・逆方向はp側が高くなります）
+    </div>
+  </section>
+
+  <div class="foot">第7週 ダイオード｜整流特性アニメ図解｜白背景・ネイビー基調・色の意味ルール準拠</div>
+</div>
+
+<script>
+// ====== 共通設定 ======
+const NS="http://www.w3.org/2000/svg";
+const COL={navy:"#1C3A5E",flow:"#1F6FB2",stop:"#C0392B",emph:"#7E3FA0",line:"#cfd6df",panel:"#f4f6f9",ink:"#222222"};
+function el(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function txt(x,y,s,attrs={}){const t=el("text",Object.assign({x,y,"font-family":'"メイリオ","Meiryo",sans-serif'},attrs));t.textContent=s;return t;}
+
+// タブ切替
+document.querySelectorAll(".tab").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById(b.dataset.tab).classList.add("active");
+  });
+});
+
+/* =========================================================
+   タブ1：一方通行の改札（回路＋電球）
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg1");
+  const W=920,H=420;
+  // 回路レイアウト（長方形のループ）
+  const L=140,R=780,T=90,B=330; // ループの四隅
+  let mode="fwd"; // fwd / rev
+  let raf=null;
+  const electrons=[]; // {p:0..1 周回位置}
+  const N=14;
+  for(let i=0;i<N;i++)electrons.push({p:i/N});
+
+  // ループ経路（左下→上→右→下 と一周）を点列で定義
+  // 経路：電池(左辺) → 上辺 → ダイオード(右上) → 電球(右辺) → 下辺 → 戻る
+  // 周長パラメータ p(0..1) を座標に変換
+  function pos(p){
+    p=((p%1)+1)%1;
+    // 区間長の比率：上辺(0-0.35) 右辺(0.35-0.6) 下辺(0.6-0.95) 左辺(0.95-1)
+    if(p<0.35){const t=p/0.35;return {x:L+(R-L)*t,y:T};}
+    if(p<0.60){const t=(p-0.35)/0.25;return {x:R,y:T+(B-T)*t};}
+    if(p<0.95){const t=(p-0.60)/0.35;return {x:R-(R-L)*t,y:B};}
+    const t=(p-0.95)/0.05;return {x:L,y:B-(B-T)*t};
+  }
+
+  function drawStatic(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // 配線
+    const wire=el("rect",{x:L,y:T,width:R-L,height:B-T,fill:"none",stroke:COL.navy,"stroke-width":3,rx:6});
+    svg.appendChild(wire);
+
+    // 電池（左辺中央）
+    const by=(T+B)/2;
+    svg.appendChild(el("rect",{x:L-30,y:by-46,width:60,height:92,fill:"#fff",stroke:COL.navy,"stroke-width":2,rx:4}));
+    // 電池の向き表示（順方向なら 上＋ 下− になるよう極性を出す）
+    const topPlus = (mode==="fwd"); // 順方向：上が＋（時計回りに電流→電子は反時計回り）
+    // ＋は横棒2本＋縦棒、−は横棒1本で図形描画（フォント依存のつぶれを回避）
+    function plusSym(cx,cy,col){
+      svg.appendChild(el("line",{x1:cx-9,y1:cy,x2:cx+9,y2:cy,stroke:col,"stroke-width":3.5}));
+      svg.appendChild(el("line",{x1:cx,y1:cy-9,x2:cx,y2:cy+9,stroke:col,"stroke-width":3.5}));
+    }
+    function minusSym(cx,cy,col){
+      svg.appendChild(el("line",{x1:cx-9,y1:cy,x2:cx+9,y2:cy,stroke:col,"stroke-width":3.5}));
+    }
+    if(topPlus){ plusSym(L,by-24,COL.stop); minusSym(L,by+26,COL.flow); }
+    else       { minusSym(L,by-24,COL.flow); plusSym(L,by+26,COL.stop); }
+    svg.appendChild(txt(L,by+70,"電池",{"text-anchor":"middle","font-size":15,fill:COL.navy}));
+
+    // ダイオード（上辺中央）：三角形＋バー。三角の向き＝順方向に電流が通る向き
+    const dx=(L+R)/2, dy=T;
+    // 順方向のとき電流は時計回り（上辺は左→右）。ダイオードは左→右に通す向きに描く
+    const tri = topPlus
+      ? [[dx-26,dy-18],[dx-26,dy+18],[dx+18,dy]]   // 左→右に通す（▷）
+      : [[dx-26,dy-18],[dx-26,dy+18],[dx+18,dy]];  // 形は固定（向きは変えない＝部品は固定）
+    const poly=el("polygon",{points:tri.map(p=>p.join(",")).join(" "),fill:"#fff",stroke:COL.navy,"stroke-width":2.5});
+    svg.appendChild(poly);
+    svg.appendChild(el("line",{x1:dx+18,y1:dy-20,x2:dx+18,y2:dy+20,stroke:COL.navy,"stroke-width":3}));
+    svg.appendChild(txt(dx,dy-30,"ダイオード（回路記号）",{"text-anchor":"middle","font-size":15,fill:COL.navy}));
+
+    // ── 回路記号の真下に pn接合の構造図を対応づけて描く ──
+    // ダイオード記号：三角(▷)の根元がアノード=p型、バー(|)側がカソード=n型
+    // 順方向は p(＋)→n の向きに通す。空乏層は順方向で狭く・逆方向で広く。
+    const py=dy+58;            // pn図の上端
+    const pH=30;               // 箱の高さ
+    const boxL=dx-58, boxR=dx+58, boxMid=dx; // p(左)とn(右)の箱。記号の左=p, 右=n に合わせる
+    // 空乏層の半幅（順方向=狭い／逆方向=広い）
+    const dep = (mode==="fwd") ? 7 : 16;
+    // p型（左・赤）
+    svg.appendChild(el("rect",{x:boxL,y:py,width:boxMid-boxL-dep,height:pH,fill:COL.stop,opacity:0.16,stroke:COL.stop,"stroke-width":1.2}));
+    svg.appendChild(txt((boxL+boxMid-dep)/2,py+pH/2+5,"p型",{"text-anchor":"middle","font-size":13,"font-weight":"bold",fill:COL.stop}));
+    // n型（右・青）
+    svg.appendChild(el("rect",{x:boxMid+dep,y:py,width:boxR-boxMid-dep,height:pH,fill:COL.flow,opacity:0.16,stroke:COL.flow,"stroke-width":1.2}));
+    svg.appendChild(txt((boxMid+dep+boxR)/2,py+pH/2+5,"n型",{"text-anchor":"middle","font-size":13,"font-weight":"bold",fill:COL.flow}));
+    // 空乏層（中央のグレー帯）
+    svg.appendChild(el("rect",{x:boxMid-dep,y:py,width:dep*2,height:pH,fill:"#9aa6b3",opacity:0.5,stroke:"#7a8694","stroke-width":1}));
+    // 接合面（中心の縦線）
+    svg.appendChild(el("line",{x1:boxMid,y1:py-3,x2:boxMid,y2:py+pH+3,stroke:COL.navy,"stroke-width":1.5,"stroke-dasharray":"3 3"}));
+    // 記号と構造の対応（点線で結ぶ）＋空乏層ラベル
+    svg.appendChild(txt(boxR+8,py+pH/2+5,mode==="fwd"?"空乏層せまい":"空乏層ひろい",
+      {"text-anchor":"start","font-size":12,"font-weight":"bold",fill:mode==="fwd"?COL.flow:COL.stop}));
+    svg.appendChild(txt(dx,py+pH+22,"▷ この向き（p→n）にだけ通す",{"text-anchor":"middle","font-size":13,fill:"#777"}));
+
+    // 電球（右辺中央）
+    const lx=R, ly=(T+B)/2;
+    const lit=(mode==="fwd");
+    // 後光（点灯時）
+    if(lit){
+      for(let r=46;r>=30;r-=8){
+        svg.appendChild(el("circle",{cx:lx,cy:ly,r:r,fill:"#FCE9A6",opacity:(46-r)/40+0.15}));
+      }
+    }
+    svg.appendChild(el("circle",{cx:lx,cy:ly,r:26,fill:lit?"#FFD23F":"#eef0f3",stroke:COL.navy,"stroke-width":2.5}));
+    svg.appendChild(el("rect",{x:lx-12,y:ly+24,width:24,height:14,fill:"#fff",stroke:COL.navy,"stroke-width":2}));
+    svg.appendChild(txt(lx,ly+70,lit?"点灯！":"消灯",{"text-anchor":"middle","font-size":17,"font-weight":"bold",fill:lit?COL.flow:COL.stop}));
+
+    // 状態見出し
+    svg.appendChild(txt(W/2,40,mode==="fwd"?"順方向：電子が一周して電球が光る":"逆方向：ダイオードで止められ、電子が回れない",
+      {"text-anchor":"middle","font-size":19,"font-weight":"bold",fill:mode==="fwd"?COL.flow:COL.stop}));
+
+    // 順方向：電子の向きと電流の向きは逆、を下辺に明示（第4週の歴史的経緯と地続き）
+    if(mode==="fwd"){
+      const cy1=B+34, cy2=B+58; // 下辺(B)の下の余白に2段
+      // 電子の向き（下辺は左←右で電子が動く＝反時計回り）青の矢印
+      svg.appendChild(el("line",{x1:dx+70,y1:cy1,x2:dx-70,y2:cy1,stroke:COL.flow,"stroke-width":2.5}));
+      svg.appendChild(el("polygon",{points:`${dx-70},${cy1} ${dx-58},${cy1-6} ${dx-58},${cy1+6}`,fill:COL.flow}));
+      svg.appendChild(txt(dx+80,cy1+5,"電子の流れ（実際に動く向き）",{"text-anchor":"start","font-size":13,"font-weight":"bold",fill:COL.flow}));
+      // 電流の向き（逆＝左→右、時計回り）グレーの矢印
+      svg.appendChild(el("line",{x1:dx-70,y1:cy2,x2:dx+70,y2:cy2,stroke:"#666","stroke-width":2.5}));
+      svg.appendChild(el("polygon",{points:`${dx+70},${cy2} ${dx+58},${cy2-6} ${dx+58},${cy2+6}`,fill:"#666"}));
+      svg.appendChild(txt(dx-80,cy2+5,"電流の向き（＋基準の決めごと・逆）",{"text-anchor":"end","font-size":13,"font-weight":"bold",fill:"#666"}));
+    }
+
+    // 逆方向の「ブロック」表示（ダイオード位置に×）
+    if(mode==="rev"){
+      svg.appendChild(txt(dx+70,dy+4,"✕ せき止め",{"text-anchor":"start","font-size":16,"font-weight":"bold",fill:COL.stop}));
+    }
+
+    // 電子レイヤ（最後に追加）
+    const g=el("g",{id:"e-layer"});
+    svg.appendChild(g);
+    return g;
+  }
+
+  let layer=drawStatic();
+
+  // 逆方向：電子は電池側に少し溜まって押し返される往復モーション用
+  let revPhase=0;
+
+  function frame(){
+    while(layer.firstChild)layer.removeChild(layer.firstChild);
+    if(mode==="fwd"){
+      // 時計回りに電流→電子は反時計回り（p を減らす）
+      for(const e of electrons){
+        e.p-=0.0032;
+        const q=pos(e.p);
+        layer.appendChild(el("circle",{cx:q.x,cy:q.y,r:7,fill:COL.flow}));
+      }
+    }else{
+      // 逆方向：電子は流れず、電池の−側付近で「押されては戻る」振動だけ
+      revPhase+=0.05;
+      const by=(T+B)/2;
+      const amp=10+6*Math.sin(revPhase);
+      for(let i=0;i<8;i++){
+        const yy=by-50+i*14;
+        const xx=L+18+amp*Math.abs(Math.sin(revPhase+i*0.4));
+        layer.appendChild(el("circle",{cx:xx,cy:yy,r:6.5,fill:COL.flow,opacity:0.85}));
+      }
+      // ダイオード手前で詰まる電子
+      const dx=(L+R)/2;
+      for(let i=0;i<5;i++){
+        layer.appendChild(el("circle",{cx:dx-60-i*16,cy:T,r:6.5,fill:COL.flow,opacity:0.8}));
+      }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  function setMode(m){
+    mode=m;
+    document.getElementById("t1-fwd").classList.toggle("on",m==="fwd");
+    document.getElementById("t1-rev").classList.toggle("on",m==="rev");
+    layer=drawStatic();
+    updateNote();
+  }
+  function updateNote(){
+    const n=document.getElementById("note1");
+    if(mode==="fwd"){
+      n.innerHTML='<b>順方向</b>：電池の向きとダイオードの向き（記号の下のp→n）が合っているので、'+
+        '<span class="pos">電子は改札を通り抜けて一周し、電球が光ります</span>。'+
+        'なお<b>電子が実際に動く向きと、電流の向きは逆</b>です（電流は大昔に「＋から流れる」と決めた名残。'+
+        '実際に動く電子は−なので逆向き――第4週の小ネタの通りです）。';
+    }else{
+      n.innerHTML='<b>逆方向</b>：電池をさかさまにすると、ダイオードは'+
+        '<span class="neg">改札を閉じて電子をせき止めます</span>。電子は回れず、電球は消えたまま。'+
+        '同じ部品なのに、つなぐ向きで通す・通さないが決まる――これが<b>一方通行</b>です。';
+    }
+  }
+
+  document.getElementById("t1-fwd").addEventListener("click",()=>setMode("fwd"));
+  document.getElementById("t1-rev").addEventListener("click",()=>setMode("rev"));
+  updateNote();
+  frame();
+})();
+
+/* =========================================================
+   タブ2：半波整流（波形）
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg2");
+  const W=920,H=440;
+  const x0=70,x1=880;          // 波形描画域 横
+  const midIn=150, midOut=330; // 入力・出力それぞれの中心線y
+  const amp=70;
+  let t=0, playing=true, raf=null;
+
+  function base(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // 入力枠
+    svg.appendChild(txt(x0,midIn-amp-22,"入力（交流）　＋と−を行き来する",{"font-size":15,"font-weight":"bold",fill:COL.flow}));
+    svg.appendChild(el("line",{x1:x0,y1:midIn,x2:x1,y2:midIn,stroke:COL.line,"stroke-width":1.5}));
+    svg.appendChild(txt(x0-8,midIn+5,"0",{"text-anchor":"end","font-size":12,fill:"#999"}));
+
+    // ダイオード帯（中央のラベル）
+    svg.appendChild(el("rect",{x:x0,y:midIn+amp+18,width:x1-x0,height:34,fill:COL.panel,stroke:COL.line,"stroke-width":1,rx:6}));
+    svg.appendChild(txt(W/2,midIn+amp+40,"▷ ダイオードを通す（＋側だけ通り、−側は止める）",
+      {"text-anchor":"middle","font-size":15,"font-weight":"bold",fill:COL.navy}));
+
+    // 出力枠
+    svg.appendChild(txt(x0,midOut-amp-22,"出力（整流後）　山だけ残る",{"font-size":15,"font-weight":"bold",fill:COL.emph}));
+    svg.appendChild(el("line",{x1:x0,y1:midOut,x2:x1,y2:midOut,stroke:COL.line,"stroke-width":1.5}));
+    svg.appendChild(txt(x0-8,midOut+5,"0",{"text-anchor":"end","font-size":12,fill:"#999"}));
+
+    const gi=el("path",{id:"in-path",fill:"none",stroke:COL.flow,"stroke-width":3});
+    const go=el("path",{id:"out-path",fill:"none",stroke:COL.emph,"stroke-width":3});
+    const gof=el("path",{id:"out-fill",fill:COL.emph,opacity:0.12,stroke:"none"});
+    svg.appendChild(gof);svg.appendChild(gi);svg.appendChild(go);
+    // 進行点
+    svg.appendChild(el("circle",{id:"in-dot",r:6,fill:COL.flow}));
+    svg.appendChild(el("circle",{id:"out-dot",r:6,fill:COL.emph}));
+  }
+  base();
+
+  const cycles=2.2;            // 画面内に見える周期数
+  function yIn(px){ // px:0..1 →入力波
+    const ph=(px*cycles + t)*2*Math.PI;
+    return midIn - amp*Math.sin(ph);
+  }
+  function vIn(px){ // 符号付き入力値（−amp..amp）, +が上
+    const ph=(px*cycles + t)*2*Math.PI;
+    return Math.sin(ph);
+  }
+  let model="ideal"; // ideal / drop07
+  // ピーク=ampを約3.5Vと見なすと、0.7Vは振幅比 0.2（=14px相当）
+  const Vf=0.2; // 0.7V相当の振幅比
+  function yOut(px){
+    const s=vIn(px); // -1..1
+    if(model==="ideal"){
+      return midOut - amp*(s>0?s:0); // 理想：負はゼロにクリップ＝半波整流
+    }else{
+      // 0.7V近似：入力がVfを超えた分だけ、Vfぶん下げて通す。Vf未満は出ない
+      const out = (s>Vf) ? (s-Vf) : 0;
+      return midOut - amp*out;
+    }
+  }
+
+  function frame(){
+    if(playing)t+=0.006;
+    const Npts=200;
+    let din="",dout="",dfill="";
+    for(let i=0;i<=Npts;i++){
+      const px=i/Npts, X=x0+(x1-x0)*px;
+      din+=(i?"L":"M")+X.toFixed(1)+","+yIn(px).toFixed(1)+" ";
+      const Y=yOut(px);
+      dout+=(i?"L":"M")+X.toFixed(1)+","+Y.toFixed(1)+" ";
+    }
+    // 塗り（出力の下を中心線まで）
+    dfill="M"+x0+","+midOut+" ";
+    for(let i=0;i<=Npts;i++){const px=i/Npts,X=x0+(x1-x0)*px;dfill+="L"+X.toFixed(1)+","+yOut(px).toFixed(1)+" ";}
+    dfill+="L"+x1+","+midOut+" Z";
+
+    svg.getElementById("in-path").setAttribute("d",din);
+    svg.getElementById("out-path").setAttribute("d",dout);
+    svg.getElementById("out-fill").setAttribute("d",dfill);
+    // 進行点（左端の現在値）
+    const pIn=svg.getElementById("in-dot"), pOut=svg.getElementById("out-dot");
+    pIn.setAttribute("cx",x0);pIn.setAttribute("cy",yIn(0));
+    pOut.setAttribute("cx",x0);pOut.setAttribute("cy",yOut(0));
+    // 0.7V近似モード時：入力側に「0.7Vのしきいライン」を破線で出す
+    const old=svg.getElementById("vf-line"); if(old)old.remove();
+    const oldL=svg.getElementById("vf-lbl"); if(oldL)oldL.remove();
+    if(model==="drop07"){
+      const yvf=midIn-amp*Vf;
+      const ln=el("line",{id:"vf-line",x1:x0,y1:yvf,x2:x1,y2:yvf,stroke:COL.stop,"stroke-width":1.5,"stroke-dasharray":"5 4",opacity:0.8});
+      const lb=txt(x1,yvf-6,"0.7V（ここを超えないと通らない）",{id:"vf-lbl","text-anchor":"end","font-size":12,"font-weight":"bold",fill:COL.stop});
+      svg.appendChild(ln);svg.appendChild(lb);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  frame();
+
+  document.getElementById("t2-play").addEventListener("click",function(){
+    playing=!playing;this.classList.toggle("on",playing);
+  });
+  document.getElementById("t2-reset").addEventListener("click",function(){
+    t=0;playing=true;document.getElementById("t2-play").classList.add("on");
+  });
+  document.getElementById("t2-ideal").addEventListener("click",function(){
+    model="ideal";this.classList.add("on");document.getElementById("t2-07").classList.remove("on");
+  });
+  document.getElementById("t2-07").addEventListener("click",function(){
+    model="drop07";this.classList.add("on");document.getElementById("t2-ideal").classList.remove("on");
+  });
+})();
+
+/* =========================================================
+   タブ3：I-Vカーブ
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg3");
+  const W=920,H=540;
+  const ox=460, oy=360;     // 原点（縦軸を伸ばすため下げた）
+  const sx=300;             // 電圧1Vあたりpx
+  const Vcurve=0.62;        // カーブの中心電圧（実値0.6〜0.7Vに合わせる）
+  const Vline=0.44;         // しきい線の位置＝電流が流れ始める肩
+  const Imax=200;           // 縦軸を伸ばし立ち上がりを鋭く見せる
+  let playing=true, raf=null;
+  let phase=0;              // 0..1 でスイープ位置（往復）
+
+  // ダイオードのI(V)モデル（検算済み：逆ほぼ0／0.4V未満ほぼ地面／0.6V付近から急立ち上がり）
+  function current(V){
+    if(V<=0) return 0;
+    const e=Math.exp((V-Vcurve)*16.0); // 鋭く立ち上げて「流れ始め」をはっきり
+    return Imax*(e/(e+1));
+  }
+  function Ipx(V){
+    return Math.max(0,Math.min(Imax,current(V)));
+  }
+
+  function base(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // 軸
+    svg.appendChild(el("line",{x1:120,y1:oy,x2:820,y2:oy,stroke:COL.navy,"stroke-width":2})); // V軸
+    svg.appendChild(el("line",{x1:ox,y1:80,x2:ox,y2:oy+30,stroke:COL.navy,"stroke-width":2}));  // I軸
+    // 矢印（塗り三角）
+    svg.appendChild(el("polygon",{points:`820,${oy} 808,${oy-6} 808,${oy+6}`,fill:COL.navy}));
+    svg.appendChild(el("polygon",{points:`${ox},80 ${ox-6},92 ${ox+6},92`,fill:COL.navy}));
+    svg.appendChild(txt(826,oy+5,"電圧 V",{"font-size":15,"font-weight":"bold",fill:COL.navy}));
+    svg.appendChild(txt(ox+10,76,"電流 I",{"font-size":15,"font-weight":"bold",fill:COL.navy}));
+    // しきい線（＝電流が流れ始める肩の位置）
+    const xth=ox+sx*Vline;
+    svg.appendChild(el("line",{x1:xth,y1:oy,x2:xth,y2:110,stroke:COL.emph,"stroke-width":2,"stroke-dasharray":"5 4"}));
+    svg.appendChild(txt(xth,102,"しきい電圧",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.emph}));
+    svg.appendChild(txt(xth,122,"＝ここから電流が流れ始める",{"text-anchor":"middle","font-size":12,"font-weight":"bold",fill:COL.emph}));
+    svg.appendChild(txt(xth,140,"（シリコンで実際は約0.6〜0.7V）",{"text-anchor":"middle","font-size":11,fill:"#888"}));
+    // 領域ラベル
+    svg.appendChild(txt(ox-150,oy+34,"逆方向：ほぼ流れない",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.stop}));
+    svg.appendChild(txt(ox+180,oy+34,"順方向：しきいを超えると急に流れる",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.flow}));
+
+    // 曲線（静的に薄く全体を描いておく）
+    let d="";
+    for(let i=0;i<=240;i++){
+      const V=-1.5+(i/240)*(2.5); // -1.5V .. +1.0V
+      const X=ox+sx*V, Y=oy-Ipx(V);
+      d+=(i?"L":"M")+X.toFixed(1)+","+Y.toFixed(1)+" ";
+    }
+    svg.appendChild(el("path",{d:d,fill:"none",stroke:COL.line,"stroke-width":2}));
+    svg.appendChild(el("path",{id:"trace",fill:"none",stroke:COL.navy,"stroke-width":3.5}));
+    svg.appendChild(el("circle",{id:"pt",r:8,fill:COL.emph,stroke:"#fff","stroke-width":2}));
+    svg.appendChild(txt(0,0,"",{id:"pl","font-size":13,"font-weight":"bold",fill:COL.navy}));
+  }
+  base();
+
+  function Vof(ph){ // 往復スイープ：-1.5 → +1.0 → -1.5
+    const tri = ph<0.5 ? (ph/0.5) : (1-(ph-0.5)/0.5); // 0..1..0
+    return -1.5 + tri*(2.5);
+  }
+
+  function frame(){
+    if(playing)phase=(phase+0.0025)%1;
+    const V=Vof(phase);
+    const X=ox+sx*V, Y=oy-Ipx(V);
+    // trace：現在のスイープの行き分を描く
+    let d="";
+    const upto = phase<0.5?phase:0.5; // 行き（増加方向）だけ濃く描く簡易表現
+    const steps=160;
+    for(let i=0;i<=steps;i++){
+      const ph=(phase<0.5? (i/steps)*phase : (i/steps)*0.5 );
+      const vv=Vof(ph), XX=ox+sx*vv, YY=oy-Ipx(vv);
+      d+=(i?"L":"M")+XX.toFixed(1)+","+YY.toFixed(1)+" ";
+    }
+    svg.getElementById("trace").setAttribute("d",d);
+    const pt=svg.getElementById("pt");pt.setAttribute("cx",X);pt.setAttribute("cy",Y);
+    const pl=svg.getElementById("pl");
+    pl.setAttribute("x",X+12);pl.setAttribute("y",Y-10);
+    pl.textContent="V="+V.toFixed(2)+"V";
+    raf=requestAnimationFrame(frame);
+  }
+  frame();
+
+  document.getElementById("t3-play").addEventListener("click",function(){
+    playing=!playing;this.classList.toggle("on",playing);
+  });
+  document.getElementById("t3-reset").addEventListener("click",function(){
+    phase=0;playing=true;document.getElementById("t3-play").classList.add("on");
+  });
+})();
+
+/* =========================================================
+   タブ4：崖でキャリア（バンド図発展・標準形）
+   上ほどエネルギー高 / 伝導帯=上青 / 価電子帯=下赤 / フェルミ準位=紫点線
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg4");
+  const W=920,H=430;
+  const xn0=120, xj=460, xp1=800; // n領域 / 接合 / p領域
+  let mode="fwd", raf=null, tphase=0;
+  // 標準形：上ほど高エネ（yが小さい=高エネ=伝導帯側）。フェルミ準位を基準に帯を組む。検算済み。
+  // n型＝Efは伝導帯の近く／p型＝Efは価電子帯の近く／平衡で左右のEfが一直線（差ゼロ）。
+  // バイアス：順=p側を下げる(エネルギー下がる=y増→崖低)／逆=p側を上げる(y減→崖高)。
+  const EF   = 215;            // フェルミ準位の基準線（平衡で水平）
+  const Eg   = 74;             // バンドギャップ（伝導帯中心−価電子帯中心）
+  const offN = 22, offP = 22;  // n:Efから伝導帯中心まで／p:Efから価電子帯中心まで（小さい=寄っている）
+  const yc_n = EF - offN;          // n伝導帯中心（上＝伝導帯寄り＝Efの近く）
+  const yv_n = yc_n + Eg;          // n価電子帯中心（下）
+  const yv_p_eq = EF + offP;       // p価電子帯中心（下＝価電子帯寄り＝Efの近く）
+  const yc_p_eq = yv_p_eq - Eg;    // p伝導帯中心（上）
+  function geom(){
+    // 順:p側を下げ(y増,崖低)＋空乏層せまい／逆:p側を上げ(y減,崖高)＋空乏層ひろい
+    const s    = (mode==="fwd") ? 24 : -26;
+    const wdep = (mode==="fwd") ? 26  : 48;  // 空乏層半幅＝傾斜区間の半幅
+    return { yc_p: yc_p_eq+s, yv_p: yv_p_eq+s, ef_p: EF+s, wdep, s };
+  }
+  // smoothstep補間（傾斜を滑らかに）
+  function smooth(t){ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); }
+  // バンドのy座標：x位置に応じて n側水平→傾斜→p側水平（空乏層ぶんなだらかに曲がる）
+  function bandY(x,yn,yp,wdep){
+    if(x <= xj-wdep) return yn;
+    if(x >= xj+wdep) return yp;
+    const t=(x-(xj-wdep))/(2*wdep);
+    return yn+(yp-yn)*smooth(t);
+  }
+  // 帯（塗り＋上下の縁取り線）を傾斜つきパスで描く
+  function drawBand(yn,yp,wdep,color){
+    const halfBand=18; // 帯の太さ（中心線から±）
+    const N=40, pts=[];
+    for(let i=0;i<=N;i++){
+      const x=xn0+(xp1-xn0)*i/N;
+      pts.push([x, bandY(x,yn,yp,wdep)]);
+    }
+    // 塗り（上縁→下縁を閉じる）
+    let d="M"+xn0+","+(pts[0][1]-halfBand)+" ";
+    for(const [x,y] of pts) d+="L"+x.toFixed(1)+","+(y-halfBand).toFixed(1)+" ";
+    for(let i=pts.length-1;i>=0;i--) d+="L"+pts[i][0].toFixed(1)+","+(pts[i][1]+halfBand).toFixed(1)+" ";
+    d+="Z";
+    svg.appendChild(el("path",{d,fill:color,opacity:0.16,stroke:"none"}));
+    // 中心線
+    let dl="M"+pts[0][0]+","+pts[0][1].toFixed(1)+" ";
+    for(const [x,y] of pts) dl+="L"+x.toFixed(1)+","+y.toFixed(1)+" ";
+    svg.appendChild(el("path",{d:dl,fill:"none",stroke:color,"stroke-width":2.5}));
+  }
+
+  function base(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const g=geom();
+    // 見出し
+    svg.appendChild(txt(W/2,38,
+      mode==="fwd"?"順方向：崖が低い → 電子が越えて流れ続ける":"逆方向：崖が高い → 越えられず跳ね返る",
+      {"text-anchor":"middle","font-size":19,"font-weight":"bold",fill:mode==="fwd"?COL.flow:COL.stop}));
+
+    // 軸の向き注記
+    svg.appendChild(txt(40,H/2,"↓低　エネルギー　高↑",{"font-size":12,fill:"#999","transform":`rotate(-90 40 ${H/2})`,"text-anchor":"middle"}));
+
+    // 領域ラベル
+    svg.appendChild(txt((120+xj)/2,400,"n型（電子が多い）",{"text-anchor":"middle","font-size":15,"font-weight":"bold",fill:COL.flow}));
+    svg.appendChild(txt((xj+800)/2,400,"p型（正孔が多い）",{"text-anchor":"middle","font-size":15,"font-weight":"bold",fill:COL.stop}));
+    // 空乏層の左右の縁（傾斜が始まる/終わる位置）を縦点線で示す
+    svg.appendChild(el("line",{x1:xj-g.wdep,y1:70,x2:xj-g.wdep,y2:370,stroke:COL.line,"stroke-width":1.5,"stroke-dasharray":"4 4"}));
+    svg.appendChild(el("line",{x1:xj+g.wdep,y1:70,x2:xj+g.wdep,y2:370,stroke:COL.line,"stroke-width":1.5,"stroke-dasharray":"4 4"}));
+
+    // ---- 伝導帯（上・青）空乏層ぶん傾斜 ----
+    drawBand(yc_n, g.yc_p, g.wdep, COL.flow);
+    svg.appendChild(txt(xn0+6,yc_n-30,"伝導帯（電子が転がる地形）",{"font-size":12,fill:COL.flow}));
+
+    // ---- 価電子帯（下・赤）空乏層ぶん傾斜 ----
+    drawBand(yv_n, g.yv_p, g.wdep, COL.stop);
+    svg.appendChild(txt(xn0+6,yv_n+32,"価電子帯（正孔の地形）",{"font-size":12,fill:COL.stop}));
+
+    // 空乏層の範囲を薄く明示（傾斜＝空乏層幅であることを示す）
+    svg.appendChild(el("rect",{x:xj-g.wdep,y:72,width:g.wdep*2,height:296,fill:"#9aa6b3",opacity:0.10,stroke:"none"}));
+    svg.appendChild(txt(xj, 360, mode==="fwd"?"空乏層せまい":"空乏層ひろい",
+      {"text-anchor":"middle","font-size":12,"font-weight":"bold",fill:"#5a6675"}));
+
+    // 崖の高さ表示（接合線から右に離し、p側ギャップ内＝伝導帯の下・フェルミ線の上へ）
+    const cliffLabY=((g.yc_p+18)+g.ef_p)/2+6;
+    svg.appendChild(txt(xj+g.wdep+14,cliffLabY,mode==="fwd"?"崖：低い":"崖：高い",
+      {"font-size":15,"font-weight":"bold",fill:mode==="fwd"?COL.flow:COL.stop}));
+
+    // フェルミ準位（紫点線）：n側=EF一定／p側=g.ef_p。平衡(s=0)で左右がそろう。傾斜区間で滑らかに
+    const ef_n = EF;
+    const ef_p = g.ef_p;
+    let def="M"+xn0+","+ef_n+" ";
+    for(let i=0;i<=40;i++){const x=xn0+(xp1-xn0)*i/40; def+="L"+x.toFixed(1)+","+bandY(x,ef_n,ef_p,g.wdep).toFixed(1)+" ";}
+    svg.appendChild(el("path",{d:def,fill:"none",stroke:COL.emph,"stroke-width":2.2,"stroke-dasharray":"6 4"}));
+    // ラベルはn側のフェルミ線の下に置く（伝導帯と価電子帯の間＝ギャップ内で読みやすい位置）
+    svg.appendChild(txt(xn0+6,ef_n+16,"フェルミ準位",{"text-anchor":"start","font-size":12,"font-weight":"bold",fill:COL.emph}));
+
+    // キャリアレイヤ
+    const layer=el("g",{id:"c-layer"});
+    svg.appendChild(layer);
+    return layer;
+  }
+
+  let layer=base();
+
+  function frame(){
+    const g=geom();
+    while(layer.firstChild)layer.removeChild(layer.firstChild);
+    tphase+=0.012;
+
+    if(mode==="fwd"){
+      // 電子：n側(右へ)→傾斜を下って p側へ流れ続ける（ループ）。yは帯の傾斜bandYに沿う
+      const Ne=8;
+      for(let i=0;i<Ne;i++){
+        let p=(tphase*0.18 + i/Ne)%1; // 0..1 で n→p へ
+        const X=xn0+40+(xp1-xn0-80)*p;
+        const Y=bandY(X, yc_n, g.yc_p, g.wdep);
+        layer.appendChild(el("circle",{cx:X,cy:Y,r:7,fill:COL.flow}));
+      }
+      // 正孔（赤い輪）：p側→n側（逆向きに流れる、価電子帯）。yは傾斜bandYに沿う
+      const Nh=6;
+      for(let i=0;i<Nh;i++){
+        let p=(tphase*0.16 + i/Nh)%1; // 0..1 で p→n
+        const X=xp1-40-(xp1-xn0-80)*p;
+        const Y=bandY(X, yv_n, g.yv_p, g.wdep);
+        layer.appendChild(el("circle",{cx:X,cy:Y,r:7,fill:"none",stroke:COL.stop,"stroke-width":3}));
+      }
+    }else{
+      // 逆方向：電子は傾斜の手前(空乏層の縁)まで来て跳ね返る（往復）
+      const Ne=6;
+      const edge=xj-g.wdep; // 空乏層n側の縁
+      for(let i=0;i<Ne;i++){
+        const home=xn0+40+i*30;
+        const reach=Math.min(edge-8, home + 55*Math.abs(Math.sin(tphase*1.4 - i*0.5)));
+        layer.appendChild(el("circle",{cx:reach,cy:bandY(reach,yc_n,g.yc_p,g.wdep),r:7,fill:COL.flow,opacity:0.9}));
+      }
+      // 跳ね返る矢印（↩）
+      layer.appendChild(txt(edge-10,yc_n-14,"↩",{"text-anchor":"end","font-size":22,"font-weight":"bold",fill:COL.stop}));
+      // 正孔も p側(空乏層の縁)で押し戻される（位相を散らして団子化を防ぐ）
+      const Nh=5;
+      const edgeP=xj+g.wdep;
+      for(let i=0;i<Nh;i++){
+        const home=xp1-60-i*48;
+        const reach=Math.max(edgeP+8, home - 48*Math.abs(Math.sin(tphase*1.4 - i*0.7)));
+        layer.appendChild(el("circle",{cx:reach,cy:bandY(reach,yv_n,g.yv_p,g.wdep),r:7,fill:"none",stroke:COL.stop,"stroke-width":3,opacity:0.9}));
+      }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  function setMode(m){
+    mode=m;
+    document.getElementById("t4-fwd").classList.toggle("on",m==="fwd");
+    document.getElementById("t4-rev").classList.toggle("on",m==="rev");
+    layer=base();
+  }
+  document.getElementById("t4-fwd").addEventListener("click",()=>setMode("fwd"));
+  document.getElementById("t4-rev").addEventListener("click",()=>setMode("rev"));
+  frame();
+})();
+</script>
+</body>
+</html>

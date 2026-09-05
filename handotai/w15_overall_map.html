@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第15週 総まとめ 全体マップ ― 砂が「考える石」になるまで</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222; --gray:#6B7682; --line:#D9DEE5;
+    --panel:#F4F6F9; --neg:#C0392B; --pos:#1F6FB2; --emph:#7E3FA0; --todo:#2E8B57;
+    --bg:#FAFBFC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"メイリオ","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  header.top{
+    background:var(--navy); color:#fff; padding:18px 28px;
+    display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+  }
+  header.top .kicker{font-size:14px; color:#AEC4DE; font-weight:700;}
+  header.top h1{font-size:24px; font-weight:700; letter-spacing:.02em;}
+  header.top .sub{font-size:14px; color:#E6EEF6; margin-left:auto;}
+  .wrap{flex:1; display:flex; gap:0; min-height:0;}
+  /* 左：旅マップ */
+  nav.map{
+    width:300px; background:#fff; border-right:1px solid var(--line);
+    padding:18px 14px; overflow-y:auto; flex-shrink:0;
+  }
+  nav.map .acttitle{
+    font-size:12px; font-weight:700; color:var(--gray);
+    margin:14px 8px 6px; letter-spacing:.04em;
+  }
+  nav.map .acttitle:first-child{margin-top:4px;}
+  .step{
+    display:flex; align-items:center; gap:12px; padding:11px 12px; margin:5px 0;
+    border-radius:10px; cursor:pointer; border:1px solid transparent;
+    transition:background .15s, border-color .15s;
+  }
+  .step:hover{background:var(--panel);}
+  .step.active{background:var(--navy); border-color:var(--navy);}
+  .step.active .num{background:#fff; color:var(--navy);}
+  .step.active .label{color:#fff;}
+  .step.active .sublabel{color:#CADCFC;}
+  .num{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:var(--navy); color:#fff; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step .label{font-size:15px; font-weight:700; color:var(--ink);}
+  .step .sublabel{font-size:11.5px; color:var(--gray);}
+  .acttag{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+  /* 右：詳細 */
+  main.detail{flex:1; padding:26px 34px; overflow-y:auto;}
+  .crumbs{font-size:13px; color:var(--gray); margin-bottom:6px;}
+  .stage-title{font-size:30px; font-weight:700; color:var(--navy); margin-bottom:4px;}
+  .stage-en{font-size:16px; color:var(--gray); font-weight:700; margin-left:8px;}
+  .stage-week{font-size:13px; color:var(--gray); margin-bottom:18px;}
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;}
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px 22px;
+    box-shadow:0 2px 8px rgba(0,0,0,.05); position:relative;
+  }
+  .card h3{font-size:16px; color:var(--navy); margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+  .card p{font-size:15.5px; color:var(--ink);}
+  .card .accent{position:absolute; left:0; top:14px; bottom:14px; width:5px; border-radius:3px;}
+  .ana{font-size:15.5px;}
+  .ana b{color:var(--emph);}
+  /* なぜパネル */
+  .why{
+    background:var(--panel); border-radius:14px; padding:18px 22px; margin-bottom:18px;
+    border-left:5px solid var(--navy);
+  }
+  .why .qlabel{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:6px;}
+  .why p{font-size:16px; color:var(--ink);}
+  /* 視覚ミニ図 */
+  .visual{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px;
+    display:flex; align-items:center; justify-content:center; min-height:150px; margin-bottom:18px;
+  }
+  /* 旅の進捗バー */
+  .progress{display:flex; gap:6px; margin-bottom:20px;}
+  .progress .seg{flex:1; height:6px; border-radius:3px; background:var(--line);}
+  .progress .seg.done{background:var(--navy);}
+  /* 色つき強調 */
+  .pos{color:var(--pos); font-weight:700;}
+  .neg{color:var(--neg); font-weight:700;}
+  .emph{color:var(--emph); font-weight:700;}
+  .todo{color:var(--todo); font-weight:700;}
+  /* ナビボタン */
+  .navbtns{display:flex; justify-content:space-between; gap:12px; margin-top:8px;}
+  .navbtns button{
+    font-family:inherit; font-size:14px; font-weight:700; padding:10px 20px;
+    border:1px solid var(--navy); background:#fff; color:var(--navy);
+    border-radius:8px; cursor:pointer; transition:background .15s,color .15s;
+  }
+  .navbtns button:hover:not(:disabled){background:var(--navy); color:#fff;}
+  .navbtns button:disabled{opacity:.35; cursor:default;}
+  /* ミニ図パーツ */
+  .chip-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .blk{padding:10px 16px; border-radius:8px; font-weight:700; font-size:14px; border:1.5px solid;}
+  .arrow{color:var(--gray); font-size:20px;}
+  .band{display:flex; flex-direction:column; gap:4px; width:220px;}
+  .band .lvl{padding:8px; border-radius:6px; text-align:center; font-size:13px; font-weight:700; border:1.5px solid;}
+  @media(max-width:880px){
+    .cards{grid-template-columns:1fr;}
+    nav.map{width:240px;}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="kicker">第15週 総まとめ</span>
+  <h1>砂が「考える石」になるまで</h1>
+  <span class="sub">左のマップをクリックして、14週の旅をたどろう</span>
+</header>
+
+<div class="wrap">
+  <nav class="map" id="map"></nav>
+  <main class="detail" id="detail"></main>
+</div>
+
+<script>
+const C={navy:"#1C3A5E",pos:"#1F6FB2",neg:"#C0392B",emph:"#7E3FA0",todo:"#2E8B57",gray:"#6B7682"};
+
+// 6ステージ（4幕）。新概念は足さず、既出アナロジーのみ。
+const stages=[
+ {
+   act:1, actName:"第1幕 電気を操れる石", tag:C.pos,
+   title:"砂 → 操れる石", en:"Material & Carrier", week:"第2〜5週",
+   left:{h:"何を学んだか", accent:C.pos, html:
+     "金属・半導体・絶縁体の違いは「電気の通しやすさ」。半導体は<b class='emph'>通す/通さないを操れる</b>のが特別。"+
+     "電子の席（バンド）と隙間（バンドギャップ）、電気を運ぶ<span class='pos'>自由電子</span>と<span class='neg'>正孔</span>。"},
+   right:{h:"公式アナロジー", html:
+     "絶縁体＝<b>満員電車</b>（動けない）／金属＝<b>ガラガラ電車</b>（スイスイ）。"+
+     "正孔＝<b>満員電車の空席</b>（1人降りると空席が逆向きに動く）。"+
+     "席＝<b>ライブ会場</b>（満席だと動けない）。"},
+   why:"なぜ半導体は特別？ → よく通すからではなく、<b>通す/通さないを自分で操れる</b>から。だからスイッチになり、コンピュータになる。",
+   visual:`<div class="band">
+     <div class="lvl" style="background:#1F6FB244;border-color:${C.pos};color:${C.pos}">伝導帯（動ける席）</div>
+     <div class="lvl" style="background:#fff;border:1.5px dashed ${C.gray};color:${C.gray}">バンドギャップ（隙間）</div>
+     <div class="lvl" style="background:#C0392B33;border-color:${C.neg};color:${C.neg}">価電子帯（ふだんの席）</div>
+   </div>`
+ },
+ {
+   act:2, actName:"第2幕 境界の魔法", tag:C.emph,
+   title:"pn接合", en:"pn Junction", week:"第6週（核①）",
+   left:{h:"何を学んだか", accent:C.emph, html:
+     "n型とp型をくっつけると、境界で電子と正孔が出会って<b class='emph'>再結合</b>（互いに消える）。"+
+     "あとに残るキャリアのいない領域が<b class='emph'>空乏層</b>。"},
+   right:{h:"公式アナロジー", html:
+     "pn接合＝2つの世界が出会う<b>国境</b>。再結合＝<b>結ばれた瞬間に消える</b>。"+
+     "空乏層＝<b>川の中州の無人地帯</b>（立入禁止ゾーン）。"},
+   why:"境界の電界は、キャリアにとって越えるべき<b>「坂」</b>になる。この坂こそ、次のすべてを説明する鍵。",
+   visual:`<div class="chip-row">
+     <span class="blk" style="background:#1F6FB244;border-color:${C.pos};color:${C.pos}">n型</span>
+     <span class="blk" style="background:#fff;border:1.5px dashed ${C.gray};color:${C.gray}">空乏層</span>
+     <span class="blk" style="background:#C0392B33;border-color:${C.neg};color:${C.neg}">p型</span>
+   </div>`
+ },
+ {
+   act:2, actName:"第2幕 境界の魔法", tag:C.emph,
+   title:"ダイオード・LED", en:"Diode / LED", week:"第7週",
+   left:{h:"何を学んだか", accent:C.emph, html:
+     "<span class='pos'>順方向</span>＝坂が低くなり流れる。<span class='neg'>逆方向</span>＝坂が高くなり止まる。"+
+     "この一方通行が<b class='emph'>整流</b>（交流→直流）。"},
+   right:{h:"公式アナロジー", html:
+     "ダイオード＝<b>一方通行の改札</b>（逆走は止められる）。"+
+     "LEDと太陽電池＝<b>同じpn接合を逆向きに</b>使う（電気→光／光→電気）。"},
+   why:"なぜ流れる/止まる？ → <b>坂が低い＝越えられる、高い＝越えられない</b>。順方向と逆方向の違いは坂の高さだけ。",
+   visual:`<div style="text-align:center">
+     <div style="margin-bottom:10px"><span class="pos">順方向</span>：坂が低い → 流れる ✓</div>
+     <div><span class="neg">逆方向</span>：坂が高い → 止まる ✕</div>
+   </div>`
+ },
+ {
+   act:3, actName:"第3幕 スイッチの完成", tag:C.emph,
+   title:"MOSトランジスタ", en:"MOSFET", week:"第8〜9週（核②）",
+   left:{h:"何を学んだか", accent:C.emph, html:
+     "ゲートと通り道の間は<b class='emph'>絶縁膜（酸化膜）</b>。電流は流れ込まず、電界で操作する。"+
+     "<b>しきい値Vth</b>を超えるとチャネルができ、電流が流れる。"},
+   right:{h:"公式アナロジー", html:
+     "ゲート＝<b>水門の門番</b>（離れたまま下の流れを操る）。"+
+     "ゲート電圧としきい値＝<b>蛇口</b>（あるラインを超えると一気に出る）。"},
+   why:"式 Id=½μCox(W/L)(Vgs−Vth)² で、(Vgs−Vth)は<b>2乗で効く</b>。少し上げるだけで電流が大きく変わる＝スイッチのキレ。",
+   visual:`<div style="text-align:center;width:260px">
+     <div class="blk" style="display:block;background:#7E3FA0;color:#fff;border-color:${C.emph};margin-bottom:4px">ゲート（紫）</div>
+     <div class="blk" style="display:block;background:#C8A55B;color:#fff;border-color:#A9863F;margin-bottom:4px">酸化膜（絶縁）</div>
+     <div class="chip-row" style="margin-bottom:4px">
+       <span class="blk" style="background:#1F6FB2;color:#fff;border-color:${C.pos}">S</span>
+       <span class="blk" style="background:#1F6FB2;color:#fff;border-color:${C.pos}">D</span>
+     </div>
+     <div class="blk" style="display:block;background:#C0392B33;color:${C.neg};border-color:${C.neg}">p型基板</div>
+   </div>`
+ },
+ {
+   act:3, actName:"第3幕 スイッチの完成", tag:C.emph,
+   title:"デジタル・CMOS・微細化", en:"Digital / CMOS / Scaling", week:"第10〜11週",
+   left:{h:"何を学んだか", accent:C.emph, html:
+     "0と1＝<b>電圧の低い/高い</b>（スイッチのオフ/オン）。CMOSは待機時ほぼ無電力。"+
+     "速く省電力にするため、平面→<b>FinFET→GAA</b>と立体化。"},
+   right:{h:"公式アナロジー / つながり", html:
+     "第1幕の<b class='emph'>「操れる＝スイッチ」</b>がここで完成。"+
+     "MOSのオン/オフを0と1に対応させ、集めるとコンピュータになる。"},
+   why:"なぜCMOSは電池で動く？ → nMOSとpMOSのペアで、<b>切り替わる瞬間以外は電気をほぼ使わない</b>から。",
+   visual:`<div class="chip-row">
+     <span class="blk" style="background:#fff;border-color:${C.gray};color:${C.gray}">平面型</span><span class="arrow">→</span>
+     <span class="blk" style="background:#1F6FB244;border-color:${C.pos};color:${C.pos}">FinFET</span><span class="arrow">→</span>
+     <span class="blk" style="background:#7E3FA022;border-color:${C.emph};color:${C.emph}">GAA</span>
+   </div>`
+ },
+ {
+   act:4, actName:"第4幕 砂から世界へ", tag:C.todo,
+   title:"製造 → チップ → 世界", en:"Manufacturing & Industry", week:"第12〜14週",
+   left:{h:"何を学んだか", accent:C.todo, html:
+     "砂→超高純度シリコン→ウェハ→<b>フォトリソ</b>で回路を焼く（EUVで微細に）。"+
+     "後工程で仕上げ、<b>CoWoS</b>で組み合わせる。世界は4層の分業。"},
+   right:{h:"公式アナロジー", html:
+     "ウェハ＝<b>板チョコ</b>。フォトリソ＝<b>版画の刷り重ね</b>。EUV＝<b>超細ペン先</b>。"+
+     "CoWoS＝<b>幕の内弁当</b>。産業＝<b>レストランの厨房分担</b>。"},
+   why:"日本は<span class='pos'>材料は◎</span>・<span class='neg'>装置はまだら</span>。全部で勝ってはいないが、なくてはならない強みがある。<b>だから君たちが必要</b>。",
+   visual:`<div class="chip-row">
+     <span class="blk" style="background:#fff;border-color:${C.gray};color:${C.gray}">砂</span><span class="arrow">→</span>
+     <span class="blk" style="background:#fff;border-color:${C.navy};color:${C.navy}">ウェハ</span><span class="arrow">→</span>
+     <span class="blk" style="background:#7E3FA022;border-color:${C.emph};color:${C.emph}">回路を焼く</span><span class="arrow">→</span>
+     <span class="blk" style="background:#2E8B5722;border-color:${C.todo};color:${C.todo}">世界へ</span>
+   </div>`
+ },
+];
+
+let cur=0;
+const mapEl=document.getElementById("map");
+const detEl=document.getElementById("detail");
+
+function buildMap(){
+  let lastAct=0; let html="";
+  stages.forEach((s,i)=>{
+    if(s.act!==lastAct){ html+=`<div class="acttitle"><span class="acttag" style="background:${s.tag}"></span>${s.actName}</div>`; lastAct=s.act; }
+    html+=`<div class="step${i===cur?' active':''}" data-i="${i}">
+      <div class="num">${i+1}</div>
+      <div><div class="label">${s.title}</div><div class="sublabel">${s.week}</div></div>
+    </div>`;
+  });
+  mapEl.innerHTML=html;
+  mapEl.querySelectorAll(".step").forEach(el=>{
+    el.addEventListener("click",()=>{cur=+el.dataset.i; render();});
+  });
+}
+
+function render(){
+  const s=stages[cur];
+  // progress
+  let prog="";
+  for(let i=0;i<stages.length;i++) prog+=`<div class="seg${i<=cur?' done':''}"></div>`;
+  detEl.innerHTML=`
+    <div class="progress">${prog}</div>
+    <div class="crumbs">${s.actName} ・ ${s.week}</div>
+    <div class="stage-title">${s.title}<span class="stage-en">${s.en}</span></div>
+    <div class="cards">
+      <div class="card">
+        <div class="accent" style="background:${s.left.accent}"></div>
+        <h3>${s.left.h}</h3>
+        <p class="ana">${s.left.html}</p>
+      </div>
+      <div class="card">
+        <h3>${s.right.h}</h3>
+        <p class="ana">${s.right.html}</p>
+      </div>
+    </div>
+    <div class="visual">${s.visual}</div>
+    <div class="why">
+      <div class="qlabel">なぜ？（ここを押さえる）</div>
+      <p>${s.why}</p>
+    </div>
+    <div class="navbtns">
+      <button id="prev" ${cur===0?'disabled':''}>← 前へ</button>
+      <button id="next" ${cur===stages.length-1?'disabled':''}>次へ →</button>
+    </div>
+  `;
+  const p=document.getElementById("prev"), n=document.getElementById("next");
+  if(p) p.onclick=()=>{if(cur>0){cur--;buildMap();render();}};
+  if(n) n.onclick=()=>{if(cur<stages.length-1){cur++;buildMap();render();}};
+  // 左マップのactive更新
+  mapEl.querySelectorAll(".step").forEach(el=>el.classList.toggle("active",+el.dataset.i===cur));
+}
+
+// キーボード操作
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"&&cur<stages.length-1){cur++;buildMap();render();}
+  if(e.key==="ArrowLeft"&&cur>0){cur--;buildMap();render();}
+});
+
+buildMap();
+render();
+</script>
+</body>
+</html>

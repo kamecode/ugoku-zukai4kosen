@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>非反転増幅：Vout =（1＋Rf/Rin）·Vin</title>
+<style>
+  :root{
+    --in:#1565C0; --out:#E65100; --vplus:#D32F2F; --gnd:#9E9E9E;
+    --head:#0D3C6E; --ok:#2E7D32; --ink:#1b2733; --paper:#fbfaf6; --rail:#b00020;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Sans CJK JP","Hiragino Sans","Yu Gothic",sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 20px 28px;}
+  h1{font-size:21px;color:var(--head);margin:4px 0 2px;letter-spacing:.02em;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 14px;line-height:1.6;}
+  .tabs{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap;}
+  .tab{border:1.5px solid #c7cdd6;background:#fff;border-radius:999px;
+    padding:7px 16px;font-size:13.5px;cursor:pointer;color:#4a5560;font-weight:600;transition:.15s;}
+  .tab:hover{border-color:#9aa3ad;}
+  .tab.active{background:var(--head);color:#fff;border-color:var(--head);}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;}
+  .panel{background:#fff;border:1.5px solid #e3e1d8;border-radius:14px;
+    padding:14px 14px 8px;box-shadow:0 2px 10px rgba(30,40,60,.05);}
+  .panel h2{font-size:14px;margin:0 0 6px;color:var(--head);display:flex;align-items:center;gap:7px;}
+  .panel h2 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  svg{width:100%;height:auto;display:block;}
+  .controls{margin:16px 0 6px;background:#fff;border:1.5px solid #e3e1d8;border-radius:14px;padding:14px 18px;}
+  .ctrl-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctrl-row label{font-size:13px;font-weight:700;color:#444;min-width:96px;}
+  input[type=range]{flex:1;min-width:200px;accent-color:var(--in);height:5px;}
+  .gainbtns{display:flex;gap:6px;}
+  .gainbtns button{border:1.5px solid #c7cdd6;background:#fff;border-radius:8px;
+    padding:5px 12px;font-size:13px;cursor:pointer;font-weight:700;color:#445;}
+  .gainbtns button.on{background:var(--out);color:#fff;border-color:var(--out);}
+  .readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+  .rcard{border:1.5px solid #eee;border-radius:10px;padding:8px 10px;text-align:center;background:#fcfcfa;}
+  .rcard .k{font-size:11.5px;color:#7a8590;margin-bottom:3px;}
+  .rcard .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .note{font-size:12.5px;color:#5a6573;margin:12px 2px 0;line-height:1.7;
+    background:#f4f6f9;border-left:4px solid var(--head);padding:9px 12px;border-radius:0 8px 8px 0;}
+  text{font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .modeline{font-size:13px;color:#444;margin:2px 2px 12px;min-height:20px;}
+  .cmp{margin-top:6px;font-size:12px;color:#7a8590;background:#fff8ee;border:1px dashed #E65100;
+    border-radius:8px;padding:7px 11px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>非反転増幅：Vout =（1 ＋ Rf/Rin）· Vin</h1>
+  <p class="sub">入力を <b>＋入力</b> に加える構成。仮想短絡で −入力 も Vin と同じ高さに保たれ、Rin と Rf が分圧器になる。<b>反転増幅と違い、入力と出力は同符号</b>（向きが反転しない）。利得は必ず1以上。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="ideal">① 理想動作（同符号で増幅）</button>
+    <button class="tab" data-mode="clip">② 出力飽和（レール張り付き）</button>
+    <button class="tab" data-mode="follower">③ ボルテージフォロワ（Rf=0, 利得1）</button>
+  </div>
+  <div class="modeline" id="modeline"></div>
+
+  <div class="stage">
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--head)"></span>シーソー：支点ごと Vin の高さへ持ち上がる</h2>
+      <svg id="seesaw" viewBox="0 0 460 320" aria-label="シーソー図"></svg>
+    </div>
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--out)"></span>非反転増幅回路</h2>
+      <svg id="circuit" viewBox="0 0 460 330" aria-label="非反転増幅回路図"></svg>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <label for="vin">入力 Vin</label>
+      <input type="range" id="vin" min="-0.4" max="0.4" step="0.01" value="0.3">
+      <span id="vinval" style="font-weight:800;color:var(--in);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;">+0.30 V</span>
+    </div>
+    <div class="ctrl-row" style="margin-top:12px;">
+      <label>利得（抵抗比）</label>
+      <div class="gainbtns" id="gainbtns">
+        <button data-g="2">×2（Rf=Rin）</button>
+        <button data-g="11" class="on">×11（Rf=10·Rin）</button>
+        <button data-g="23">×23</button>
+      </div>
+      <span style="font-size:12.5px;color:#7a8590;">利得 A = 1 ＋ Rf/Rin（必ず正・1以上）</span>
+    </div>
+
+    <div class="readout">
+      <div class="rcard"><div class="k">入力 Vin（＋入力）</div><div class="v" id="rd-vin" style="color:var(--in)">—</div></div>
+      <div class="rcard"><div class="k">利得 A = 1+Rf/Rin</div><div class="v" id="rd-gain" style="color:var(--head)">—</div></div>
+      <div class="rcard"><div class="k">出力 Vout</div><div class="v" id="rd-vout" style="color:var(--out)">—</div></div>
+      <div class="rcard"><div class="k">−入力の電位</div><div class="v" id="rd-vminus" style="color:var(--ok)">—</div></div>
+    </div>
+
+    <div class="note" id="note"></div>
+    <div class="cmp">
+      <b>反転との違い：</b>反転は A=−Rf/Rin（符号が逆・利得は0〜∞）／非反転は A=1+Rf/Rin（同符号・利得は必ず1以上）。
+      仮想短絡で −入力が「0Vに張り付く」のが反転、「Vinに張り付く」のが非反転。
+    </div>
+  </div>
+</div>
+
+<script>
+const RAIL = 4.6;
+let mode="ideal", gain=11, vin=0.3;
+
+const $ = id => document.getElementById(id);
+
+function effGain(){ return mode==="follower" ? 1 : gain; }
+
+function compute(){
+  const a = effGain();
+  let videal = a * vin;
+  let vout = videal, clipped=false;
+  if(mode!=="ideal" && mode!=="follower"){ /* clip mode */ }
+  if(mode==="clip"){
+    if(vout>RAIL){ vout=RAIL; clipped=true; }
+    if(vout<-RAIL){ vout=-RAIL; clipped=true; }
+  } else {
+    // ideal / follower：範囲設計でレール内に収める。飽和は適用しない。
+  }
+  // −入力電位：仮想短絡で +入力(=Vin)に一致。飽和時のみ分圧点へずれる。
+  let vminus;
+  if(clipped){
+    // 飽和時：Voutが固定され、−入力 = Vout·Rin/(Rin+Rf) = Vout/ a  （非反転の分圧）
+    vminus = vout / gain; // A=1+Rf/Rin, 分圧比 Rin/(Rin+Rf)=1/A
+  } else {
+    vminus = vin; // 仮想短絡：−入力＝＋入力＝Vin
+  }
+  return {a, videal, vout, clipped, vminus};
+}
+
+// シーソー：水平基準=0V。支点(=−入力)が Vin の高さへ持ち上がり、両端も Vin にそろう＝水平のまま上下動。
+function drawSeesaw(s){
+  const cx=230, baseY=190, halfLen=150;
+  const scale=70; // V→px
+  // 支点の高さ = −入力電位（理想ではVin）。バーは水平（両入力が同電位）。
+  const pivotY = baseY - s.vminus*scale;
+  // 飽和時は両端が等しくならない（−入力≠＋入力）→バーを少し傾ける
+  let tilt=0;
+  if(s.clipped){ tilt = (vin - s.vminus)*0.06; }
+  const ly = pivotY + halfLen*Math.sin(tilt);
+  const ry = pivotY - halfLen*Math.sin(tilt);
+  const lx = cx - halfLen*Math.cos(tilt);
+  const rx = cx + halfLen*Math.cos(tilt);
+  const plusLabel = (vin>=0?"+":"")+vin.toFixed(2)+"V";
+  const minusLabel = (s.vminus>=0?"+":"")+s.vminus.toFixed(2)+"V";
+  let head;
+  if(mode==="ideal"||mode==="follower"){
+    head=`<text x="230" y="34" text-anchor="middle" font-size="13.5" fill="#2E7D32" font-weight="800">−入力 ＝ ＋入力 ＝ Vin（支点ごと持ち上がる）</text>`;
+  } else {
+    head= s.clipped
+      ?`<text x="230" y="34" text-anchor="middle" font-size="13.5" fill="#b00020" font-weight="800">飽和：−入力が Vin に届かない＝仮想短絡が破れる</text>`
+      :`<text x="230" y="34" text-anchor="middle" font-size="13.5" fill="#2E7D32" font-weight="800">−入力 ＝ ＋入力 ＝ Vin</text>`;
+  }
+  return `
+  <rect x="0" y="0" width="460" height="320" fill="#fff"/>
+  ${head}
+  <line x1="50" y1="${baseY}" x2="410" y2="${baseY}" stroke="#cfd6de" stroke-dasharray="5 5" stroke-width="1.5"/>
+  <text x="414" y="${baseY+4}" font-size="11" fill="#9aa3ad">0V</text>
+  <!-- 持ち上がり矢印 -->
+  <line x1="60" y1="${baseY}" x2="60" y2="${pivotY}" stroke="#2E7D32" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="70" y="${(baseY+pivotY)/2+4}" font-size="10.5" fill="#2E7D32">Vinの高さ</text>
+  <!-- 支点 -->
+  <polygon points="${cx},${pivotY} ${cx-16},${pivotY+30} ${cx+16},${pivotY+30}" fill="#0D3C6E"/>
+  <text x="${cx}" y="${pivotY+48}" text-anchor="middle" font-size="11.5" fill="#0D3C6E" font-weight="700">支点＝−入力（仮想短絡でVinに一致）</text>
+  <!-- バー -->
+  <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="#3a4654" stroke-width="7" stroke-linecap="round"/>
+  <!-- ＋入力側 -->
+  <circle cx="${lx}" cy="${ly}" r="20" fill="#D32F2F"/>
+  <text x="${lx}" y="${ly-28}" text-anchor="middle" font-size="12" fill="#D32F2F" font-weight="800">＋入力</text>
+  <text x="${lx}" y="${ly+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${plusLabel}</text>
+  <!-- −入力側 -->
+  <circle cx="${rx}" cy="${ry}" r="20" fill="#2E7D32"/>
+  <text x="${rx}" y="${ry-28}" text-anchor="middle" font-size="12" fill="#2E7D32" font-weight="800">−入力</text>
+  <text x="${rx}" y="${ry+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${minusLabel}</text>
+  `;
+}
+
+// 非反転増幅回路
+function drawCircuit(s){
+  const opX=250, opTop=120, opBot=210, opTip=300;
+  const outX=410, outY=165;
+  const sumX=170, minusY=opTop+22; // −入力ノード高さ
+  const aTxt=(s.a).toFixed(s.a%1===0?0:1);
+  const vmTxt=(s.vminus>=0?"+":"")+s.vminus.toFixed(2)+"V";
+  let vmSub = s.clipped ? "(仮想短絡が破れる)" : "(仮想短絡＝Vin)";
+  const railNote = s.clipped ? `<text x="350" y="36" text-anchor="middle" font-size="12.5" fill="#b00020" font-weight="800">出力がレール(±${RAIL}V)で飽和</text>`:"";
+  const isFollower = (mode==="follower");
+  // フォロワは Rf=0(直結), Rin=∞(なし)
+  let fb;
+  if(isFollower){
+    fb=`
+    <line x1="${opX}" y1="${minusY}" x2="${sumX-30}" y2="${minusY}" stroke="#E65100" stroke-width="2.5"/>
+    <line x1="${sumX-30}" y1="${minusY}" x2="${sumX-30}" y2="70" stroke="#E65100" stroke-width="2.5"/>
+    <line x1="${sumX-30}" y1="70" x2="330" y2="70" stroke="#E65100" stroke-width="2.5"/>
+    <line x1="330" y1="70" x2="330" y2="${outY}" stroke="#E65100" stroke-width="2.5"/>
+    <text x="${(sumX-30+330)/2}" y="62" text-anchor="middle" font-size="11" fill="#E65100" font-weight="700">出力を直結（Rf=0）</text>`;
+  } else {
+    fb=`
+    <!-- −入力ノードからGNDへRin -->
+    <line x1="${sumX}" y1="${minusY}" x2="${sumX}" y2="250" stroke="#1565C0" stroke-width="2.5"/>
+    <rect x="${sumX-9}" y="200" width="18" height="40" fill="#fff" stroke="#1565C0" stroke-width="2"/>
+    <text x="${sumX-26}" y="222" text-anchor="middle" font-size="11" fill="#1565C0" font-weight="700">Rin</text>
+    <line x1="${sumX}" y1="250" x2="${sumX}" y2="266" stroke="#1565C0" stroke-width="2.5"/>
+    <line x1="${sumX-13}" y1="266" x2="${sumX+13}" y2="266" stroke="#9E9E9E" stroke-width="2.5"/>
+    <line x1="${sumX-8}" y1="272" x2="${sumX+8}" y2="272" stroke="#9E9E9E" stroke-width="2"/>
+    <text x="${sumX}" y="288" text-anchor="middle" font-size="10" fill="#9E9E9E">GND</text>
+    <!-- −入力→OP -->
+    <line x1="${sumX}" y1="${minusY}" x2="${opX}" y2="${minusY}" stroke="#3a4654" stroke-width="2"/>
+    <!-- Rf：−入力ノード→出力 -->
+    <line x1="${sumX}" y1="${minusY}" x2="${sumX}" y2="78" stroke="#E65100" stroke-width="2.5"/>
+    <line x1="${sumX}" y1="78" x2="330" y2="78" stroke="#E65100" stroke-width="2.5"/>
+    <rect x="225" y="69" width="44" height="18" fill="#fff" stroke="#E65100" stroke-width="2"/>
+    <text x="247" y="64" text-anchor="middle" font-size="11" fill="#E65100" font-weight="700">Rf</text>
+    <line x1="330" y1="78" x2="330" y2="${outY}" stroke="#E65100" stroke-width="2.5"/>`;
+  }
+  return `
+  <rect x="0" y="0" width="460" height="330" fill="#fff"/>
+  ${railNote}
+  <!-- Vin → ＋入力（OP三角の＋端子の高さへ） -->
+  <text x="38" y="${opBot-22-18}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">Vin</text>
+  <circle cx="38" cy="${opBot-22}" r="5" fill="#1565C0"/>
+  <line x1="38" y1="${opBot-22}" x2="${opX}" y2="${opBot-22}" stroke="#1565C0" stroke-width="2.5"/>
+  <circle cx="${opX}" cy="${opBot-22}" r="3.5" fill="#1565C0"/>
+  <text x="120" y="${opBot-30}" text-anchor="middle" font-size="10" fill="#D32F2F" font-weight="700">＋入力へ</text>
+  ${fb}
+  <!-- −入力ノード印 -->
+  <circle cx="${sumX}" cy="${minusY}" r="4.5" fill="#2E7D32"/>
+  <circle cx="${opX}" cy="${minusY}" r="3.5" fill="#2E7D32"/>
+  <text x="${sumX-2}" y="${minusY-10}" text-anchor="middle" font-size="10" fill="#2E7D32" font-weight="700">−入力 ${vmTxt}</text>
+  <text x="${sumX-2}" y="${minusY+ (isFollower? -22:  -22)}" text-anchor="middle" font-size="9" fill="#2E7D32"></text>
+  <!-- OP三角 -->
+  <polygon points="${opX},${opTop} ${opX},${opBot} ${opTip},165" fill="#fff" stroke="#0D3C6E" stroke-width="2.5"/>
+  <text x="${opX+12}" y="${opTop+26}" font-size="13" fill="#1565C0" font-weight="800">−</text>
+  <text x="${opX+12}" y="${opBot-12}" font-size="13" fill="#D32F2F" font-weight="800">+</text>
+  <text x="${opX+34}" y="170" font-size="11" fill="#0D3C6E" font-weight="700">∞</text>
+  <!-- 出力 -->
+  <line x1="${opTip}" y1="165" x2="${outX}" y2="165" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="${outX}" cy="165" r="5" fill="#E65100"/>
+  <text x="${outX}" y="150" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">Vout</text>
+  <!-- 数値ボックス -->
+  <rect x="300" y="248" width="150" height="64" rx="9" fill="#fff7f0" stroke="#E65100" stroke-width="1.5"/>
+  <text x="375" y="268" text-anchor="middle" font-size="12" fill="#444">Vout = A · Vin</text>
+  <text x="375" y="290" text-anchor="middle" font-size="15" fill="#E65100" font-weight="800">${(s.vout>=0?"+":"")+s.vout.toFixed(2)} V</text>
+  <text x="375" y="305" text-anchor="middle" font-size="10.5" fill="#7a8590">A=${aTxt}, Vin=${(vin>=0?"+":"")+vin.toFixed(2)}V</text>
+  `;
+}
+
+function noteText(s){
+  if(mode==="ideal"){
+    return `＋入力に Vin を加えると、仮想短絡で −入力も Vin に一致します。すると Rin と Rf が出力を分圧する形になり、`
+      +`<b>Vout =（1＋Rf/Rin）· Vin ＝ ${s.a} × ${vin.toFixed(2)} ＝ ${s.videal.toFixed(2)} V</b>。`
+      +`反転増幅と違って<b>符号は変わらず（同符号）</b>、利得は必ず1以上です。`;
+  }
+  if(mode==="clip"){
+    return `理想式では Vout=${s.videal.toFixed(2)}V ですが、出力はレール（±${RAIL}V）の外へ出られません。`
+      +(s.clipped?`<b>いまレールに張り付いています（${s.vout.toFixed(2)}V）。</b>出力を動かせず、−入力をVinまで持ち上げられない＝<b>仮想短絡が破れます</b>。`
+        :`Vinを大きくして A·Vin が ±${RAIL}V を超えると張り付きます。`)
+      +`実機では波形の頭が平らに潰れる形で観察します。`;
+  }
+  // follower
+  return `Rf=0（出力を−入力に直結）にすると利得は <b>A = 1</b>。出力は入力をそのまま写します（<b>ボルテージフォロワ／バッファ, voltage follower</b>）。`
+    +`増幅はしませんが、入力インピーダンスが極めて高く出力インピーダンスが低いので、<b>センサなど弱い信号源を次段から守る緩衝役</b>として多用されます。`;
+}
+
+function adjustVinRange(){
+  const vr=$("vin");
+  const a = effGain();
+  let lim;
+  if(mode==="clip"){ lim = Math.min(0.6, (RAIL*1.6)/a); }
+  else { lim = Math.min(0.6, (RAIL-0.3)/a); }
+  vr.min=(-lim).toFixed(3); vr.max=lim.toFixed(3); vr.step=(lim/40).toFixed(4);
+  if(vin>lim) vin=lim; if(vin<-lim) vin=-lim;
+  vr.value=vin;
+}
+
+function render(){
+  adjustVinRange();
+  const s=compute();
+  $("seesaw").innerHTML=drawSeesaw(s);
+  $("circuit").innerHTML=drawCircuit(s);
+  $("rd-vin").textContent=(vin>=0?"+":"")+vin.toFixed(2)+" V";
+  $("rd-gain").textContent=(s.a).toFixed(s.a%1===0?0:1);
+  $("rd-vout").textContent=(s.vout>=0?"+":"")+s.vout.toFixed(2)+" V"+(s.clipped?" ⚠":"");
+  $("rd-vminus").textContent=(s.vminus>=0?"+":"")+s.vminus.toFixed(2)+" V";
+  $("note").innerHTML=noteText(s);
+  $("vinval").textContent=(vin>=0?"+":"")+vin.toFixed(2)+" V";
+}
+
+const modeLines={
+  ideal:"スライダーでVinを動かすと、−入力も同じ高さへ。出力は Vout=(1+Rf/Rin)·Vin で、入力と同符号です。",
+  clip:"Vinを大きく振ってみてください。出力がレール(±"+RAIL+"V)に張り付くと仮想短絡が破れます。",
+  follower:"Rf=0の特別な場合。利得1の「そっくりそのまま写す」バッファ。増幅はしないが緩衝役として重要です。"
+};
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    mode=t.dataset.mode;
+    $("modeline").textContent=modeLines[mode];
+    render();
+  });
+});
+$("vin").addEventListener("input",e=>{vin=parseFloat(e.target.value);render();});
+document.querySelectorAll("#gainbtns button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#gainbtns button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); gain=parseFloat(b.dataset.g); render();
+  });
+});
+$("modeline").textContent=modeLines.ideal;
+render();
+
+window.__setState=function(o){
+  if(o.mode){ document.querySelector(`.tab[data-mode="${o.mode}"]`).click(); }
+  if(o.gain!==undefined){ gain=o.gain; document.querySelectorAll("#gainbtns button").forEach(x=>x.classList.toggle("on", parseFloat(x.dataset.g)===o.gain)); }
+  if(o.vin!==undefined){ vin=o.vin; $("vin").value=o.vin; }
+  render();
+};
+</script>
+</body>
+</html>

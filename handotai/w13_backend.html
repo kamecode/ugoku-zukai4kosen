@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>後工程の流れ（詳しく）｜第13週</title>
+<style>
+  :root{
+    --ink:#1b2733; --sub:#5a6b7a; --line:#cfd8e0;
+    --paper:#f4f1ea; --card:#ffffff;
+    --pos:#1F6FB2; --emph:#7E3FA0; --task:#2E8B57; --neg:#C0392B;
+    --si:#8a94a2; --siface:#aeb8c4;
+    --gold:#d4a531; --resin:#2a2f36; --pcb:#2E7D5B; --pad:#c9a84a; --blade:#b0b8c2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),var(--paper);
+    color:var(--ink);min-height:100vh;padding:22px 16px 56px;}
+  .wrap{max-width:920px;margin:0 auto;}
+  .eyebrow{font-size:13px;letter-spacing:.18em;color:var(--emph);font-weight:700;margin-bottom:6px;}
+  h1{font-size:24px;margin:0 0 4px;line-height:1.3;}
+  .lead{color:var(--sub);font-size:14.5px;margin:0 0 14px;line-height:1.7;}
+  .analogy{display:inline-block;background:#fff7e8;border:1px solid #f0d9a8;color:#8a6a1f;font-size:13px;padding:6px 12px;border-radius:999px;margin-bottom:16px;}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px 6px;box-shadow:0 10px 30px -18px rgba(20,40,60,.4);}
+  .chaptitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .chaptitle .nm{font-size:16px;font-weight:800;color:var(--emph);}
+  .chaptitle .ct{font-size:12px;color:var(--sub);background:#f0eef4;padding:4px 10px;border-radius:999px;font-weight:700;}
+  .svgbox{width:100%;height:auto;display:block;}
+  .info{display:flex;gap:14px;align-items:flex-start;padding:12px 4px 12px;}
+  .stepnum{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--emph);color:#fff;font-weight:800;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;}
+  .stepnum small{font-size:9px;font-weight:600;opacity:.85;}
+  .info h2{margin:0 0 2px;font-size:18px;}
+  .info .en{color:#93a1ad;font-size:11.5px;font-weight:600;}
+  .info p{margin:4px 0 0;color:var(--sub);font-size:13.5px;line-height:1.65;}
+  .why{margin:8px 4px 0;background:#f0e8f6;border:1px solid #d9c2ea;border-radius:12px;padding:10px 14px;}
+  .why b{color:#6a2f8a;}
+  .why span{color:var(--ink);font-size:13.5px;line-height:1.6;}
+  .progress{display:flex;gap:5px;margin:10px 4px 0;}
+  .dot{flex:1;height:5px;border-radius:3px;background:#dde4ea;}
+  .dot.on{background:var(--emph);}
+  .nav{display:flex;gap:8px;margin-top:10px;}
+  .nav button{border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+  .prev{flex:1;background:#e7edf2;color:var(--ink);} .next{flex:2;background:var(--pos);color:#fff;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+  .controls{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 6px;}
+  .controls button{border:1px solid var(--line);background:#fff;color:var(--sub);padding:6px 9px;border-radius:8px;font-size:11.5px;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s;}
+  .controls button:hover{border-color:var(--emph);color:var(--emph);}
+  .controls button.active{background:var(--emph);border-color:var(--emph);color:#fff;}
+  .done{text-align:center;color:var(--task);font-weight:700;font-size:14px;margin-top:12px;padding:11px;background:#eef7f1;border-radius:12px;border:1px solid #c7e6d4;}
+  .done.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第13週 ｜ 砂からチップへ ②</div>
+  <h1>後工程の流れ（詳しく）― ウェハを「使える部品」に</h1>
+  <p class="lead">前工程で作ったチップを、1個ずつの部品に仕上げる9つの工程。各ステップで「なぜそれをするか」も見ていきます。</p>
+  <div class="analogy">📦 全体イメージは「出荷前の検品と梱包」</div>
+
+  <div class="stage">
+    <div class="chaptitle">
+      <span class="nm" id="chapnm"></span>
+      <span class="ct" id="chapct"></span>
+    </div>
+    <svg class="svgbox" viewBox="0 0 760 300" role="img" aria-label="後工程の流れ">
+      <ellipse cx="380" cy="262" rx="300" ry="11" fill="#000" opacity="0.05"/>
+      <g id="scene"></g>
+    </svg>
+  </div>
+
+  <div class="info">
+    <div class="stepnum"><span id="sidx">1</span><small id="stot">/9</small></div>
+    <div>
+      <h2 id="stitle"></h2>
+      <div class="en" id="sen"></div>
+      <p id="sdesc"></p>
+    </div>
+  </div>
+
+  <div class="why" id="whybox"><b>なぜ？</b> <span id="whytext"></span></div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="nav">
+    <button class="prev" id="prev">← 前へ</button>
+    <button class="next" id="next">次へ →</button>
+  </div>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="done hidden" id="done">✅ 合格した部品が完成。スマホ・PC・車に組み込まれます</div>
+</div>
+
+<script>
+function cssv(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+
+function drawScene(i){
+  const scene=document.getElementById("scene");
+  scene.innerHTML="";
+  const add=s=>scene.insertAdjacentHTML("beforeend",s);
+
+  if(i===0){ // バックグラインド
+    add(`<rect x="230" y="150" width="300" height="34" rx="4" fill="${cssv('--siface')}" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<text x="380" y="172" text-anchor="middle" font-size="12" fill="#3a4654" font-weight="700">ウェハ（裏面を削って薄く）</text>`);
+    add(`<circle cx="380" cy="120" r="26" fill="${cssv('--blade')}" stroke="#7d8794" stroke-width="2"/>`);
+    add(`<line x1="362" y1="120" x2="398" y2="120" stroke="#7d8794" stroke-width="2"/><line x1="380" y1="102" x2="380" y2="138" stroke="#7d8794" stroke-width="2"/>`);
+    add(`<text x="380" y="92" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">研削ホイール</text>`);
+  }
+  else if(i===1){ // ウェハテスト（プローブ検査）
+    add(`<circle cx="300" cy="160" r="92" fill="#aeb8c4"/>`);
+    // 格子チップ（一部に×印＝不良）
+    const bad=[[ -44,-44],[22,0],[-22,44]];
+    for(let x=-66;x<=66;x+=22){
+      for(let y=-66;y<=66;y+=22){
+        const dx=x+11, dy=y+11;
+        if(Math.sqrt(dx*dx+dy*dy)<82){
+          const isBad=bad.some(([bx,by])=>Math.abs(bx-x)<11&&Math.abs(by-y)<11);
+          add(`<rect x="${300+x}" y="${160+y}" width="20" height="20" rx="2" fill="${isBad?'#e3b7b1':'#8a94a2'}" stroke="#c8d0da" stroke-width="1"/>`);
+          if(isBad) add(`<text x="${300+x+10}" y="${160+y+15}" text-anchor="middle" font-size="14" fill="${cssv('--neg')}" font-weight="800">×</text>`);
+        }
+      }
+    }
+    add(`<circle cx="300" cy="160" r="92" fill="none" stroke="#6f7a88" stroke-width="2"/>`);
+    // プローブ針（チップに当てる）
+    add(`<g stroke="${cssv('--neg')}" stroke-width="2.5"><line x1="300" y1="56" x2="300" y2="78"/><line x1="312" y1="56" x2="312" y2="78"/><line x1="288" y1="56" x2="288" y2="78"/></g>`);
+    add(`<text x="300" y="48" text-anchor="middle" font-size="11" fill="${cssv('--neg')}" font-weight="700">プローブ針で測定</text>`);
+    // 凡例
+    add(`<rect x="500" y="120" width="18" height="18" rx="2" fill="#8a94a2"/><text x="526" y="134" font-size="13" fill="${cssv('--ink')}">良品</text>`);
+    add(`<rect x="500" y="150" width="18" height="18" rx="2" fill="#e3b7b1"/><text x="514" y="164" text-anchor="middle" font-size="12" fill="${cssv('--neg')}" font-weight="800">×</text><text x="526" y="164" font-size="13" fill="${cssv('--ink')}">不良（印を付ける）</text>`);
+  }
+  else if(i===2){ // ダイシング（良品だけ取る）
+    add(`<circle cx="240" cy="160" r="88" fill="#aeb8c4"/>`);
+    for(let x=-66;x<=66;x+=22){add(`<line x1="${240+x}" y1="78" x2="${240+x}" y2="242" stroke="#C0392B" stroke-width="1" opacity="0.5"/>`);}
+    for(let y=-66;y<=66;y+=22){add(`<line x1="158" y1="${160+y}" x2="322" y2="${160+y}" stroke="#C0392B" stroke-width="1" opacity="0.5"/>`);}
+    add(`<circle cx="240" cy="160" r="88" fill="none" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<rect x="376" y="60" width="4" height="200" fill="${cssv('--neg')}"/>`);
+    add(`<circle cx="378" cy="50" r="13" fill="${cssv('--blade')}" stroke="#7d8794" stroke-width="2"/>`);
+    add(`<text x="392" y="44" font-size="11" fill="${cssv('--sub')}">ブレード</text>`);
+    // 取り出した良品
+    add(`<rect x="470" y="130" width="110" height="60" rx="5" fill="#aeb8c4" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<text x="525" y="165" text-anchor="middle" font-size="13" fill="#3a4654" font-weight="700">良品ダイ</text>`);
+    add(`<text x="240" y="262" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">線に沿って切り、良品だけ取り出す</text>`);
+  }
+  else if(i===3){ // ダイボンド
+    add(`<rect x="200" y="190" width="360" height="32" rx="4" fill="${cssv('--pcb')}"/>`);
+    add(`<text x="380" y="244" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">基板（リードフレーム）</text>`);
+    add(`<rect x="320" y="150" width="120" height="42" rx="4" fill="#aeb8c4" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<text x="380" y="176" text-anchor="middle" font-size="13" fill="#3a4654" font-weight="700">チップ</text>`);
+    add(`<rect x="324" y="188" width="112" height="5" fill="#caa14a"/>`);
+  }
+  else if(i===4){ // ワイヤボンド
+    add(`<rect x="200" y="190" width="360" height="32" rx="4" fill="${cssv('--pcb')}"/>`);
+    add(`<rect x="320" y="148" width="120" height="44" rx="4" fill="#aeb8c4" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<text x="380" y="176" text-anchor="middle" font-size="13" fill="#3a4654" font-weight="700">チップ</text>`);
+    add(`<g fill="${cssv('--pad')}"><rect x="220" y="182" width="28" height="9"/><rect x="265" y="182" width="28" height="9"/><rect x="468" y="182" width="28" height="9"/><rect x="513" y="182" width="28" height="9"/></g>`);
+    add(`<g stroke="${cssv('--gold')}" stroke-width="2.5" fill="none">
+      <path d="M 326 152 Q 280 110 234 182"/><path d="M 336 154 Q 300 120 280 182"/>
+      <path d="M 434 152 Q 480 110 482 182"/><path d="M 424 154 Q 460 120 527 182"/></g>`);
+    add(`<text x="380" y="248" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">金線でチップ↔端子をつなぐ</text>`);
+  }
+  else if(i===5){ // 封止
+    add(`<rect x="200" y="194" width="360" height="30" rx="4" fill="${cssv('--pcb')}"/>`);
+    add(`<rect x="250" y="104" width="260" height="90" rx="6" fill="none" stroke="#9aa6b4" stroke-width="2" stroke-dasharray="5 4"/>`);
+    add(`<rect x="252" y="106" width="256" height="88" rx="5" fill="${cssv('--resin')}"/>`);
+    add(`<text x="380" y="156" text-anchor="middle" font-size="14" fill="#cfd6df" font-weight="700">樹脂で封止</text>`);
+    add(`<text x="380" y="248" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">金型に樹脂を流し込んで包む</text>`);
+  }
+  else if(i===6){ // リード成形
+    add(`<rect x="270" y="110" width="220" height="86" rx="8" fill="${cssv('--resin')}"/>`);
+    add(`<text x="380" y="158" text-anchor="middle" font-size="13" fill="#cfd6df" font-weight="700">パッケージ</text>`);
+    add(`<g stroke="#aab2bd" stroke-width="6" fill="none" stroke-linejoin="round">
+      <path d="M 290 196 L 290 214 L 278 228"/><path d="M 330 196 L 330 214 L 318 228"/><path d="M 370 196 L 370 214 L 358 228"/>
+      <path d="M 410 196 L 410 214 L 422 228"/><path d="M 450 196 L 450 214 L 462 228"/></g>`);
+    add(`<text x="380" y="252" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">足を切って、はんだ付けしやすい形に曲げる</text>`);
+  }
+  else if(i===7){ // マーキング
+    add(`<rect x="270" y="110" width="220" height="86" rx="8" fill="${cssv('--resin')}"/>`);
+    add(`<g stroke="#aab2bd" stroke-width="6" stroke-linejoin="round" fill="none">
+      <path d="M 290 196 L 290 214 L 278 228"/><path d="M 330 196 L 330 214 L 318 228"/><path d="M 370 196 L 370 214 L 358 228"/>
+      <path d="M 410 196 L 410 214 L 422 228"/><path d="M 450 196 L 450 214 L 462 228"/></g>`);
+    add(`<line x1="380" y1="64" x2="380" y2="108" stroke="${cssv('--neg')}" stroke-width="2"/>`);
+    add(`<text x="380" y="54" text-anchor="middle" font-size="11" fill="${cssv('--neg')}" font-weight="700">レーザーで刻印</text>`);
+    add(`<text x="380" y="150" text-anchor="middle" font-size="15" fill="#e6ecf2" font-weight="700" font-family="monospace">ABC-12345</text>`);
+    add(`<text x="380" y="252" text-anchor="middle" font-size="11" fill="${cssv('--sub')}">型番などを表面に印字</text>`);
+  }
+  else if(i===8){ // 最終検査
+    add(`<rect x="270" y="110" width="220" height="86" rx="8" fill="${cssv('--resin')}"/>`);
+    add(`<text x="380" y="156" text-anchor="middle" font-size="13" fill="#cfd6df" font-weight="700">完成パッケージ</text>`);
+    add(`<g stroke="#aab2bd" stroke-width="6" stroke-linejoin="round" fill="none">
+      <path d="M 300 196 L 300 214 L 288 228"/><path d="M 350 196 L 350 214 L 338 228"/><path d="M 410 196 L 410 214 L 422 228"/><path d="M 460 196 L 460 214 L 472 228"/></g>`);
+    add(`<g stroke="${cssv('--neg')}" stroke-width="2.5"><line x1="300" y1="232" x2="300" y2="252"/><line x1="350" y1="232" x2="350" y2="252"/><line x1="410" y1="232" x2="410" y2="252"/><line x1="460" y1="232" x2="460" y2="252"/></g>`);
+    add(`<text x="380" y="276" text-anchor="middle" font-size="11" fill="${cssv('--neg')}" font-weight="700">針を当てて測定</text>`);
+    add(`<circle cx="600" cy="120" r="24" fill="none" stroke="${cssv('--task')}" stroke-width="4"/><path d="M 589 120 l 7 8 l 15 -17" fill="none" stroke="${cssv('--task')}" stroke-width="4"/>`);
+    add(`<text x="600" y="162" text-anchor="middle" font-size="11" fill="${cssv('--task')}" font-weight="700">合格</text>`);
+  }
+}
+
+const steps=[
+ {nm:"① 薄くする",t:"バックグラインド",en:"Back grinding",
+  desc:"ウェハの裏面を研削ホイールで削り、薄くします。",
+  why:"チップは薄いほど熱を逃がしやすく、積み重ねやすい。最終製品の厚みも抑えられる。"},
+ {nm:"② 切る前の検査",t:"ウェハテスト（プローブ検査）",en:"Wafer test",
+  desc:"切る前に、ウェハ上のチップを1個ずつ針（プローブ）で測定し、不良チップに目印を付けます。",
+  why:"先に不良を見分けておけば、ダイシング後に良品だけを次の工程へ送れる。ムダな手間（不良を包んだり配線したり）を省ける。"},
+ {nm:"③ 切る",t:"ダイシング",en:"Dicing",
+  desc:"ウェハを格子の線に沿って切り、1個ずつのチップ（ダイ）に。良品だけを取り出します。日本のディスコが世界トップ級の装置メーカー。",
+  why:"1枚のウェハに数百個のチップがある。使うには1個ずつ切り分ける必要がある。"},
+ {nm:"④ 載せる",t:"ダイボンド",en:"Die bonding",
+  desc:"良品のチップを、基板（リードフレーム）の上に置いて接着・固定します。",
+  why:"チップ単体では扱えない。土台に貼り付けて、配線できる状態にする。"},
+ {nm:"⑤ つなぐ",t:"ワイヤボンド",en:"Wire bonding",
+  desc:"髪の毛より細い金属の線（金線）で、チップの端子と外の端子をつなぎます。",
+  why:"チップ内部の信号を外（基板の足）に出すため。電気の出入り口を作る。"},
+ {nm:"⑥ 包む",t:"封止（モールド）",en:"Molding",
+  desc:"金型に樹脂を流し込み、チップと金線を包んで固めます。よく見る黒い部品の形に。",
+  why:"細い金線やチップは、ほこり・湿気・衝撃に弱い。樹脂で固めて守る。"},
+ {nm:"⑦ 整える",t:"リード成形",en:"Lead forming",
+  desc:"パッケージの外に出た端子（リード）を切り、はんだ付けしやすい形に曲げます。",
+  why:"基板にきれいにはんだ付けできる形（ガルウィング等）に整えるため。"},
+ {nm:"⑧ 印字",t:"マーキング",en:"Marking",
+  desc:"パッケージ表面に、型番などをレーザーで刻印します。",
+  why:"どのチップか識別できるように。製造のトレース（追跡）にも使う。"},
+ {nm:"⑨ 出荷検査",t:"最終検査",en:"Final test",done:1,
+  desc:"テスタの針を端子に当てて電気的にテストし、合否を判定。合格品だけを出荷します。",
+  why:"②のウェハテストは「切る前の選別」、最終検査は「出荷前の最終確認」。役割が違うので、検査は前後で2回行う。"},
+];
+
+let cur=0;
+const $=id=>document.getElementById(id);
+function render(i){
+  const s=steps[i];
+  drawScene(i);
+  $("chapnm").textContent=s.nm;
+  $("chapct").textContent=`工程 ${i+1} / ${steps.length}`;
+  $("sidx").textContent=i+1; $("stot").textContent="/"+steps.length;
+  $("stitle").textContent=s.t; $("sen").textContent=s.en;
+  $("sdesc").textContent=s.desc;
+  $("whytext").textContent=s.why;
+  document.querySelectorAll(".dot").forEach((d,idx)=>d.classList.toggle("on",idx<=i));
+  $("done").classList.toggle("hidden", !s.done);
+  $("prev").disabled=i===0; $("next").disabled=i===steps.length-1;
+  document.querySelectorAll("#controls button").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+}
+const ctr=$("controls");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.textContent=`${i+1}. ${s.t}`;b.onclick=()=>{cur=i;render(cur);};ctr.appendChild(b);});
+const pg=$("progress");
+steps.forEach(()=>{const d=document.createElement("div");d.className="dot";pg.appendChild(d);});
+$("prev").onclick=()=>{if(cur>0){cur--;render(cur);}};
+$("next").onclick=()=>{if(cur<steps.length-1){cur++;render(cur);}};
+render(0);
+</script>
+</body>
+</html>

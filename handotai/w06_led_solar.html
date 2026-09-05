@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6週 応用：LEDと太陽電池</title>
+<style>
+  :root{ --navy:#1C3A5E; --ink:#222222; --pos:#1F6FB2; --neg:#C0392B; --emph:#7E3FA0; --task:#2E8B57; --line:#cccccc; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#FFFFFF; color:var(--ink); font-family:"メイリオ","Meiryo",sans-serif; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px; margin:0 auto; padding:24px 20px 48px;}
+  header h1{font-size:24px; color:var(--navy); margin:0 0 4px; font-weight:bold; letter-spacing:.5px;}
+  header .sub{font-size:15px; color:#555; margin:0 0 10px;}
+  .rule{height:1px; background:var(--line); border:0; margin:0 0 20px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .tab{font-family:inherit; font-size:15px; cursor:pointer; border:1.5px solid var(--navy); background:#fff; color:var(--navy); padding:9px 16px; border-radius:6px; transition:.15s;}
+  .tab:hover{background:#f0f5fb;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .stage{border:1.5px solid var(--navy); border-radius:10px; padding:6px; background:#fff;}
+  svg{display:block; width:100%; height:auto;}
+  .panel{margin-top:18px; border:1px solid var(--line); border-radius:8px; padding:16px 18px;}
+  .panel h2{font-size:19px; margin:0 0 8px; color:var(--navy);}
+  .panel p{font-size:16px; line-height:1.7; margin:0 0 8px;}
+  .panel .key{font-weight:bold;}
+  .flowtag{display:inline-block; font-size:14px; font-weight:bold; padding:3px 10px; border-radius:4px; margin-left:8px; vertical-align:middle;}
+  .flowtag.light{background:#E0A800; color:#fff;}
+  .flowtag.elec{background:#1F6FB2; color:#fff;}
+  .legend{display:flex; flex-wrap:wrap; gap:16px 18px; margin:14px 2px 0; font-size:14px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>LEDと太陽電池：同じpn接合が逆向きに働く</h1>
+    <p class="sub">第6週｜LED＝電気を入れて光を出す／太陽電池＝光を入れて電気を取り出す</p>
+    <hr class="rule">
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-state="led">① LED（電気 → 光）</button>
+    <button class="tab" data-state="solar">② 太陽電池（光 → 電気）</button>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 900 430" role="img" aria-label="LEDと太陽電池の図">
+      <rect id="nArea" x="60" y="100" width="360" height="190" fill="#eaf2fb"/>
+      <rect id="pArea" x="480" y="100" width="360" height="190" fill="#fdeeec"/>
+      <rect id="depletion" x="400" y="100" width="100" height="190" fill="#ffffff" stroke="#bbbbbb" stroke-dasharray="5 5"/>
+      <text x="240" y="88" text-anchor="middle" font-size="18" font-weight="bold" fill="#1C3A5E">n型（電子）</text>
+      <text x="660" y="88" text-anchor="middle" font-size="18" font-weight="bold" fill="#1C3A5E">p型（正孔）</text>
+      <text x="450" y="310" text-anchor="middle" font-size="13" fill="#888">pn接合（境界）</text>
+      <rect x="60" y="100" width="780" height="190" fill="none" stroke="#1C3A5E" stroke-width="2"/>
+      <line x1="450" y1="100" x2="450" y2="290" stroke="#1C3A5E" stroke-width="1.2" stroke-dasharray="3 4"/>
+
+      <g id="rays"></g>       <!-- 太陽電池：降り注ぐ光 -->
+      <text id="sunLabel" x="450" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#E0A800" opacity="0">☀ 太陽の光が降り注ぐ</text>
+      <g id="electrons"></g>
+      <g id="holes"></g>
+      <g id="photons"></g>    <!-- LED：出る光 -->
+
+      <!-- 外部回路の表示 -->
+      <text id="circuitLabel" x="450" y="340" text-anchor="middle" font-size="15" font-weight="bold" opacity="0"></text>
+      <text id="note" x="450" y="365" text-anchor="middle" font-size="14" fill="#555"></text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#1F6FB2"></i>電子（−）</span>
+    <span><i class="dot" style="background:#fff;border:2px solid #C0392B"></i>正孔（＋）</span>
+    <span><i class="dot" style="background:#E0A800"></i>光（フォトン）</span>
+  </div>
+
+  <div class="panel">
+    <h2 id="pTitle"></h2>
+    <p id="pBody"></p>
+    <p id="pPoint" style="color:#7E3FA0;"></p>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+const eG=document.getElementById("electrons");
+const hG=document.getElementById("holes");
+const photonG=document.getElementById("photons");
+const rayG=document.getElementById("rays");
+const sunLabel=document.getElementById("sunLabel");
+const circuitLabel=document.getElementById("circuitLabel");
+const note=document.getElementById("note");
+
+let loopTimers=[];
+function clearLoops(){ loopTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); loopTimers=[]; }
+function clearG(g){ g.innerHTML=""; }
+
+function mkDot(x,y,type){
+  const g=document.createElementNS(SVGNS,"g");
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",x); c.setAttribute("cy",y); c.setAttribute("r",10);
+  const t=document.createElementNS(SVGNS,"text");
+  t.setAttribute("x",x); t.setAttribute("y",y+4); t.setAttribute("text-anchor","middle");
+  t.setAttribute("font-size","13"); t.setAttribute("font-weight","bold");
+  if(type==="e"){ c.setAttribute("fill","#1F6FB2"); t.setAttribute("fill","#fff"); t.textContent="−"; }
+  else if(type==="h"){ c.setAttribute("fill","#fff"); c.setAttribute("stroke","#C0392B"); c.setAttribute("stroke-width","2.2"); t.setAttribute("fill","#C0392B"); t.textContent="＋"; }
+  else { c.setAttribute("fill","#E0A800"); c.setAttribute("r",7); t.textContent=""; } // photon
+  g.appendChild(c); if(t.textContent) g.appendChild(t);
+  g.dataset.x=x; g.dataset.y=y;
+  return g;
+}
+function moveG(g,x,y){
+  const c=g.querySelector("circle"); c.setAttribute("cx",x); c.setAttribute("cy",y);
+  const t=g.querySelector("text"); if(t){ t.setAttribute("x",x); t.setAttribute("y",y+4); }
+  g.dataset.x=x; g.dataset.y=y;
+}
+function animateTo(g,x,y,dur,onDone){
+  const sx=parseFloat(g.dataset.x), sy=parseFloat(g.dataset.y), start=performance.now();
+  (function step(now){ let t=Math.min(1,(now-start)/dur); let e=t<.5?2*t*t:-1+(4-2*t)*t;
+    moveG(g, sx+(x-sx)*e, sy+(y-sy)*e);
+    if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
+  })(performance.now());
+}
+// 再結合の瞬間：複数の光が放射状にパッと飛び出す
+function flashPhoton(x,y){
+  // 中心のフラッシュ
+  const flash=document.createElementNS(SVGNS,"circle");
+  flash.setAttribute("cx",x); flash.setAttribute("cy",y); flash.setAttribute("fill","#FFD43B");
+  photonG.appendChild(flash);
+  const fs=performance.now();
+  (function f(now){ let t=Math.min(1,(now-fs)/500);
+    flash.setAttribute("r", 4+18*t); flash.setAttribute("opacity", 0.6*(1-t));
+    if(t<1) requestAnimationFrame(f); else flash.remove();
+  })(performance.now());
+  // 放射状に飛ぶ光の粒（8方向）
+  const N=8;
+  for(let i=0;i<N;i++){
+    const ang=(Math.PI*2*i/N) - Math.PI/2;
+    const g=document.createElementNS(SVGNS,"g");
+    const c=document.createElementNS(SVGNS,"circle");
+    c.setAttribute("cx",x); c.setAttribute("cy",y); c.setAttribute("r",5); c.setAttribute("fill","#E0A800");
+    g.appendChild(c); photonG.appendChild(g);
+    const dist=70+Math.random()*20, start=performance.now(), dur=1000;
+    (function step(now){ let t=Math.min(1,(now-start)/dur);
+      c.setAttribute("cx", x+Math.cos(ang)*dist*t);
+      c.setAttribute("cy", y+Math.sin(ang)*dist*t);
+      c.setAttribute("opacity", 1-t);
+      if(t<1) requestAnimationFrame(step); else g.remove();
+    })(performance.now());
+  }
+}
+
+const states={
+  led:{ title:"① LED：電気を入れて光を出す", tag:["電気 → 光","light"],
+    body:"順方向に電圧をかけると、電子と正孔が境界に集まって<span class='key'>再結合</span>します。第6週で見た『出会って消える』あの再結合です。このとき<span class='key'>余ったエネルギーが光となって飛び出します</span>。だからLEDは光る。",
+    point:"再結合＝消えておしまい、ではなく『光が生まれる瞬間』。色は材料で決まります。" },
+  solar:{ title:"② 太陽電池：光を入れて電気を取り出す", tag:["光 → 電気","elec"],
+    body:"今度は逆。pn接合に<span class='key'>光が当たると、電子と正孔のペアが生まれます</span>。すると空乏層の<span class='key'>『崖（壁）』が電子をn側・正孔をp側へ振り分け</span>、外の回路に電流が流れます。LEDをちょうど逆に使った形です。",
+    point:"同じpn接合が、光を出す（LED）にも、光から電気を作る（太陽電池）にも使える。" }
+};
+
+function applyState(name){
+  clearLoops(); clearG(eG); clearG(hG); clearG(photonG); clearG(rayG);
+  const s=states[name];
+  document.getElementById("pTitle").innerHTML = s.title + ` <span class="flowtag ${s.tag[1]}">${s.tag[0]}</span>`;
+  document.getElementById("pBody").innerHTML = s.body;
+  document.getElementById("pPoint").innerHTML = s.point;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.state===name));
+
+  if(name==="led"){
+    sunLabel.setAttribute("opacity","0");
+    circuitLabel.setAttribute("opacity","1"); circuitLabel.setAttribute("fill","#1F6FB2");
+    circuitLabel.textContent="外から電気を入れる（順方向）→ 光がどんどん出る";
+    note.textContent="電子（左から）と正孔（右から）が境界で再結合し、光がパッと放射される";
+    ledLoop();
+  } else {
+    sunLabel.setAttribute("opacity","1");
+    circuitLabel.setAttribute("opacity","1"); circuitLabel.setAttribute("fill","#E0A800");
+    circuitLabel.textContent="光を当てる → 電子・正孔が生まれ、電気が取り出せる";
+    note.textContent="光が降り注いでペアが生まれ、崖が左右に振り分けて電流になる";
+    solarLoop();
+  }
+}
+
+// LED：電子が左から、正孔が右から境界へ→出会って消え→光が出る→繰り返し
+function ledLoop(){
+  function pulse(){
+    const lanes=[100,140,180,220];
+    lanes.forEach((y,k)=>{
+      const e=mkDot(90,y,"e"); eG.appendChild(e);
+      const h=mkDot(810,y,"h"); hG.appendChild(h);
+      animateTo(e,440,y,1500);
+      animateTo(h,460,y,1500,()=>{
+        e.remove(); h.remove();
+        flashPhoton(450,y);  // 再結合→光が放射状に
+      });
+    });
+  }
+  pulse(); loopTimers.push(setInterval(pulse,1700));
+}
+
+// 太陽電池：光が束で降り注ぐ→境界でペア生成→電子はn(左)、正孔はp(右)へ振り分け
+function solarLoop(){
+  // 上部に「光が当たっている」帯（常時きらめき）
+  function dropRay(x){
+    // 尾を引く光線（線＋先頭の粒）
+    const g=document.createElementNS(SVGNS,"g");
+    const line=document.createElementNS(SVGNS,"line");
+    line.setAttribute("x1",x); line.setAttribute("x2",x);
+    line.setAttribute("stroke","#FFD43B"); line.setAttribute("stroke-width","4"); line.setAttribute("stroke-linecap","round");
+    const head=document.createElementNS(SVGNS,"circle");
+    head.setAttribute("cx",x); head.setAttribute("r",7); head.setAttribute("fill","#E0A800");
+    g.appendChild(line); g.appendChild(head); rayG.appendChild(g);
+    const y0=30, y1=190, start=performance.now(), dur=750;
+    return new Promise(res=>{
+      (function step(now){ let t=Math.min(1,(now-start)/dur);
+        const y=y0+(y1-y0)*t;
+        line.setAttribute("y1", Math.max(y0, y-34)); line.setAttribute("y2", y);
+        head.setAttribute("cy", y);
+        if(t<1) requestAnimationFrame(step); else { g.remove(); res(); }
+      })(performance.now());
+    });
+  }
+  function pulse(){
+    const xs=[280,360,450,540,620];   // 束で降らせる
+    xs.forEach((x,k)=>{
+      setTimeout(()=>{
+        dropRay(x).then(()=>{
+          // 真ん中3本だけペア生成（端は吸収されたイメージ）
+          if(x<300||x>600) return;
+          const e=mkDot(x,180,"e"); eG.appendChild(e);
+          const h=mkDot(x,205,"h"); hG.appendChild(h);
+          animateTo(e, 110, 180, 1500, ()=>e.remove());
+          animateTo(h, 790, 205, 1500, ()=>h.remove());
+        });
+      }, k*120);
+    });
+  }
+  pulse(); loopTimers.push(setInterval(pulse,1700));
+}
+
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>applyState(t.dataset.state)));
+applyState("led");
+</script>
+</body>
+</html>

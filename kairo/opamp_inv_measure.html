@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;
+    font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .card{width:1000px;padding:24px 30px;}
+  h1{font-size:21px;color:#0D3C6E;margin:0 0 2px;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 14px;line-height:1.6;}
+  svg{width:100%;height:auto;display:block;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:22px;height:4px;border-radius:2px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>反転増幅 測定回路図（NJM4558 / A回路・両電源 ±8V）</h1>
+  <p class="sub">入力を <b>−入力（2番）</b> 側の Rin 経由で加える構成。＋入力（3番）は GND。利得 <b>A = −Rf/Rin</b>（例：Rin=1kΩ, Rf=10kΩ → A=−10）。<br>
+  出力は入力と<b>逆符号（反転）</b>。オシロでVin・Voutを観測し、予想波形と重ねる。GNDは電源の0Vに統一。</p>
+  <svg id="cir" viewBox="0 0 1000 560"></svg>
+  <div class="legend">
+    <span><i class="sw" style="background:#1565C0"></i>入力 Vin / 信号経路</span>
+    <span><i class="sw" style="background:#E65100"></i>出力 Vout / 帰還</span>
+    <span><i class="sw" style="background:#D32F2F"></i>V+（正電源 +8V）</span>
+    <span><i class="sw" style="background:#0D47A1"></i>V−（負電源 −8V）</span>
+    <span><i class="sw" style="background:#9E9E9E"></i>GND（0V 基準）</span>
+  </div>
+</div>
+<script>
+const IN="#1565C0",OUT="#E65100",VP="#D32F2F",VN="#0D47A1",GND="#9E9E9E",HEAD="#0D3C6E",OK="#2E7D32",INK="#2b2b2b";
+const W=3;
+let s=`<rect width="1000" height="560" fill="#fff"/>`;
+
+// ===== OPアンプ三角（A回路） =====
+const ax=480, atop=180, abot=300, atip=600, amid=240;
+// 端子座標
+const pPlus={x:ax, y:abot-22};   // +入力（下側）= 3番
+const pMinus={x:ax, y:atop+22};  // −入力（上側）= 2番
+const pOut={x:atip, y:amid};     // 出力 = 1番
+// 三角
+s+=`<polygon points="${ax},${atop} ${ax},${abot} ${atip},${amid}" fill="#fff" stroke="${HEAD}" stroke-width="2.5"/>`;
+s+=`<text x="${ax+18}" y="${pMinus.y+5}" font-size="15" fill="${IN}" font-weight="800">−</text>`;
+s+=`<text x="${ax+18}" y="${pPlus.y+5}" font-size="15" fill="${VP}" font-weight="800">+</text>`;
+s+=`<text x="${ax+70}" y="${amid+5}" font-size="13" fill="${HEAD}" font-weight="700">NJM4558</text>`;
+s+=`<text x="${ax+70}" y="${amid+22}" font-size="11" fill="#7a8590">A回路</text>`;
+// ピン番号バッジ
+function pinBadge(x,y,n,col){return `<circle cx="${x}" cy="${y}" r="11" fill="${col}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">${n}</text>`;}
+
+// ===== Vin源（左）→ Rin → −入力(2番)ノード =====
+const vinX=70, vinY=pMinus.y;  // −入力の高さに合わせる
+s+=`<text x="${vinX}" y="${vinY-46}" font-size="12" fill="${IN}" font-weight="800">入力 Vin</text>`;
+s+=`<text x="${vinX}" y="${vinY-30}" font-size="10.5" fill="#7a8590">（ファンクションジェネレータ）</text>`;
+// 信号源シンボル
+s+=`<circle cx="${vinX}" cy="${vinY}" r="16" fill="#fff" stroke="${IN}" stroke-width="2"/>`;
+s+=`<path d="M ${vinX-8} ${vinY} q 4 -7 8 0 q 4 7 8 0" fill="none" stroke="${IN}" stroke-width="2"/>`;
+s+=`<line x1="${vinX}" y1="${vinY+16}" x2="${vinX}" y2="${vinY+60}" stroke="${IN}" stroke-width="${W}"/>`;
+s+=`<line x1="${vinX-13}" y1="${vinY+60}" x2="${vinX+13}" y2="${vinY+60}" stroke="${GND}" stroke-width="2.5"/>`;
+s+=`<line x1="${vinX-8}" y1="${vinY+66}" x2="${vinX+8}" y2="${vinY+66}" stroke="${GND}" stroke-width="2"/>`;
+s+=`<text x="${vinX}" y="${vinY+82}" text-anchor="middle" font-size="9.5" fill="${GND}">GND</text>`;
+// 定義：−入力ノード
+const nodeX=pMinus.x-90, nodeY=pMinus.y;
+// FG → Rin（水平）→ −入力ノード
+s+=`<line x1="${vinX}" y1="${vinY}" x2="${nodeX-100}" y2="${vinY}" stroke="${IN}" stroke-width="${W}"/>`;
+s+=`<rect x="${nodeX-100}" y="${vinY-9}" width="46" height="18" fill="#fff" stroke="${IN}" stroke-width="2"/>`;
+s+=`<text x="${nodeX-77}" y="${vinY-14}" text-anchor="middle" font-size="12" fill="${IN}" font-weight="700">Rin = 1kΩ</text>`;
+s+=`<line x1="${nodeX-54}" y1="${vinY}" x2="${nodeX}" y2="${nodeY}" stroke="${IN}" stroke-width="${W}"/>`;
+// オシロCH1（Vin測定点：Rinの手前）
+const tap1x=vinX+90;
+s+=`<circle cx="${tap1x}" cy="${vinY}" r="3.5" fill="${IN}"/>`;
+s+=`<line x1="${tap1x}" y1="${vinY}" x2="${tap1x}" y2="${vinY+90}" stroke="${IN}" stroke-width="2" stroke-dasharray="5 4"/>`;
+s+=`<rect x="${tap1x-44}" y="${vinY+90}" width="88" height="30" rx="6" fill="#eef4fb" stroke="${IN}" stroke-width="1.5"/>`;
+s+=`<text x="${tap1x}" y="${vinY+110}" text-anchor="middle" font-size="11" fill="${IN}" font-weight="700">オシロ CH1</text>`;
+
+// ===== −入力(2番)ノード：Rin(入力側)・Rf→出力 =====
+// 2番→ノード
+s+=`<line x1="${pMinus.x}" y1="${pMinus.y}" x2="${nodeX}" y2="${nodeY}" stroke="${INK}" stroke-width="2"/>`;
+s+=pinBadge(pMinus.x-40,pMinus.y,2,IN);
+s+=`<circle cx="${nodeX}" cy="${nodeY}" r="4.5" fill="${OK}"/>`;
+s+=`<text x="${nodeX+6}" y="${nodeY-14}" text-anchor="middle" font-size="10" fill="${OK}" font-weight="700">−入力ノード</text>`;
+s+=`<text x="${nodeX+6}" y="${nodeY-2}" text-anchor="middle" font-size="9" fill="${OK}">仮想GND≈0V</text>`;
+
+// ===== ＋入力(3番) → GND =====
+s+=pinBadge(pPlus.x-40,pPlus.y,3,VP);
+s+=`<line x1="${pPlus.x}" y1="${pPlus.y}" x2="${pPlus.x-40}" y2="${pPlus.y}" stroke="${GND}" stroke-width="${W}"/>`;
+s+=`<line x1="${pPlus.x-40}" y1="${pPlus.y}" x2="${pPlus.x-40}" y2="${pPlus.y+50}" stroke="${GND}" stroke-width="${W}"/>`;
+s+=`<line x1="${pPlus.x-53}" y1="${pPlus.y+50}" x2="${pPlus.x-27}" y2="${pPlus.y+50}" stroke="${GND}" stroke-width="2.5"/>`;
+s+=`<line x1="${pPlus.x-48}" y1="${pPlus.y+56}" x2="${pPlus.x-32}" y2="${pPlus.y+56}" stroke="${GND}" stroke-width="2"/>`;
+s+=`<text x="${pPlus.x-40}" y="${pPlus.y+72}" text-anchor="middle" font-size="9.5" fill="${GND}">GND</text>`;
+s+=`<text x="${pPlus.x-70}" y="${pPlus.y+5}" text-anchor="end" font-size="10" fill="${VP}">＋入力=0V</text>`;
+
+// Rf：ノード→上→出力へ（最上段y=70を通す）
+const rfY=70;
+s+=`<line x1="${nodeX}" y1="${nodeY}" x2="${nodeX}" y2="${rfY}" stroke="${OUT}" stroke-width="${W}"/>`;
+s+=`<line x1="${nodeX}" y1="${rfY}" x2="710" y2="${rfY}" stroke="${OUT}" stroke-width="${W}"/>`;
+s+=`<rect x="${nodeX+70}" y="${rfY-9}" width="46" height="18" fill="#fff" stroke="${OUT}" stroke-width="2"/>`;
+s+=`<text x="${nodeX+93}" y="${rfY-14}" text-anchor="middle" font-size="12" fill="${OUT}" font-weight="700">Rf = 10kΩ</text>`;
+
+// ===== 出力(1番) =====
+s+=pinBadge(pOut.x,pOut.y,1,OUT);
+s+=`<line x1="${pOut.x+11}" y1="${pOut.y}" x2="710" y2="${pOut.y}" stroke="${OUT}" stroke-width="${W}"/>`;
+// 出力ノード（Rf帰還の落とし込み点）
+s+=`<line x1="710" y1="${rfY}" x2="710" y2="${pOut.y}" stroke="${OUT}" stroke-width="${W}"/>`;
+s+=`<circle cx="710" cy="${pOut.y}" r="4.5" fill="${OUT}"/>`;
+s+=`<text x="740" y="${pOut.y-8}" font-size="12" fill="${OUT}" font-weight="800">出力 Vout</text>`;
+// オシロCH2（Vout測定点）
+s+=`<circle cx="670" cy="${pOut.y}" r="3.5" fill="${OUT}"/>`;
+s+=`<line x1="670" y1="${pOut.y}" x2="670" y2="${pOut.y+70}" stroke="${OUT}" stroke-width="2" stroke-dasharray="5 4"/>`;
+s+=`<rect x="${670-44}" y="${pOut.y+70}" width="88" height="30" rx="6" fill="#fff3ec" stroke="${OUT}" stroke-width="1.5"/>`;
+s+=`<text x="670" y="${pOut.y+90}" text-anchor="middle" font-size="11" fill="${OUT}" font-weight="700">オシロ CH2</text>`;
+
+// ===== 電源 V+ (8番) / V- (4番) =====
+// V+ → 8番（三角の上、Rf経路y=70より下のy=125で取り出し）
+const vpx=ax+80;
+s+=`<line x1="${vpx}" y1="${atop+18}" x2="${vpx}" y2="125" stroke="${VP}" stroke-width="${W}"/>`;
+s+=`<line x1="${vpx}" y1="${atop+18}" x2="${ax+6}" y2="${atop+18}" stroke="${VP}" stroke-width="${W}"/>`;
+s+=pinBadge(vpx,125,8,VP);
+s+=`<text x="${vpx+18}" y="119" font-size="12" fill="${VP}" font-weight="800">V+ = +8V</text>`;
+s+=`<text x="${vpx+18}" y="135" font-size="10" fill="#7a8590">8番ピン</text>`;
+// V- → 4番（三角の下）
+const vnx=ax+80;
+s+=`<line x1="${vnx}" y1="${abot-18}" x2="${vnx}" y2="400" stroke="${VN}" stroke-width="${W}"/>`;
+s+=`<line x1="${vnx}" y1="${abot-18}" x2="${ax+6}" y2="${abot-18}" stroke="${VN}" stroke-width="${W}"/>`;
+s+=pinBadge(vnx,400,4,VN);
+s+=`<text x="${vnx+18}" y="396" font-size="12" fill="${VN}" font-weight="800">V− = −8V</text>`;
+s+=`<text x="${vnx+18}" y="412" font-size="10" fill="#7a8590">4番ピン</text>`;
+
+// ===== 式・注記 =====
+s+=`<rect x="40" y="450" width="920" height="86" rx="10" fill="#f4f6f9" stroke="#cdd5df"/>`;
+s+=`<text x="60" y="476" font-size="13.5" fill="#333" font-weight="700">利得 A = −Rf/Rin = −10kΩ/1kΩ = −10（出力は入力と逆符号＝反転）</text>`;
+s+=`<text x="60" y="500" font-size="12" fill="#333">測定：オシロCH1=Vin（Rinの手前）、CH2=Vout。両CHのGNDを電源の0Vに合わせる。予想波形と重ねて利得と反転を読む。</text>`;
+s+=`<text x="60" y="522" font-size="12" fill="#b00020" font-weight="700">注意：使わないB回路（5・6・7番）も入力を放置しない。V+/V−の極性とピンを取り違えない。</text>`;
+document.getElementById("cir").innerHTML=s;
+</script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第9週 MOSの動作 アニメ図解</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222; --grey:#6b7480;
+    --flow:#1F6FB2; --stop:#C0392B; --emph:#7E3FA0; --chal:#2E8B57;
+    --line:#cfd6df; --panel:#f4f6f9;
+    --metal:#7E3FA0; --oxide:#E0A800; --semi:#1F6FB2;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"メイリオ","Meiryo",sans-serif;background:#FFFFFF;color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 60px;}
+  header.title{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px;}
+  header.title .week{font-size:14px;color:var(--flow);font-weight:bold;letter-spacing:.04em;}
+  header.title h1{font-size:26px;color:var(--navy);margin:6px 0 4px;font-weight:bold;}
+  header.title p.sub{font-size:15px;color:#555;margin:0;}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .tab{font-family:inherit;font-size:15px;font-weight:bold;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:9px 14px;cursor:pointer;line-height:1.3;transition:all .12s;}
+  .tab .num{display:inline-block;background:var(--panel);color:var(--navy);border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:13px;margin-right:7px;}
+  .tab.active{background:var(--navy);color:#fff;}
+  .tab.active .num{background:#fff;color:var(--navy);}
+  .panel{display:none;} .panel.active{display:block;}
+  .stage{border:1px solid var(--line);border-radius:10px;background:#fff;padding:14px;margin-bottom:14px;}
+  svg{display:block;width:100%;height:auto;}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 14px;}
+  .controls .ctrl{font-family:inherit;font-size:15px;font-weight:bold;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:8px 14px;cursor:pointer;}
+  .controls .ctrl.on{background:var(--navy);color:#fff;}
+  .controls .ctrl.flow{border-color:var(--flow);color:var(--flow);}
+  .controls .ctrl.flow.on{background:var(--flow);color:#fff;}
+  .controls .ctrl.stop{border-color:var(--stop);color:var(--stop);}
+  .controls .ctrl.stop.on{background:var(--stop);color:#fff;}
+  .controls label{font-size:14px;color:var(--navy);font-weight:bold;}
+  .controls input[type=range]{width:240px;vertical-align:middle;}
+  .vval{font-size:15px;font-weight:bold;color:var(--emph);min-width:60px;display:inline-block;}
+  .note{background:var(--panel);border-left:4px solid var(--navy);border-radius:0 8px 8px 0;padding:12px 14px;font-size:15px;color:var(--ink);}
+  .note b{color:var(--navy);} .note .pos{color:var(--flow);font-weight:bold;} .note .neg{color:var(--stop);font-weight:bold;}
+  .note .emp{color:var(--emph);font-weight:bold;} .note .chal{color:var(--chal);font-weight:bold;}
+  .panel h2{font-size:19px;color:var(--navy);margin:2px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;}
+  .legend{font-size:13px;color:#555;margin:8px 0 0;}
+  .legend span{margin-right:16px;white-space:nowrap;}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px;}
+  .foot{font-size:12px;color:#888;margin-top:24px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <div class="week">第9週　MOSの動作：電圧でスイッチが入る</div>
+    <h1>ゲート電圧で、スイッチがONになる</h1>
+    <p class="sub">第8週の構造に「動き」を乗せる。ゲートに電圧をかけると、下に通り道ができて電流が流れる</p>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="t1"><span class="num">1</span>チャネルができる（OFF→ON）</button>
+    <button class="tab" data-tab="t2"><span class="num">2</span>しきい電圧</button>
+    <button class="tab" data-tab="t3"><span class="num">3</span>水門が開く</button>
+    <button class="tab" data-tab="t4"><span class="num">4</span>ON/OFF＝1と0</button>
+  </div>
+
+  <!-- ① チャネル形成 -->
+  <section class="panel active" id="t1">
+    <h2>① 電圧でチャネルができる ― ゲート電圧を上げてみよう</h2>
+    <div class="controls">
+      <label>ゲート電圧：</label>
+      <input type="range" id="t1-vg" min="0" max="4" step="0.1" value="0">
+      <span class="vval" id="t1-vval">0.0 V</span>
+      <span id="t1-state" style="font-weight:bold;font-size:16px;margin-left:12px;"></span>
+    </div>
+    <div class="stage">
+      <svg id="svg1" viewBox="0 0 920 470" role="img" aria-label="ゲート電圧でチャネルができるアニメーション"></svg>
+    </div>
+    <p class="legend">
+      <span><span class="dot" style="background:#1F6FB2"></span>電子（チャネルに集まる／流れる）</span>
+      <span>スライダーでゲート電圧を上げると、ある電圧から通り道（チャネル）ができます</span>
+    </p>
+    <div class="note" id="note1"></div>
+  </section>
+
+  <!-- ② しきい電圧 -->
+  <section class="panel" id="t2">
+    <h2>② しきい電圧 ― あるラインを超えると一気に流れる</h2>
+    <div class="controls">
+      <button class="ctrl flow on" id="t2-play">再生／一時停止</button>
+      <button class="ctrl" id="t2-reset">最初から</button>
+    </div>
+    <div class="stage">
+      <svg id="svg2" viewBox="0 0 920 460" role="img" aria-label="ゲート電圧としきい電圧の特性グラフ"></svg>
+    </div>
+    <div class="note" id="note2"></div>
+  </section>
+
+  <!-- ③ 水門が開く -->
+  <section class="panel" id="t3">
+    <h2>③ 水門が開く ― ゲート電圧＝門を上げる力（蛇口）</h2>
+    <div class="controls">
+      <button class="ctrl stop on" id="t3-off">電圧OFF（門が閉じる）</button>
+      <button class="ctrl flow" id="t3-on">電圧ON（門が開く）</button>
+    </div>
+    <div class="stage">
+      <svg id="svg3" viewBox="0 0 920 470" role="img" aria-label="水門が開いて水が流れるアニメーション"></svg>
+    </div>
+    <div class="note" id="note3"></div>
+  </section>
+
+  <!-- ④ ON/OFF=1と0 -->
+  <section class="panel" id="t4">
+    <h2>④ ON/OFF ＝ 1と0 ― デジタルの正体へ</h2>
+    <div class="controls">
+      <button class="ctrl" id="t4-toggle">スイッチを切り替える</button>
+      <button class="ctrl flow on" id="t4-auto">自動でパチパチ</button>
+    </div>
+    <div class="stage">
+      <svg id="svg4" viewBox="0 0 920 430" role="img" aria-label="ON/OFFが1と0に対応する図"></svg>
+    </div>
+    <div class="note" id="note4"></div>
+  </section>
+
+  <div class="foot">第9週 MOSの動作｜アニメ図解｜白背景・ネイビー基調・色の意味ルール準拠</div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const COL={navy:"#1C3A5E",ink:"#222222",grey:"#6b7480",flow:"#1F6FB2",stop:"#C0392B",emph:"#7E3FA0",chal:"#2E8B57",line:"#cfd6df",panel:"#f4f6f9",metal:"#7E3FA0",oxide:"#E0A800",semi:"#1F6FB2"};
+function el(t,a={}){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a={}){const e=el("text",Object.assign({x,y,"font-family":'"メイリオ","Meiryo",sans-serif'},a));e.textContent=s;return e;}
+document.querySelectorAll(".tab").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); document.getElementById(b.dataset.tab).classList.add("active");
+  });
+});
+
+// ===== 第8週の構造レイアウト（流用・一貫性）=====
+const LAY={
+  sub:{x:160,y:250,w:600,h:150},
+  src:{x:170,y:250,w:120,h:70},
+  drn:{x:630,y:250,w:120,h:70},
+  ox:{x:260,y:228,w:400,h:22},
+  g:{x:264,y:178,w:392,h:50},
+};
+const chX0=LAY.src.x+LAY.src.w, chX1=LAY.drn.x; // 290..630
+const Vth=2.0; // しきい電圧
+
+// 構造を描く（第8週と同じ絵柄）。gateFill=ゲートの塗り強さ（電圧で濃くする演出）
+function drawStructure(s, opt={}){
+  const gOp = opt.gateOpacity!=null?opt.gateOpacity:0.42;
+  // 基板
+  s.appendChild(el("rect",{x:LAY.sub.x,y:LAY.sub.y,width:LAY.sub.w,height:LAY.sub.h,fill:COL.semi,"fill-opacity":0.13,stroke:COL.semi,"stroke-width":2,rx:3}));
+  s.appendChild(txt(LAY.sub.x+LAY.sub.w-12,LAY.sub.y+LAY.sub.h-14,"p型シリコン基板",{"text-anchor":"end","font-size":13,fill:COL.semi,"font-weight":"bold"}));
+  // ソース/ドレイン
+  [["ソース",LAY.src],["ドレイン",LAY.drn]].forEach(([name,r])=>{
+    s.appendChild(el("rect",{x:r.x,y:r.y,width:r.w,height:r.h,fill:COL.flow,"fill-opacity":0.32,stroke:COL.flow,"stroke-width":2,rx:3}));
+    s.appendChild(txt(r.x+r.w/2,r.y+r.h/2+5,name,{"text-anchor":"middle","font-size":14,fill:COL.navy,"font-weight":"bold"}));
+  });
+  // 酸化膜
+  s.appendChild(el("rect",{x:LAY.ox.x,y:LAY.ox.y,width:LAY.ox.w,height:LAY.ox.h,fill:COL.oxide,"fill-opacity":0.6,stroke:"#B8860B","stroke-width":1.5}));
+  // ゲート（電圧で濃さを変える）
+  s.appendChild(el("rect",{x:LAY.g.x,y:LAY.g.y,width:LAY.g.w,height:LAY.g.h,fill:COL.metal,"fill-opacity":gOp,stroke:COL.metal,"stroke-width":2,rx:3}));
+  s.appendChild(txt(LAY.g.x+LAY.g.w/2,LAY.g.y+LAY.g.h/2+6,"ゲート",{"text-anchor":"middle","font-size":15,fill:COL.metal,"font-weight":"bold"}));
+  // 端子（G上・S/Dはゲート外側へ斜め・B下）
+  const gx=LAY.g.x+LAY.g.w/2;
+  s.appendChild(el("line",{x1:gx,y1:LAY.g.y,x2:gx,y2:LAY.g.y-42,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(txt(gx+10,LAY.g.y-40,"G",{"font-size":15,fill:COL.navy,"font-weight":"bold"}));
+  const sx=LAY.src.x+LAY.src.w/2, dx=LAY.drn.x+LAY.drn.w/2;
+  s.appendChild(el("line",{x1:sx,y1:LAY.src.y,x2:sx,y2:LAY.g.y-18,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(txt(sx-9,LAY.g.y-22,"S",{"text-anchor":"end","font-size":15,fill:COL.navy,"font-weight":"bold"}));
+  s.appendChild(el("line",{x1:dx,y1:LAY.drn.y,x2:dx,y2:LAY.g.y-18,stroke:COL.navy,"stroke-width":3}));
+  s.appendChild(txt(dx+9,LAY.g.y-22,"D",{"font-size":15,fill:COL.navy,"font-weight":"bold"}));
+}
+
+/* =========================================================
+   ① チャネル形成（スライダーでゲート電圧）
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg1");
+  const slider=document.getElementById("t1-vg");
+  let Vg=0, raf=null, tflow=0;
+  // チャネルの電子数（Vth未満ほぼ0、Vth超で一気に）
+  function channelN(v){
+    if(v<Vth-0.4) return 0;
+    if(v<Vth) return Math.round(2*(v-(Vth-0.4))/0.4); // 立ち上がり直前に少し
+    return Math.round(2+13*Math.min(1,(v-Vth)/1.6));
+  }
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const on = Vg>=Vth;
+    const N=channelN(Vg);
+    // ゲートは電圧で濃く
+    const gOp=0.25+0.4*Math.min(1,Vg/4);
+    drawStructure(svg,{gateOpacity:gOp});
+    // ゲート電圧の＋表示（電圧をかけている演出）
+    if(Vg>0.1){
+      for(let i=0;i<Math.round(Vg);i++){
+        svg.appendChild(txt(LAY.g.x+30+i*70,LAY.g.y+LAY.g.h/2+6,"＋",{"font-size":18,fill:COL.metal,"font-weight":"bold","fill-opacity":0.7}));
+      }
+    }
+    // チャネル（電子が酸化膜の下＝基板上面に集まる）
+    const cy=LAY.sub.y+12;
+    if(N>0){
+      // チャネルの帯（電子が集まった通り道）
+      const dens=Math.min(1,N/15);
+      svg.appendChild(el("rect",{x:chX0,y:LAY.sub.y+2,width:chX1-chX0,height:20,fill:COL.flow,"fill-opacity":0.10+0.25*dens,stroke:"none"}));
+      // 電子の粒
+      const layer=el("g",{id:"e1"}); svg.appendChild(layer);
+      for(let i=0;i<N;i++){
+        const x=chX0+15+(chX1-chX0-30)*(i/(Math.max(1,N-1)));
+        // ON時は流れる（tflowで左右に動く）
+        let xx=x;
+        if(on){ xx=chX0+15+((x-chX0-15+tflow*2)%(chX1-chX0-30)); }
+        layer.appendChild(el("circle",{cx:xx,cy:cy,r:5.5,fill:COL.flow}));
+      }
+    }
+    // 状態ラベルと通り道テキスト
+    if(on){
+      svg.appendChild(txt(460,40,"ON：チャネル（通り道）ができて、ソース→ドレインに電流が流れる",
+        {"text-anchor":"middle","font-size":17,"font-weight":"bold",fill:COL.flow}));
+      svg.appendChild(txt((chX0+chX1)/2,LAY.sub.y+46,"チャネル（電子の通り道）",{"text-anchor":"middle","font-size":12,fill:COL.flow,"font-weight":"bold"}));
+    }else{
+      svg.appendChild(txt(460,40,"OFF：通り道がなく、電流は流れない",
+        {"text-anchor":"middle","font-size":17,"font-weight":"bold",fill:COL.stop}));
+      svg.appendChild(txt((chX0+chX1)/2,LAY.sub.y+46,"まだ通り道がない",{"text-anchor":"middle","font-size":12,fill:COL.stop}));
+    }
+    // 状態表示（コントロール側）
+    const st=document.getElementById("t1-state");
+    st.textContent = on?"● ON（流れる）":"○ OFF（流れない）";
+    st.style.color = on?COL.flow:COL.stop;
+    document.getElementById("t1-vval").textContent=Vg.toFixed(1)+" V";
+    updateNote(on);
+  }
+  function updateNote(on){
+    const n=document.getElementById("note1");
+    if(on){
+      n.innerHTML='ゲート電圧が<b>しきい電圧（約'+Vth+'V）を超えた</b>ので、'
+        +'<span class="pos">電界に引き寄せられた電子が酸化膜の下に集まり、ソースとドレインをつなぐチャネル（通り道）ができました</span>。'
+        +'通り道ができたので電流が流れます＝<b>スイッチON</b>。';
+    }else{
+      n.innerHTML='ゲート電圧が<b>まだ低い</b>ので、電子は十分に集まらず<span class="neg">通り道（チャネル）ができていません</span>。'
+        +'ソースとドレインはつながっておらず、電流は流れません＝<b>スイッチOFF</b>。スライダーを上げてみましょう。';
+    }
+  }
+  function loop(){ tflow+=1.2; if(Vg>=Vth) render(); raf=requestAnimationFrame(loop); }
+  slider.addEventListener("input",()=>{ Vg=parseFloat(slider.value); render(); });
+  render(); loop();
+})();
+
+/* =========================================================
+   ② しきい電圧グラフ（横軸Vg, 縦軸Id）
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg2");
+  const ox=160, oy=380, sx=150, Imax=240; // 原点・1Vあたりpx・縦最大
+  let playing=true, raf=null, phase=0;
+  function Id(Vg){ if(Vg<=Vth) return 0; return Math.min(Imax,Imax*Math.pow((Vg-Vth)/2.0,1.4)); }
+  function Ipx(Vg){ return Math.max(0,Math.min(Imax,Id(Vg))); }
+  function base(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // 軸
+    svg.appendChild(el("line",{x1:ox,y1:oy,x2:830,y2:oy,stroke:COL.navy,"stroke-width":2}));
+    svg.appendChild(el("line",{x1:ox,y1:oy,x2:ox,y2:80,stroke:COL.navy,"stroke-width":2}));
+    svg.appendChild(el("polygon",{points:`830,${oy} 818,${oy-6} 818,${oy+6}`,fill:COL.navy}));
+    svg.appendChild(el("polygon",{points:`${ox},80 ${ox-6},92 ${ox+6},92`,fill:COL.navy}));
+    svg.appendChild(txt(800,oy+24,"ゲート電圧 Vg",{"text-anchor":"end","font-size":14,"font-weight":"bold",fill:COL.navy}));
+    svg.appendChild(txt(ox+8,76,"ドレイン電流 Id（流れる量）",{"font-size":14,"font-weight":"bold",fill:COL.navy}));
+    // しきい電圧の縦点線
+    const xth=ox+sx*Vth;
+    svg.appendChild(el("line",{x1:xth,y1:oy,x2:xth,y2:120,stroke:COL.emph,"stroke-width":2,"stroke-dasharray":"5 4"}));
+    svg.appendChild(txt(xth,112,"しきい電圧 Vth",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.emph}));
+    svg.appendChild(txt(xth,132,"＝ここを超えるとON",{"text-anchor":"middle","font-size":12,"font-weight":"bold",fill:COL.emph}));
+    // 領域ラベル
+    svg.appendChild(txt((ox+xth)/2,oy+30,"OFF（流れない）",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.stop}));
+    svg.appendChild(txt(xth+150,oy+30,"ON（急に流れ出す）",{"text-anchor":"middle","font-size":14,"font-weight":"bold",fill:COL.flow}));
+    // 曲線（薄く全体）
+    let d="";
+    for(let i=0;i<=200;i++){ const Vg=(i/200)*4.4; const X=ox+sx*Vg, Y=oy-Ipx(Vg); d+=(i?"L":"M")+X.toFixed(1)+","+Y.toFixed(1)+" "; }
+    svg.appendChild(el("path",{d,fill:"none",stroke:COL.line,"stroke-width":2}));
+    svg.appendChild(el("path",{id:"trace",fill:"none",stroke:COL.navy,"stroke-width":3.5}));
+    svg.appendChild(el("circle",{id:"pt",r:8,fill:COL.emph,stroke:"#fff","stroke-width":2}));
+    svg.appendChild(txt(0,0,"",{id:"pl","font-size":13,"font-weight":"bold",fill:COL.navy}));
+  }
+  base();
+  function frame(){
+    if(playing)phase=(phase+0.004)%1;
+    const Vg=phase*4.4; // 0→4.4Vを繰り返しスイープ
+    const X=ox+sx*Vg, Y=oy-Ipx(Vg);
+    let d=""; const steps=160;
+    for(let i=0;i<=steps;i++){ const vv=(i/steps)*Vg; const XX=ox+sx*vv, YY=oy-Ipx(vv); d+=(i?"L":"M")+XX.toFixed(1)+","+YY.toFixed(1)+" "; }
+    svg.getElementById("trace").setAttribute("d",d);
+    const pt=svg.getElementById("pt"); pt.setAttribute("cx",X); pt.setAttribute("cy",Y);
+    const pl=svg.getElementById("pl"); pl.setAttribute("x",X+12); pl.setAttribute("y",Math.max(70,Y-10));
+    pl.textContent="Vg="+Vg.toFixed(1)+"V";
+    updateNote(Vg);
+    raf=requestAnimationFrame(frame);
+  }
+  function updateNote(Vg){
+    const n=document.getElementById("note2");
+    n.innerHTML='横軸＝ゲート電圧、縦軸＝流れる電流。<b>しきい電圧（Vth）を超えるまでは電流ゼロ（OFF）</b>、'
+      +'<span class="emp">超えたとたんに急に流れ出します（ON）</span>。'
+      +'この「あるラインで一気に切り替わる」性質が、MOSがきれいなスイッチになる理由です。'
+      +'（第7週ダイオードのしきい電圧と同じ感覚。式で追わなくてOK）';
+  }
+  frame();
+  document.getElementById("t2-play").addEventListener("click",function(){playing=!playing;this.classList.toggle("on",playing);});
+  document.getElementById("t2-reset").addEventListener("click",function(){phase=0;playing=true;document.getElementById("t2-play").classList.add("on");});
+})();
+
+/* =========================================================
+   ③ 水門が開く（第8週の水門を動かす）
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg3");
+  let mode="off", raf=null, tflow=0;
+  const wy=300, wh=70, gx=460, gw=130; // 水路・門の座標（第8週と同系）
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const on=(mode==="on");
+    svg.appendChild(txt(460,38, on?"電圧ON：門が上がり、水（電気）が流れ出す":"電圧OFF：門が閉じていて、水（電気）は止まったまま",
+      {"text-anchor":"middle","font-size":18,"font-weight":"bold",fill:on?COL.flow:COL.stop}));
+    // 水路
+    svg.appendChild(el("rect",{x:140,y:wy,width:640,height:wh,fill:COL.flow,"fill-opacity":0.10,stroke:COL.flow,"stroke-width":2}));
+    svg.appendChild(txt(120,wy+wh/2+5,"水路",{"text-anchor":"end","font-size":15,fill:COL.flow,"font-weight":"bold"}));
+    svg.appendChild(txt(170,wy-12,"上流＝ソース",{"font-size":14,fill:COL.navy,"font-weight":"bold"}));
+    svg.appendChild(txt(750,wy-12,"下流＝ドレイン",{"text-anchor":"end","font-size":14,fill:COL.navy,"font-weight":"bold"}));
+    // 蛇口/ゲート（電圧をかける手）：門の上に「電圧」ラベル
+    svg.appendChild(txt(gx,150,on?"ゲート電圧ON（蛇口を開く）":"ゲート電圧OFF",{"text-anchor":"middle","font-size":16,fill:COL.metal,"font-weight":"bold"}));
+    // 門：OFF時は下りて水路をふさぐ、ON時は上がる
+    const gateTop = on? 175 : 175;
+    const gateBottom = on? wy-6 : wy+wh; // ON:水路の上で止まる(開く)/OFF:水路の底までふさぐ
+    svg.appendChild(el("rect",{x:gx-gw/2,y:gateTop,width:gw,height:gateBottom-gateTop,fill:COL.metal,"fill-opacity":0.22,stroke:COL.metal,"stroke-width":2.5}));
+    svg.appendChild(txt(gx,gateTop+24,"門",{"text-anchor":"middle","font-size":15,fill:COL.metal,"font-weight":"bold"}));
+    if(on) svg.appendChild(txt(gx,gateTop+46,"↑開く",{"text-anchor":"middle","font-size":13,fill:COL.flow,"font-weight":"bold"}));
+    // 水（電子）：ON時だけ流れる
+    const layer=el("g"); svg.appendChild(layer);
+    if(on){
+      tflow+=2.0;
+      const N=10;
+      for(let i=0;i<N;i++){
+        const x=150+((i/N*640 + tflow)% 620)+10;
+        layer.appendChild(el("circle",{cx:x,cy:wy+wh/2,r:7,fill:COL.flow}));
+      }
+    }else{
+      // OFF：上流側にたまって止まる
+      for(let i=0;i<5;i++){
+        layer.appendChild(el("circle",{cx:200+i*30,cy:wy+wh/2,r:7,fill:COL.flow,"fill-opacity":0.85}));
+      }
+      svg.appendChild(txt(gx,wy+wh+26,"門にせき止められて流れない",{"text-anchor":"middle","font-size":13,fill:COL.stop,"font-weight":"bold"}));
+    }
+    updateNote(on);
+    document.getElementById("t3-off").classList.toggle("on",!on);
+    document.getElementById("t3-on").classList.toggle("on",on);
+  }
+  function updateNote(on){
+    const n=document.getElementById("note3");
+    if(on){
+      n.innerHTML='<span class="emp">ゲート電圧をかける＝蛇口をひねる・門を上げる</span>。'
+        +'<span class="pos">門が開いて、水（電気）がソースからドレインへ流れ出します＝スイッチON</span>。'
+        +'第8週で「閉じていた門」が、ついに開きました。';
+    }else{
+      n.innerHTML='ゲート電圧OFF＝門が閉じたまま。<span class="neg">水（電気）はせき止められて流れません＝スイッチOFF</span>。'
+        +'門番（ゲート）が下を見張って、通すか止めるかを決めています。';
+    }
+  }
+  function loop(){ if(mode==="on") render(); raf=requestAnimationFrame(loop); }
+  document.getElementById("t3-off").addEventListener("click",()=>{mode="off";render();});
+  document.getElementById("t3-on").addEventListener("click",()=>{mode="on";render();});
+  render(); loop();
+})();
+
+/* =========================================================
+   ④ ON/OFF = 1と0
+   ========================================================= */
+(function(){
+  const svg=document.getElementById("svg4");
+  let on=false, autoTimer=null;
+  function render(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // 左：MOSスイッチの簡略（ON=チャネルあり/OFF=なし）
+    svg.appendChild(txt(230,50,"MOSスイッチ",{"text-anchor":"middle","font-size":16,"font-weight":"bold",fill:COL.navy}));
+    // ソース・ドレインの箱＋間のチャネル
+    svg.appendChild(el("rect",{x:90,y:120,width:90,height:60,fill:COL.flow,"fill-opacity":0.3,stroke:COL.flow,"stroke-width":2,rx:4}));
+    svg.appendChild(txt(135,155,"S",{"text-anchor":"middle","font-size":18,fill:COL.navy,"font-weight":"bold"}));
+    svg.appendChild(el("rect",{x:280,y:120,width:90,height:60,fill:COL.flow,"fill-opacity":0.3,stroke:COL.flow,"stroke-width":2,rx:4}));
+    svg.appendChild(txt(325,155,"D",{"text-anchor":"middle","font-size":18,fill:COL.navy,"font-weight":"bold"}));
+    // ゲート上
+    svg.appendChild(el("rect",{x:175,y:70,width:120,height:30,fill:COL.metal,"fill-opacity":on?0.5:0.2,stroke:COL.metal,"stroke-width":2,rx:3}));
+    svg.appendChild(txt(235,90,"ゲート",{"text-anchor":"middle","font-size":13,fill:COL.metal,"font-weight":"bold"}));
+    // チャネル（ON時だけ電子の橋）
+    if(on){
+      svg.appendChild(el("rect",{x:180,y:122,width:100,height:16,fill:COL.flow,"fill-opacity":0.4}));
+      for(let i=0;i<5;i++) svg.appendChild(el("circle",{cx:188+i*22,cy:130,r:5,fill:COL.flow}));
+      svg.appendChild(txt(230,200,"通り道あり＝つながっている",{"text-anchor":"middle","font-size":13,fill:COL.flow,"font-weight":"bold"}));
+    }else{
+      svg.appendChild(el("line",{x1:180,y1:150,x2:280,y2:150,stroke:COL.stop,"stroke-width":2,"stroke-dasharray":"6 5"}));
+      svg.appendChild(txt(230,200,"通り道なし＝切れている",{"text-anchor":"middle","font-size":13,fill:COL.stop,"font-weight":"bold"}));
+    }
+    // 状態（ON/OFF）大表示
+    svg.appendChild(txt(230,250,on?"ON":"OFF",{"text-anchor":"middle","font-size":40,"font-weight":"bold",fill:on?COL.flow:COL.stop}));
+
+    // 矢印
+    svg.appendChild(txt(480,165,"⇒",{"text-anchor":"middle","font-size":40,fill:COL.grey}));
+    svg.appendChild(txt(480,205,"対応する",{"text-anchor":"middle","font-size":13,fill:COL.grey}));
+
+    // 右：デジタルの 1 / 0 大表示
+    svg.appendChild(txt(690,50,"デジタルの値",{"text-anchor":"middle","font-size":16,"font-weight":"bold",fill:COL.navy}));
+    svg.appendChild(el("rect",{x:600,y:90,width:180,height:180,fill:on?COL.flow:COL.stop,"fill-opacity":0.12,stroke:on?COL.flow:COL.stop,"stroke-width":2.5,rx:10}));
+    svg.appendChild(txt(690,210,on?"1":"0",{"text-anchor":"middle","font-size":120,"font-weight":"bold",fill:on?COL.flow:COL.stop}));
+    svg.appendChild(txt(690,300,on?"流れる ＝ 1":"流れない ＝ 0",{"text-anchor":"middle","font-size":18,"font-weight":"bold",fill:on?COL.flow:COL.stop}));
+    updateNote();
+  }
+  function updateNote(){
+    const n=document.getElementById("note4");
+    n.innerHTML='MOSの<b>ON＝電流が流れる＝「1」</b>、<b>OFF＝流れない＝「0」</b>。'
+      +'<span class="chal">この1と0の組み合わせだけで、計算も記憶も全部できる――それがデジタルの正体です（くわしくは第10週）。</span>'
+      +'スマホもPCも、この小さなスイッチのON/OFFを何十億個も並べて動いています。';
+  }
+  document.getElementById("t4-toggle").addEventListener("click",()=>{on=!on;render();});
+  document.getElementById("t4-auto").addEventListener("click",function(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;this.classList.remove("on");}
+    else{autoTimer=setInterval(()=>{on=!on;render();},900);this.classList.add("on");}
+  });
+  render();
+  // 初期は自動パチパチ
+  autoTimer=setInterval(()=>{on=!on;render();},900);
+})();
+</script>
+</body>
+</html>

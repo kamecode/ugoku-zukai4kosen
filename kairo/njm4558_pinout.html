@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;
+    font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .card{width:1000px;padding:24px 28px;}
+  h1{font-size:22px;color:#0D3C6E;margin:0 0 2px;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 16px;}
+  svg{width:100%;height:auto;display:block;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>NJM4558 ピン配置（DIP8・上から見た図）</h1>
+  <p class="sub">2回路入りデュアルOPアンプ。1パッケージに同じOPアンプ（A回路・B回路）が2つ。データシート（日清紡マイクロデバイス）準拠。</p>
+  <svg id="pin" viewBox="0 0 860 560"></svg>
+</div>
+<script>
+const HEAD="#0D3C6E", IN="#1565C0", OUT="#E65100", VP="#D32F2F", VN="#0D47A1", GND="#9E9E9E", OK="#2E7D32";
+// DIP8：左列 上から 1,2,3,4／右列 下から 5,6,7,8（基準マークは左上=1番側）
+// 標準の上面図：1=左上, 2,3,4 下へ／8=右上, 7,6,5 下へ
+const pins = {
+  1:{side:"L", row:0, name:"A出力",  en:"A OUTPUT", col:OUT},
+  2:{side:"L", row:1, name:"A −入力", en:"A −INPUT", col:IN},
+  3:{side:"L", row:2, name:"A +入力", en:"A +INPUT", col:IN},
+  4:{side:"L", row:3, name:"V−（負電源/GND）", en:"V−", col:VN},
+  5:{side:"R", row:3, name:"B +入力", en:"B +INPUT", col:IN},
+  6:{side:"R", row:2, name:"B −入力", en:"B −INPUT", col:IN},
+  7:{side:"R", row:1, name:"B出力",  en:"B OUTPUT", col:OUT},
+  8:{side:"R", row:0, name:"V+（正電源）", en:"V+", col:VP},
+};
+// パッケージ本体
+const bx=330, by=70, bw=200, bh=380;
+const rowY = r => by+58 + r*88;
+let s = `<rect width="860" height="560" fill="#fff"/>`;
+// 本体
+s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="10" fill="#2b2b2b"/>`;
+// 1番ピンの基準マーク（くぼみ）：上辺中央の半円＋左上の●
+s += `<path d="M ${bx+bw/2-18} ${by} A 18 18 0 0 0 ${bx+bw/2+18} ${by}" fill="#1a1a1a"/>`;
+s += `<circle cx="${bx+24}" cy="${by+26}" r="7" fill="#888"/>`;
+s += `<text x="${bx+bw/2}" y="${by+bh/2-10}" text-anchor="middle" font-size="20" fill="#fff" font-weight="800">NJM4558</text>`;
+s += `<text x="${bx+bw/2}" y="${by+bh/2+14}" text-anchor="middle" font-size="12" fill="#bbb">2回路入り</text>`;
+s += `<text x="${bx+bw/2}" y="${by+bh/2+34}" text-anchor="middle" font-size="11" fill="#888">基準マーク側が1番ピン</text>`;
+
+function pinBox(num){
+  const p=pins[num]; const y=rowY(p.row);
+  const isL = p.side==="L";
+  const px = isL ? bx-26 : bx+bw;
+  const legW=26, legH=22;
+  // 金属脚
+  let g = `<rect x="${px}" y="${y-legH/2}" width="${legW}" height="${legH}" fill="#c9ccd1" stroke="#9aa0a8"/>`;
+  // ピン番号（本体内側端）
+  const numX = isL ? bx+16 : bx+bw-16;
+  g += `<text x="${numX}" y="${y+5}" text-anchor="middle" font-size="15" fill="#fff" font-weight="800">${num}</text>`;
+  // ラベル（外側）
+  const lx = isL ? px-14 : px+legW+14;
+  const anc = isL ? "end" : "start";
+  g += `<circle cx="${isL?px-2:px+legW+2}" cy="${y}" r="4" fill="${p.col}"/>`;
+  g += `<text x="${lx}" y="${y-4}" text-anchor="${anc}" font-size="15" fill="${p.col}" font-weight="800">${num}. ${p.name}</text>`;
+  g += `<text x="${lx}" y="${y+15}" text-anchor="${anc}" font-size="12" fill="#7a8590">${p.en}</text>`;
+  return g;
+}
+for(let n=1;n<=8;n++) s+=pinBox(n);
+
+// 回路A／回路Bを小さなOPアンプ三角で示す（枠より直感的）
+function miniOpA(){
+  // 左側：A回路。出力=1, -入力=2, +入力=3
+  const tx=95, ty=rowY(1); // 三角の基準
+  let g=`<text x="${tx-2}" y="${rowY(0)-46}" font-size="13" fill="${OK}" font-weight="800">A回路</text>`;
+  // 三角（頂点が右=出力側）
+  g+=`<polygon points="${tx-40},${ty-40} ${tx-40},${ty+40} ${tx+34},${ty}" fill="#fff" stroke="${HEAD}" stroke-width="2"/>`;
+  g+=`<text x="${tx-30}" y="${ty-16}" font-size="13" fill="${IN}" font-weight="800">−</text>`;
+  g+=`<text x="${tx-30}" y="${ty+24}" font-size="13" fill="${IN}" font-weight="800">+</text>`;
+  // 端子→ピン対応の小ラベル
+  g+=`<text x="${tx+40}" y="${ty+4}" font-size="11" fill="${OUT}" font-weight="700">→1番(出力)</text>`;
+  g+=`<text x="${tx-44}" y="${ty-30}" text-anchor="end" font-size="11" fill="${IN}">2番(−)→</text>`;
+  g+=`<text x="${tx-44}" y="${ty+38}" text-anchor="end" font-size="11" fill="${IN}">3番(+)→</text>`;
+  return g;
+}
+function miniOpB(){
+  const tx=765, ty=rowY(2);
+  let g=`<text x="${tx-2}" y="${rowY(1)-46}" text-anchor="end" font-size="13" fill="${OK}" font-weight="800">B回路</text>`;
+  // 三角（頂点が左=出力側、左右反転）
+  g+=`<polygon points="${tx+40},${ty-40} ${tx+40},${ty+40} ${tx-34},${ty}" fill="#fff" stroke="${HEAD}" stroke-width="2"/>`;
+  g+=`<text x="${tx+24}" y="${ty-16}" font-size="13" fill="${IN}" font-weight="800">−</text>`;
+  g+=`<text x="${tx+24}" y="${ty+24}" font-size="13" fill="${IN}" font-weight="800">+</text>`;
+  g+=`<text x="${tx-40}" y="${ty+4}" text-anchor="end" font-size="11" fill="${OUT}" font-weight="700">7番(出力)←</text>`;
+  g+=`<text x="${tx+44}" y="${ty-30}" font-size="11" fill="${IN}">←6番(−)</text>`;
+  g+=`<text x="${tx+44}" y="${ty+38}" font-size="11" fill="${IN}">←5番(+)</text>`;
+  return g;
+}
+s += miniOpA() + miniOpB();
+
+// 電源の注記
+s += `<rect x="40" y="${rowY(3)+34}" width="780" height="62" rx="9" fill="#f4f6f9" stroke="#cdd5df"/>`;
+s += `<text x="56" y="${rowY(3)+56}" font-size="12.5" fill="#333" font-weight="700">電源：8番=V+（正電源）／4番=V−（負電源）。本科目は単電源運用なら V−=GND。</text>`;
+s += `<text x="56" y="${rowY(3)+78}" font-size="12" fill="#b00020" font-weight="700">使わない側の回路（A or B）も入力を放置しない：＋入力をGND等へ固定し、出力開放のままにしない。</text>`;
+document.getElementById("pin").innerHTML=s;
+</script>
+</body>
+</html>

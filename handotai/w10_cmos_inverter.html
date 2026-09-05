@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第10週 CMOSインバータと低消費電力</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222;
+    --pos:#1F6FB2; --neg:#C0392B; --key:#7E3FA0; --grn:#2E8B57;
+    --ox:#E0A800; --line:#CCCCCC; --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg);
+    font-family:"メイリオ","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+    color:var(--ink); line-height:1.6;}
+  .wrap{max-width:1060px; margin:0 auto; padding:18px 20px 60px;}
+  h1{color:var(--navy); font-size:24px; margin:6px 0 2px;
+    border-bottom:1px solid var(--line); padding-bottom:10px;}
+  .sub{color:#555; font-size:14px; margin:0 0 14px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px;}
+  .tab{border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:9px 14px; border-radius:8px; font-size:15px; font-weight:bold;
+    cursor:pointer; transition:.15s;}
+  .tab:hover{background:#EEF3F8;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .panel{display:none;} .panel.active{display:block;}
+  .panel-title{color:var(--navy); font-size:19px; margin:4px 0 6px; font-weight:bold;}
+  .panel-lead{font-size:15px; margin:0 0 14px; color:#333;}
+  .layout{display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start;}
+  .col-graph{flex:1 1 420px; min-width:360px;}
+  .col-ctrl{flex:1 1 320px; min-width:300px;}
+  .card{border:1.5px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:14px; background:#FAFBFD;}
+  .card h3{margin:0 0 10px; font-size:16px; color:var(--navy);}
+  .toggle-row{display:flex; gap:10px; margin:10px 0;}
+  .toggle{flex:1; border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:12px; border-radius:8px; font-size:18px; font-weight:bold; cursor:pointer; text-align:center;}
+  .toggle.active{background:var(--navy); color:#fff;}
+  .readout{background:#fff; border:1.5px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-size:14px;}
+  .readout b{font-size:17px;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:14px;
+    font-size:13px; font-weight:bold; color:#fff; margin-left:6px;}
+  .b-on{background:var(--grn);} .b-off{background:#999;}
+  .b1{background:var(--neg);} .b0{background:var(--pos);}
+  .note{font-size:13.5px; color:#444; background:#F4F7FA;
+    border-left:4px solid var(--navy); padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  .ana{font-size:14px; background:#FFF7EC; border-left:4px solid var(--ox);
+    padding:9px 12px; border-radius:0 6px 6px 0; margin:12px 0;}
+  svg{width:100%; height:auto; display:block;}
+  .legend{font-size:13px; margin-top:8px;}
+  .legend span{display:inline-block; margin-right:14px;}
+  .chip{display:inline-block; width:14px; height:10px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+  .truth{width:100%; border-collapse:collapse; margin-top:6px; font-size:15px;}
+  .truth th,.truth td{border:1.5px solid var(--line); padding:8px; text-align:center;}
+  .truth th{background:var(--navy); color:#fff;}
+  @media(max-width:560px){ .layout{flex-direction:column;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第10週　CMOSインバータと低消費電力</h1>
+  <p class="sub">pMOSとnMOSは「必ず逆のON/OFF」になる双子。これを2つ積むと、入力をひっくり返す回路（NOT＝インバータ）ができます。CMOS＝Complementary（相補的）MOS。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="t1">① 2つを積む</button>
+    <button class="tab" data-tab="t2">② インバータの動き</button>
+    <button class="tab" data-tab="t3">③ なぜ消費電力が小さい？</button>
+  </div>
+
+  <!-- ===== タブ1 2つを積む ===== -->
+  <div class="panel active" id="t1">
+    <div class="panel-title">① pMOS（上）と nMOS（下）を積む</div>
+    <p class="panel-lead">電源 VDD（高い・1）と GND（低い・0）の間に、pMOS を上・nMOS を下に直列でつなぎます。2つの中間が「出力」。両方のゲートに同じ「入力」を入れます。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg1" viewBox="-70 0 500 380" aria-label="CMOSインバータ回路"></svg>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>つなぎ方</h3>
+          <div class="readout">
+            <b>上：</b><span style="color:#C0392B;font-weight:bold;">pMOS</span>（VDD側＝電源につながる）<br>
+            <b>下：</b><span style="color:#1F6FB2;font-weight:bold;">nMOS</span>（GND側＝アースにつながる）<br>
+            <b>中間：</b>出力（OUT）<br>
+            <b>入力：</b>2つのゲートに同時に入れる
+          </div>
+        </div>
+        <div class="ana"><b>イメージ：</b>2つのスイッチを縦に重ねた蛇口。上を開けば出力に「高い水（1）」、下を開けば「低い水（0）」が出ます。入力しだいで、上下どちらかが開きます。</div>
+        <div class="note">pMOSが上・nMOSが下なのには理由があります。pMOSは「高い側（1）をきれいに伝える」のが得意、nMOSは「低い側（0）を伝える」のが得意だからです（発展）。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ2 動き ===== -->
+  <div class="panel" id="t2">
+    <div class="panel-title">② インバータの動き ―― 入れたら、ひっくり返る</div>
+    <p class="panel-lead">入力を 0/1 で切り替えてみてください。入力と出力は <b>必ず逆</b>になります。これが NOT（インバータ）。通電している経路が緑で光ります。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg2" viewBox="-70 0 500 380" aria-label="インバータ動作"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#2E8B57;"></span>電流が通る経路</span>
+          <span><span class="chip" style="background:#CCCCCC;"></span>OFF（通らない）</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>入力を切り替え</h3>
+          <div class="toggle-row">
+            <button class="toggle active" data-in="0">入力 = 0</button>
+            <button class="toggle" data-in="1">入力 = 1</button>
+          </div>
+          <div class="readout" id="r2">…</div>
+        </div>
+        <table class="truth">
+          <tr><th>入力</th><th>pMOS</th><th>nMOS</th><th>出力</th></tr>
+          <tr><td>0</td><td>ON</td><td>OFF</td><td><b>1</b></td></tr>
+          <tr><td>1</td><td>OFF</td><td>ON</td><td><b>0</b></td></tr>
+        </table>
+        <div class="note">入力0→pMOSがON→出力はVDD(1)へ。入力1→nMOSがON→出力はGND(0)へ。いつも入力と逆の値が出ます＝NOTゲート。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ3 低消費電力 ===== -->
+  <div class="panel" id="t3">
+    <div class="panel-title">③ なぜ消費電力が小さい？ ―― 素通りができない</div>
+    <p class="panel-lead">入力が 0 でも 1 でも、<b>必ず片方がOFF</b>。だから電源(VDD)からGNDへ「素通り」する道が開きません。落ち着いた状態では、電流がほとんど流れない＝電力を食わない。これがCMOSが世界を席巻した理由です。</p>
+    <div class="layout">
+      <div class="col-graph">
+        <svg id="svg3" viewBox="-70 0 500 380" aria-label="低消費電力"></svg>
+        <div class="legend">
+          <span><span class="chip" style="background:#C0392B;"></span>素通り経路（開かない！）</span>
+          <span><span class="chip" style="background:#2E8B57;"></span>出力への経路</span>
+        </div>
+      </div>
+      <div class="col-ctrl">
+        <div class="card">
+          <h3>状態を見る</h3>
+          <div class="toggle-row">
+            <button class="toggle active" data-s="0">入力 = 0</button>
+            <button class="toggle" data-s="1">入力 = 1</button>
+            <button class="toggle" data-s="sw">切替の一瞬</button>
+          </div>
+          <div class="readout" id="r3">…</div>
+        </div>
+        <div class="ana"><b>電力を食うのは「切り替わる一瞬」だけ。</b>0と1がすれ違う瞬間だけ、上下が半開きになって少し電流が流れます。だから速くたくさん切り替える（高クロック）ほど発熱します。</div>
+        <div class="note">落ち着いた0/1の状態では電流ほぼゼロ＝待機電力が小さい。電池で動くスマホに最適。これがCMOS（Complementary MOS）の最大の強みです。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+function el(n,a){const e=document.createElementNS(SVGNS,n); for(const k in a)e.setAttribute(k,a[k]); return e;}
+function txt(svg,x,y,s,o){o=o||{}; const t=el("text",{x,y,"font-size":o.size||13,fill:o.color||"#222","font-weight":o.bold?"bold":"normal","text-anchor":o.anchor||"start"}); t.textContent=s; svg.appendChild(t); return t;}
+
+// 検算済みロジック
+const nmos_on = inp => inp===1;
+const pmos_on = inp => inp===0;
+
+// CMOSインバータ回路を描く（SVG 420x380）
+// レイアウト：VDD上(y=40)、pMOS(y=90-150)、出力ノード(y=200)、nMOS(y=240-300)、GND下(y=345)
+const CX=160; // 縦の幹線のx
+const RailW=120;
+function drawInverter(svg, opts){
+  svg.innerHTML="";
+  opts = opts || {};
+  const inp = opts.inp; // 0/1/null
+  const showThrough = opts.showThrough; // 素通り経路を赤で示すか
+  const sw = opts.sw; // 切替の一瞬
+
+  const pOn = (inp!=null)? pmos_on(inp) : null;
+  const nOn = (inp!=null)? nmos_on(inp) : null;
+
+  // VDDレール
+  svg.appendChild(el("line",{x1:CX-RailW/2,y1:40,x2:CX+RailW/2,y2:40,stroke:"#C0392B","stroke-width":3}));
+  txt(svg,CX+RailW/2+8,45,"VDD（電源・高い=1）",{color:"#C0392B",bold:true,size:13});
+  // GNDレール
+  svg.appendChild(el("line",{x1:CX-RailW/2,y1:345,x2:CX+RailW/2,y2:345,stroke:"#1F6FB2","stroke-width":3}));
+  txt(svg,CX+RailW/2+8,350,"GND（アース・低い=0）",{color:"#1F6FB2",bold:true,size:13});
+
+  // 配線の色を状態で決める
+  const wireUp   = (pOn===true) ? "#2E8B57" : "#CCCCCC"; // VDD→出力（pMOS経路）
+  const wireDown = (nOn===true) ? "#2E8B57" : "#CCCCCC"; // 出力→GND（nMOS経路）
+  const wUpW = (pOn===true)?4:2.5, wDnW=(nOn===true)?4:2.5;
+
+  // VDD → pMOS
+  svg.appendChild(el("line",{x1:CX,y1:40,x2:CX,y2:90,stroke:wireUp,"stroke-width":wUpW}));
+  // pMOSボックス
+  const pFill = (pOn===true)?"#F6DAD6":((pOn===false)?"#EEEEEE":"#F6DAD6");
+  svg.appendChild(el("rect",{x:CX-45,y:90,width:90,height:56,rx:8,fill:pFill,stroke:"#C0392B","stroke-width":2}));
+  txt(svg,CX,116,"pMOS",{anchor:"middle",bold:true,size:16,color:"#C0392B"});
+  txt(svg,CX,134,(pOn===null?"":(pOn?"ON":"OFF")),{anchor:"middle",bold:true,size:14,color:(pOn?"#2E8B57":"#999")});
+  // pMOS → 出力ノード
+  svg.appendChild(el("line",{x1:CX,y1:146,x2:CX,y2:200,stroke:wireUp,"stroke-width":wUpW}));
+  // 出力ノード
+  svg.appendChild(el("circle",{cx:CX,cy:200,r:5,fill:"#1C3A5E"}));
+  // 出力リード（右へ）
+  let outVal = null;
+  if(inp!=null && !sw){ outVal = (pOn && !nOn)?1:((nOn && !pOn)?0:null); }
+  const outWire = (outVal!=null)?"#2E8B57":"#888";
+  svg.appendChild(el("line",{x1:CX,y1:200,x2:CX+110,y2:200,stroke:outWire,"stroke-width":3}));
+  // 出力ラベル
+  let outTxt = "OUT";
+  if(sw){ outTxt="OUT 切替中"; }
+  else if(outVal!=null){ outTxt="OUT = "+outVal; }
+  txt(svg,CX+116,196,outTxt,{color:"#1C3A5E",bold:true,size:15});
+  if(outVal!=null){
+    txt(svg,CX+116,214,(outVal===1?"（高い＝1）":"（低い＝0）"),{color:(outVal===1?"#C0392B":"#1F6FB2"),bold:true,size:12});
+  }
+  // 出力ノード → nMOS
+  svg.appendChild(el("line",{x1:CX,y1:200,x2:CX,y2:240,stroke:wireDown,"stroke-width":wDnW}));
+  // nMOSボックス
+  const nFill = (nOn===true)?"#D6E6F2":((nOn===false)?"#EEEEEE":"#D6E6F2");
+  svg.appendChild(el("rect",{x:CX-45,y:240,width:90,height:56,rx:8,fill:nFill,stroke:"#1F6FB2","stroke-width":2}));
+  txt(svg,CX,266,"nMOS",{anchor:"middle",bold:true,size:16,color:"#1F6FB2"});
+  txt(svg,CX,284,(nOn===null?"":(nOn?"ON":"OFF")),{anchor:"middle",bold:true,size:14,color:(nOn?"#2E8B57":"#999")});
+  // nMOS → GND
+  svg.appendChild(el("line",{x1:CX,y1:296,x2:CX,y2:345,stroke:wireDown,"stroke-width":wDnW}));
+
+  // 入力リード（OUTと対称：左端からy=200で1本入り、縦幹線で両ゲートへ分岐）
+  if(inp!=null || sw){
+    const inColor = sw?"#7E3FA0":(inp===1?"#C0392B":"#1F6FB2");
+    const inX = 30;        // 入力端子の左端
+    const stemX = 70;      // 縦幹線のx
+    // 左端 → 縦幹線（出力と同じ高さy=200で水平に入る）
+    svg.appendChild(el("line",{x1:inX,y1:200,x2:stemX,y2:200,stroke:inColor,"stroke-width":3}));
+    // 入力ノード（黒丸・出力ノードと対称）
+    svg.appendChild(el("circle",{cx:stemX,cy:200,r:5,fill:"#1C3A5E"}));
+    // 縦幹線（pMOSゲートの高さ118 〜 nMOSゲートの高さ268）
+    svg.appendChild(el("line",{x1:stemX,y1:118,x2:stemX,y2:268,stroke:inColor,"stroke-width":2.5}));
+    // pMOSゲートへ
+    svg.appendChild(el("line",{x1:stemX,y1:118,x2:CX-45,y2:118,stroke:inColor,"stroke-width":2.5}));
+    // nMOSゲートへ
+    svg.appendChild(el("line",{x1:stemX,y1:268,x2:CX-45,y2:268,stroke:inColor,"stroke-width":2.5}));
+    // 入力ラベル（OUTと同書式・左に）
+    let inTxt = sw?"IN 切替中":("IN = "+inp);
+    txt(svg,inX-4,196,inTxt,{color:inColor,bold:true,size:15,anchor:"end"});
+    if(!sw) txt(svg,inX-4,214,(inp===1?"（高い＝1）":"（低い＝0）"),{color:inColor,bold:true,size:12,anchor:"end"});
+  }
+
+  // 切替の一瞬：上下とも半開き＝素通り電流（紫の点線）
+  if(sw){
+    svg.appendChild(el("rect",{x:CX-45,y:90,width:90,height:56,rx:8,fill:"#F3E8FA",stroke:"#7E3FA0","stroke-width":2}));
+    txt(svg,CX,116,"pMOS",{anchor:"middle",bold:true,size:16,color:"#7E3FA0"});
+    txt(svg,CX,134,"半開き",{anchor:"middle",bold:true,size:13,color:"#7E3FA0"});
+    svg.appendChild(el("rect",{x:CX-45,y:240,width:90,height:56,rx:8,fill:"#F3E8FA",stroke:"#7E3FA0","stroke-width":2}));
+    txt(svg,CX,266,"nMOS",{anchor:"middle",bold:true,size:16,color:"#7E3FA0"});
+    txt(svg,CX,284,"半開き",{anchor:"middle",bold:true,size:13,color:"#7E3FA0"});
+    // 素通り電流（VDD→GND）
+    svg.appendChild(el("line",{x1:CX,y1:40,x2:CX,y2:345,stroke:"#7E3FA0","stroke-width":5,"stroke-dasharray":"7 5",opacity:0.6}));
+    txt(svg,CX-52,180,"一瞬だけ",{color:"#7E3FA0",bold:true,size:12,anchor:"end"});
+    txt(svg,CX-52,196,"電流が流れる",{color:"#7E3FA0",bold:true,size:12,anchor:"end"});
+  }
+
+  // 素通り経路の強調（タブ3・定常時：開かないことを示す）
+  if(showThrough && !sw && inp!=null){
+    // OFF側に×印を付けて「ここで止まる＝素通りできない」を示す
+    const offTop = (pOn===false);
+    const offY = offTop?118:268;
+    txt(svg,CX,offY+2,"✕",{anchor:"middle",bold:true,size:30,color:"#C0392B"});
+    txt(svg,CX+52,offY+5,"ここでストップ",{color:"#C0392B",bold:true,size:12});
+  }
+}
+
+// ===== タブ1（静的・入力なしで構造を見せる、ただしON/OFFは出さず配線だけ）=====
+function draw1(){ drawInverter(document.getElementById("svg1"), {inp:null}); }
+
+// ===== タブ2 =====
+let in2=0;
+function draw2(){
+  drawInverter(document.getElementById("svg2"), {inp:in2});
+  const out = (in2===0)?1:0;
+  const pstate = pmos_on(in2)?"ON":"OFF";
+  const nstate = nmos_on(in2)?"ON":"OFF";
+  document.getElementById("r2").innerHTML =
+    `入力 <span class="badge ${in2===1?'b1':'b0'}">${in2}</span> → `+
+    `pMOS:<b>${pstate}</b> / nMOS:<b>${nstate}</b> → `+
+    `出力 <span class="badge ${out===1?'b1':'b0'}">${out}</span><br>`+
+    `入力と出力は<b>逆</b>。これがNOT（インバータ）です。`;
+}
+document.querySelectorAll('[data-in]').forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll('[data-in]').forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); in2=parseInt(b.dataset.in); draw2();
+}));
+
+// ===== タブ3 =====
+let s3="0";
+function draw3(){
+  const svg=document.getElementById("svg3");
+  if(s3==="sw"){
+    drawInverter(svg, {sw:true});
+    document.getElementById("r3").innerHTML =
+      `状態：<span class="badge" style="background:#7E3FA0;">切替の一瞬</span><br>`+
+      `0↔1がすれ違う瞬間だけ、上下が半開きになり<b>素通り電流</b>が流れます。電力を食うのはこの一瞬だけ。`;
+  } else {
+    const inp=parseInt(s3);
+    drawInverter(svg, {inp:inp, showThrough:true});
+    const offside = pmos_on(inp)?"nMOS（下）":"pMOS（上）";
+    document.getElementById("r3").innerHTML =
+      `状態：入力 <span class="badge ${inp===1?'b1':'b0'}">${inp}</span>（落ち着いた状態）<br>`+
+      `${offside}がOFF → 電源からGNDへの<b>素通り経路が開かない</b> → 電流ほぼゼロ＝省電力。`;
+  }
+}
+document.querySelectorAll('[data-s]').forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll('[data-s]').forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); s3=b.dataset.s; draw3();
+}));
+
+// ===== タブ切替 =====
+const tabs=document.querySelectorAll(".tab"), panels=document.querySelectorAll(".panel");
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  tabs.forEach(x=>x.classList.remove("active")); panels.forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const id=t.getAttribute("data-tab"); document.getElementById(id).classList.add("active");
+  if(id==="t1")draw1(); if(id==="t2")draw2(); if(id==="t3")draw3();
+}));
+draw1(); draw2(); draw3();
+</script>
+</body>
+</html>

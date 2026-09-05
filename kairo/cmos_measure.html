@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>CMOSインバータ測定回路図（CD4007UB 実ピン）</title>
+<style>body{margin:0;background:#fff;font-family:"Noto Sans CJK JP",sans-serif;}</style>
+</head>
+<body>
+<svg id="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" width="820" height="600">
+  <style>
+    .vdd{stroke:#D32F2F;} .nmos{stroke:#2E7D32;} .pmos{stroke:#6A1B9A;}
+    .in{stroke:#1565C0;} .mark{stroke:#E65100;} .gnd{stroke:#444;}
+    .wire{fill:none;stroke-width:2;}
+    .lbl{font-size:13px;} .pin{font-size:11px;font-family:Arial;font-weight:700;}
+    .small{font-size:11px;fill:#5a6b82;}
+    .title{font-size:16px;font-weight:700;fill:#0D3C6E;}
+    .devname{font-size:13px;font-weight:700;}
+    .meas{stroke:#E65100;stroke-width:1.5;stroke-dasharray:5 3;fill:none;}
+    text{font-family:"Noto Sans CJK JP",sans-serif;}
+  </style>
+
+  <text x="20" y="28" class="title">CMOSインバータ 測定回路図（CD4007UB：Q1(N)＋Q2(P)を配線）</text>
+  <text x="20" y="48" class="small">電源⁺と pin14 の間に RD を直列。電源電流は必ず RD を通る → I = V_RD ÷ R_D（≒ 貫通電流）。出力は電圧計のみ＝電流をほぼ吸わない。</text>
+
+  <rect x="30" y="80" width="120" height="70" rx="6" fill="#fff" stroke="#D32F2F" stroke-width="1.6"/>
+  <text x="90" y="102" text-anchor="middle" class="lbl" fill="#D32F2F">直流電源①</text>
+  <text x="90" y="120" text-anchor="middle" class="small">VDD ＝ +8V</text>
+  <circle cx="60" cy="140" r="4" fill="#D32F2F"/><text x="48" y="144" text-anchor="end" class="pin" fill="#D32F2F">＋</text>
+  <circle cx="120" cy="140" r="4" fill="#444"/><text x="132" y="144" class="pin" fill="#444">－</text>
+
+  <line class="wire vdd" x1="60" y1="140" x2="60" y2="180"/>
+  <line class="wire vdd" x1="60" y1="180" x2="170" y2="180"/>
+  <rect x="170" y="166" width="56" height="28" rx="3" fill="#fff" stroke="#E65100" stroke-width="2"/>
+  <text x="198" y="160" text-anchor="middle" class="lbl" fill="#E65100">RD = 1 kΩ</text>
+  <text x="180" y="184" class="pin" fill="#E65100">a</text>
+  <text x="214" y="184" class="pin" fill="#E65100">b</text>
+  <line class="wire vdd" x1="226" y1="180" x2="430" y2="180"/>
+
+  <circle cx="198" cy="232" r="16" fill="#fff" stroke="#E65100" stroke-width="1.6"/>
+  <text x="198" y="237" text-anchor="middle" class="pin" fill="#E65100">V</text>
+  <text x="198" y="262" text-anchor="middle" class="small">電圧計 → V_RD</text>
+  <line class="meas" x1="183" y1="226" x2="176" y2="194"/>
+  <line class="meas" x1="213" y1="226" x2="220" y2="194"/>
+
+  <line class="wire vdd" x1="430" y1="180" x2="430" y2="110"/>
+  <line class="wire vdd" x1="430" y1="110" x2="560" y2="110"/>
+  <circle cx="560" cy="110" r="4" fill="#D32F2F"/>
+  <text x="568" y="106" class="pin" fill="#D32F2F">14 ＝ VDD・P基板</text>
+
+  <rect x="380" y="200" width="110" height="300" rx="8" fill="#f7f9fc" stroke="#0D3C6E" stroke-width="1.6"/>
+  <text x="435" y="224" text-anchor="middle" class="devname" fill="#0D3C6E">CD4007UB</text>
+  <text x="435" y="244" text-anchor="middle" class="small">1パッケージに</text>
+  <text x="435" y="262" text-anchor="middle" class="small">複数のMOSが</text>
+  <text x="435" y="280" text-anchor="middle" class="small">入っている</text>
+
+  <text x="600" y="150" class="devname" fill="#6A1B9A">PMOS ＝ Q2(P)</text>
+  <line class="wire vdd" x1="560" y1="110" x2="620" y2="110"/>
+  <line class="wire vdd" x1="620" y1="110" x2="620" y2="175"/>
+  <text x="628" y="172" class="pin" fill="#6A1B9A">2 ＝ S</text>
+  <line class="wire pmos" x1="620" y1="175" x2="606" y2="175"/>
+  <line x1="606" y1="171" x2="606" y2="211" stroke="#6A1B9A" stroke-width="6"/>
+  <line class="wire pmos" x1="590" y1="173" x2="590" y2="209" stroke-width="3"/>
+  <circle cx="582" cy="191" r="4.5" fill="#fff" stroke="#1565C0" stroke-width="2"/>
+  <line class="wire in" x1="540" y1="191" x2="577.5" y2="191"/>
+  <text x="528" y="195" text-anchor="end" class="pin" fill="#6A1B9A">3 ＝ G</text>
+  <line class="wire pmos" x1="606" y1="207" x2="620" y2="207"/>
+  <line class="wire pmos" x1="620" y1="207" x2="620" y2="290"/>
+  <text x="628" y="210" class="pin" fill="#6A1B9A">1 ＝ D</text>
+
+  <circle cx="620" cy="300" r="4" fill="#E65100"/>
+  <line class="wire mark" x1="620" y1="290" x2="620" y2="310"/>
+  <text x="600" y="296" text-anchor="end" class="pin" fill="#E65100">Vout</text>
+  <line class="wire mark" x1="620" y1="300" x2="700" y2="300"/>
+  <circle cx="716" cy="300" r="16" fill="#fff" stroke="#E65100" stroke-width="1.6"/>
+  <text x="716" y="305" text-anchor="middle" class="pin" fill="#E65100">V</text>
+  <text x="716" y="328" text-anchor="middle" class="small">電圧計 → Vout</text>
+
+  <text x="600" y="466" class="devname" fill="#2E7D32">NMOS ＝ Q1(N)</text>
+  <line class="wire nmos" x1="620" y1="310" x2="620" y2="390"/>
+  <text x="628" y="372" class="pin" fill="#2E7D32">8 ＝ D</text>
+  <line class="wire nmos" x1="620" y1="390" x2="606" y2="390"/>
+  <line x1="606" y1="386" x2="606" y2="426" stroke="#2E7D32" stroke-width="6"/>
+  <line class="wire in" x1="590" y1="388" x2="590" y2="424" stroke-width="3"/>
+  <line class="wire in" x1="540" y1="406" x2="590" y2="406"/>
+  <text x="528" y="410" text-anchor="end" class="pin" fill="#2E7D32">6 ＝ G</text>
+  <line class="wire nmos" x1="606" y1="422" x2="620" y2="422"/>
+  <line class="wire nmos" x1="620" y1="422" x2="620" y2="440"/>
+  <text x="628" y="426" class="pin" fill="#2E7D32">7 ＝ S</text>
+  <line class="wire nmos" x1="620" y1="440" x2="620" y2="540"/>
+
+  <line class="wire in" x1="540" y1="191" x2="540" y2="406"/>
+  <circle cx="540" cy="298" r="4" fill="#1565C0"/>
+  <text x="534" y="288" text-anchor="end" class="small" fill="#1565C0">ゲート共通</text>
+  <line class="wire in" x1="540" y1="298" x2="150" y2="298"/>
+
+  <rect x="30" y="330" width="120" height="70" rx="6" fill="#fff" stroke="#1565C0" stroke-width="1.6"/>
+  <text x="90" y="352" text-anchor="middle" class="lbl" fill="#1565C0">直流電源②</text>
+  <text x="90" y="370" text-anchor="middle" class="small">Vin（0〜8V 可変）</text>
+  <circle cx="60" cy="390" r="4" fill="#1565C0"/><text x="48" y="394" text-anchor="end" class="pin" fill="#1565C0">＋</text>
+  <circle cx="120" cy="390" r="4" fill="#444"/><text x="132" y="394" class="pin" fill="#444">－</text>
+  <line class="wire in" x1="60" y1="390" x2="60" y2="298"/>
+  <line class="wire in" x1="60" y1="298" x2="150" y2="298"/>
+  <line class="wire gnd" x1="120" y1="390" x2="120" y2="540"/>
+
+  <line class="wire gnd" x1="120" y1="540" x2="620" y2="540" stroke-width="3"/>
+  <line class="wire gnd" x1="120" y1="140" x2="280" y2="140"/>
+  <line class="wire gnd" x1="280" y1="140" x2="280" y2="540"/>
+  <line class="wire gnd" x1="370" y1="540" x2="370" y2="552"/>
+  <line class="wire gnd" x1="358" y1="552" x2="382" y2="552"/>
+  <line class="wire gnd" x1="362" y1="558" x2="378" y2="558"/>
+  <line class="wire gnd" x1="366" y1="564" x2="374" y2="564"/>
+  <text x="435" y="556" class="small">GND（VSS, pin7 = N基板）　電源①－・電源②－・pin7 をすべて共通</text>
+
+  <rect x="30" y="430" width="300" height="78" rx="6" fill="#f3f4f6" stroke="#9E9E9E" stroke-width="1.4"/>
+  <text x="44" y="450" class="lbl" fill="#455a64">未使用ゲートの処理（開放禁止）</text>
+  <text x="44" y="468" class="small">・Q3 のゲート pin10 →使わないなら VSS(pin7) か VDD(pin14) に固定</text>
+  <text x="44" y="484" class="small">・Q2(N)・Q3 など使わない素子のゲートも開放にしない</text>
+  <text x="44" y="500" class="small">　（放置すると誤動作・IC発熱の原因）</text>
+</svg>
+</body>
+</html>

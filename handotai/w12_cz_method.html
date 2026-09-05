@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単結晶シリコンの育て方（CZ法）｜第12週</title>
+<style>
+  :root{
+    --ink:#1b2733; --sub:#5a6b7a; --line:#cfd8e0;
+    --paper:#f4f1ea; --card:#ffffff;
+    --pos:#1F6FB2; --emph:#7E3FA0; --task:#2E8B57;
+    --melt:#e8623a;     /* 融液（高温のオレンジ赤） */
+    --meltglow:#ffb38a;
+    --crucible:#8a8f96; /* るつぼ */
+    --ingot:#9aa6b4;    /* 結晶シリコン（銀灰） */
+    --ingotface:#c2ccd6;
+    --seed:#6b7785;     /* 種結晶 */
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),var(--paper);
+    color:var(--ink);min-height:100vh;padding:24px 16px 56px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+  .eyebrow{font-size:13px;letter-spacing:.18em;color:var(--emph);font-weight:700;margin-bottom:6px;}
+  h1{font-size:25px;margin:0 0 4px;line-height:1.3;}
+  .lead{color:var(--sub);font-size:15px;margin:0 0 16px;line-height:1.7;}
+  .analogy{display:inline-block;background:#fff7e8;border:1px solid #f0d9a8;color:#8a6a1f;font-size:13px;padding:6px 12px;border-radius:999px;margin-bottom:18px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  @media(max-width:680px){.row{grid-template-columns:1fr;}}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 10px 30px -18px rgba(20,40,60,.4);}
+  .svgbox{width:100%;height:auto;display:block;}
+  .panel{display:flex;flex-direction:column;gap:12px;}
+  .stepinfo{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;}
+  .stepinfo .head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .stepnum{width:42px;height:42px;border-radius:11px;background:var(--emph);color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .stepinfo h2{margin:0;font-size:18px;}
+  .stepinfo .en{color:#93a1ad;font-size:11.5px;font-weight:600;}
+  .stepinfo p{margin:0;color:var(--sub);font-size:14px;line-height:1.75;}
+  .temp{display:inline-block;margin-top:10px;background:#fdeee2;border:1px solid #f3c89e;color:#b8600b;font-size:12px;padding:4px 10px;border-radius:999px;font-weight:700;}
+  .progress{display:flex;gap:6px;margin:4px 0 0;}
+  .dot{flex:1;height:5px;border-radius:3px;background:#dde4ea;}
+  .dot.on{background:var(--emph);}
+  .nav{display:flex;gap:8px;}
+  .nav button{border:none;border-radius:11px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+  .prev{flex:1;background:#e7edf2;color:var(--ink);}
+  .next{flex:2;background:var(--pos);color:#fff;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+  .controls{display:flex;flex-wrap:wrap;gap:7px;}
+  .controls button{border:1px solid var(--line);background:#fff;color:var(--sub);padding:7px 10px;border-radius:9px;font-size:11.5px;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s;}
+  .controls button:hover{border-color:var(--emph);color:var(--emph);}
+  .controls button.active{background:var(--emph);border-color:var(--emph);color:#fff;}
+  .purity{text-align:center;font-size:13px;color:var(--task);font-weight:700;margin-top:8px;padding:10px;background:#eef7f1;border-radius:12px;border:1px solid #c7e6d4;}
+  .purity.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第12週 ｜ 砂からチップへ ①</div>
+  <h1>単結晶シリコンの育て方（CZ法）</h1>
+  <p class="lead">超高純度のシリコンを、原子がきれいに整列した「1本の大きな結晶」に育てます。<br>種から柱を引き上げて伸ばす様子を、ステップで見てみましょう。</p>
+  <div class="analogy">🍬 イメージは「飴細工」── 種を浸して、回しながらゆっくり引き上げて伸ばす</div>
+
+  <div class="row">
+    <div class="stage">
+      <svg class="svgbox" viewBox="0 0 600 460" role="img" aria-label="CZ法によるインゴット育成">
+        <defs>
+          <radialGradient id="meltg" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffd9a8"/>
+            <stop offset="55%" stop-color="var(--melt)"/>
+            <stop offset="100%" stop-color="#b8401f"/>
+          </radialGradient>
+          <linearGradient id="ingotg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7e8a98"/>
+            <stop offset="45%" stop-color="var(--ingotface)"/>
+            <stop offset="100%" stop-color="#7e8a98"/>
+          </linearGradient>
+        </defs>
+
+        <!-- 装置外枠（チャンバ）薄く -->
+        <rect x="120" y="40" width="360" height="380" rx="10" fill="#f1f3f6" stroke="#e0e5ea"/>
+
+        <!-- 引き上げ軸（上から） -->
+        <rect x="296" y="40" width="8" height="60" fill="#5a6b7a"/>
+        <g id="chuck"><rect x="280" y="96" width="40" height="14" rx="3" fill="#5a6b7a"/></g>
+
+        <!-- 回転矢印（引き上げ中に表示） -->
+        <g id="rot" opacity="0">
+          <path d="M 270 70 A 30 12 0 1 1 330 70" fill="none" stroke="#9aa6b4" stroke-width="2.5" marker-end="url(#arrow)"/>
+        </g>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#9aa6b4"/>
+          </marker>
+        </defs>
+
+        <!-- るつぼ -->
+        <path d="M 180 300 Q 180 410 230 410 L 370 410 Q 420 410 420 300 Z" fill="var(--crucible)"/>
+        <path d="M 188 304 Q 188 402 232 402 L 368 402 Q 412 402 412 304 Z" fill="#6f757c"/>
+
+        <!-- 融液 -->
+        <g id="melt">
+          <ellipse cx="300" cy="318" rx="112" ry="20" fill="url(#meltg)"/>
+          <path d="M 188 318 Q 188 398 232 398 L 368 398 Q 412 398 412 318 Z" fill="url(#meltg)" opacity="0.95"/>
+          <ellipse id="meltglow" cx="300" cy="318" rx="80" ry="12" fill="#ffd9a8" opacity="0.5"/>
+        </g>
+
+        <!-- インゴット（種＋成長部）。JSで形状を差し替え -->
+        <g id="ingot"></g>
+
+        <!-- ラベル -->
+        <text id="lab-crucible" x="446" y="360" font-size="12" fill="#6f757c" font-weight="700">るつぼ</text>
+        <text id="lab-melt" x="300" y="345" text-anchor="middle" font-size="11" fill="#fff" font-weight="700" opacity="0">融液（約1400℃）</text>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <div class="stepinfo">
+        <div class="head">
+          <div class="stepnum" id="stepnum">1</div>
+          <div>
+            <h2 id="steptitle"></h2>
+            <div class="en" id="stepen"></div>
+          </div>
+        </div>
+        <p id="stepdesc"></p>
+        <div class="temp" id="temp"></div>
+      </div>
+
+      <div class="progress" id="progress"></div>
+
+      <div class="nav">
+        <button class="prev" id="prev">← 前へ</button>
+        <button class="next" id="next">次へ →</button>
+      </div>
+
+      <div class="controls" id="controls"></div>
+
+      <div class="purity hidden" id="purity">純度 99.999999999%（イレブンナイン）の原子が、種と同じ並びで積み上がる</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+function mk(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+const CX=300, MELT_Y=318;
+// 各ステップで完成形のパスを直接定義
+function renderIngot(step){
+  const g=document.getElementById("ingot");
+  g.innerHTML="";
+  const seedW=16;
+  // 種（チャックの下から伸びる棒）
+  function seed(topY,botY){
+    g.appendChild(mk("rect",{x:CX-seedW/2,y:topY,width:seedW,height:botY-topY,fill:"var(--seed)",rx:2}));
+  }
+  if(step<=1) return; // 溶かす段階：インゴットなし
+
+  if(step===2){ // 種を浸す：種が融液面に触れる
+    seed(110, MELT_Y);
+    const tag=mk("text",{x:CX+18,y:130,"font-size":11,fill:"#5a6b7a","font-weight":700}); tag.textContent="種結晶"; g.appendChild(tag);
+    return;
+  }
+  if(step===3){ // ネック：細い首が少し上がる
+    seed(110,150);
+    // ネック（細い）
+    g.appendChild(mk("path",{d:`M ${CX-8} 150 L ${CX+8} 150 L ${CX+7} ${MELT_Y} L ${CX-7} ${MELT_Y} Z`,fill:"url(#ingotg)"}));
+    const tag=mk("text",{x:CX+22,y:175,"font-size":11,fill:"#5a6b7a","font-weight":700}); tag.textContent="ネック（細い首）"; g.appendChild(tag);
+    return;
+  }
+  if(step===4){ // ショルダー：肩を作って太らせる
+    seed(110,150);
+    g.appendChild(mk("path",{d:`M ${CX-8} 150 L ${CX+8} 150 L ${CX+8} 175 L ${CX+45} 230 L ${CX+45} ${MELT_Y} L ${CX-45} ${MELT_Y} L ${CX-45} 230 L ${CX-8} 175 Z`,fill:"url(#ingotg)"}));
+    const tag=mk("text",{x:CX+52,y:215,"font-size":11,fill:"#5a6b7a","font-weight":700}); tag.textContent="肩（広げる）"; g.appendChild(tag);
+    return;
+  }
+  if(step===5){ // ボディ：一定径で伸ばす（引き上がってボディが長い）
+    seed(70,100);
+    g.appendChild(mk("path",{d:`M ${CX-8} 100 L ${CX+8} 100 L ${CX+8} 120 L ${CX+45} 165 L ${CX+45} ${MELT_Y} L ${CX-45} ${MELT_Y} L ${CX-45} 165 L ${CX-8} 120 Z`,fill:"url(#ingotg)"}));
+    const tag=mk("text",{x:CX+52,y:250,"font-size":11,fill:"#5a6b7a","font-weight":700}); tag.textContent="胴（同じ太さ）"; g.appendChild(tag);
+    return;
+  }
+  if(step===6){ // 完成：融液から引き上げきった大きな円柱
+    seed(46,74);
+    g.appendChild(mk("path",{d:`M ${CX-8} 74 L ${CX+8} 74 L ${CX+8} 92 L ${CX+48} 132 L ${CX+48} 286 L ${CX-48} 286 L ${CX-48} 132 L ${CX-8} 92 Z`,fill:"url(#ingotg)"}));
+    // 下端（引き上げきって融液から離れた先端）
+    g.appendChild(mk("path",{d:`M ${CX-48} 286 L ${CX+48} 286 L ${CX} 300 Z`,fill:"#7e8a98"}));
+    // 光沢ライン
+    g.appendChild(mk("rect",{x:CX-22,y:132,width:8,height:150,fill:"#e6ecf2",opacity:0.6,rx:4}));
+    const tag=mk("text",{x:CX+56,y:210,"font-size":12,fill:"#5a6b7a","font-weight":700}); tag.textContent="単結晶インゴット"; g.appendChild(tag);
+    return;
+  }
+}
+
+const steps=[
+ {t:"超高純度シリコンを溶かす",en:"Melt",desc:"るつぼの中で、超高純度の多結晶シリコンを溶かします。ドロドロの「融液」になります。",temp:"約1400℃で融解",melt:1,rot:0,purity:0},
+ {t:"種結晶を浸す",en:"Seeding",desc:"1個の完全な単結晶（種）を、回しながら融液の表面にそっとつけます。この種の並びが、これから育つ結晶のお手本になります。",temp:"",melt:1,rot:1,purity:0},
+ {t:"引き上げ開始（ネック）",en:"Necking",desc:"種をゆっくり回しながら引き上げます。まず細い首（ネック）を作り、結晶の乱れを取り除いてから太らせます。",temp:"",melt:1,rot:1,purity:0},
+ {t:"肩を作る（ショルダー）",en:"Shoulder",desc:"引き上げ速度を少しずつ落として、だんだん太らせます。狙いの直径（300mmなど）まで広げます。",temp:"",melt:1,rot:1,purity:0},
+ {t:"胴を伸ばす（ボディ）",en:"Body growth",desc:"あとは一定の速度で、同じ直径のまま長い円柱を育てます。融液の原子が、種とまったく同じ並びで積み上がっていきます。",temp:"",melt:1,rot:1,purity:1},
+ {t:"単結晶インゴット完成",en:"Complete",desc:"数十時間かけて、1本の大きな単結晶の柱が完成。これを薄く輪切りにして磨くと、鏡のようなウェハになります。",temp:"",melt:0,rot:0,purity:0},
+];
+
+let cur=0;
+const $=id=>document.getElementById(id);
+
+function render(i){
+  const s=steps[i];
+  renderIngot(i+1);
+  $("melt").style.opacity = s.melt?1:0;
+  $("lab-melt").setAttribute("opacity", s.melt?1:0);
+  $("rot").style.opacity = s.rot?1:0;
+
+  $("stepnum").textContent=i+1;
+  $("steptitle").textContent=s.t;
+  $("stepen").textContent=s.en;
+  $("stepdesc").textContent=s.desc;
+  $("temp").textContent=s.temp; $("temp").style.display=s.temp?"inline-block":"none";
+
+  document.querySelectorAll(".dot").forEach((d,idx)=>d.classList.toggle("on",idx<=i));
+  $("purity").classList.toggle("hidden", !s.purity);
+  $("prev").disabled=i===0; $("next").disabled=i===steps.length-1;
+  document.querySelectorAll("#controls button").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+}
+
+const ctr=$("controls");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.textContent=`${i+1}. ${s.t}`;b.onclick=()=>{cur=i;render(cur);};ctr.appendChild(b);});
+const pg=$("progress");
+steps.forEach(()=>{const d=document.createElement("div");d.className="dot";pg.appendChild(d);});
+$("prev").onclick=()=>{if(cur>0){cur--;render(cur);}};
+$("next").onclick=()=>{if(cur<steps.length-1){cur++;render(cur);}};
+render(0);
+</script>
+</body>
+</html>

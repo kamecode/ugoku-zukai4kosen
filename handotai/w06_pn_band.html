@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6週 バンド図で見るpn接合（標準形）</title>
+<style>
+  :root{ --navy:#1C3A5E; --ink:#222222; --pos:#1F6FB2; --neg:#C0392B; --emph:#7E3FA0; --task:#2E8B57; --line:#cccccc; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#FFFFFF; color:var(--ink); font-family:"メイリオ","Meiryo",sans-serif; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px; margin:0 auto; padding:24px 20px 48px;}
+  header h1{font-size:24px; color:var(--navy); margin:0 0 4px; font-weight:bold; letter-spacing:.5px;}
+  header .sub{font-size:15px; color:#555; margin:0 0 10px;}
+  .rule{height:1px; background:var(--line); border:0; margin:0 0 20px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .tab{font-family:inherit; font-size:15px; cursor:pointer; border:1.5px solid var(--navy); background:#fff; color:var(--navy); padding:9px 16px; border-radius:6px; transition:.15s;}
+  .tab:hover{background:#f0f5fb;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .stage{border:1.5px solid var(--navy); border-radius:10px; padding:6px; background:#fff;}
+  svg{display:block; width:100%; height:auto;}
+  .panel{margin-top:18px; border:1px solid var(--line); border-radius:8px; padding:16px 18px;}
+  .panel h2{font-size:19px; margin:0 0 8px; color:var(--navy);}
+  .panel p{font-size:16px; line-height:1.7; margin:0 0 8px;}
+  .panel .key{font-weight:bold;}
+  .flowtag{display:inline-block; font-size:14px; font-weight:bold; padding:3px 10px; border-radius:4px; margin-left:8px; vertical-align:middle;}
+  .flowtag.on{background:var(--pos); color:#fff;}
+  .flowtag.off{background:var(--neg); color:#fff;}
+  .flowtag.eq{background:#777; color:#fff;}
+  .legend{display:flex; flex-wrap:wrap; gap:16px 18px; margin:14px 2px 0; font-size:14px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .band{width:22px; height:13px; display:inline-block; border-radius:2px;}
+  .ferm{width:22px; height:0; border-top:2px dashed #7E3FA0; display:inline-block;}
+  .dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>バンド図で見るpn接合</h1>
+    <p class="sub">第6週｜上ほどエネルギーが高い。伝導帯（上）を電子が、価電子帯（下）を正孔が動く</p>
+    <hr class="rule">
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-state="apart">① くっつける前</button>
+    <button class="tab" data-state="equil">② 平衡（Efがそろう）</button>
+    <button class="tab" data-state="fwd">③ 順方向（坂が低い→流れる）</button>
+    <button class="tab" data-state="rev">④ 逆方向（坂が高い→流れない）</button>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 900 470" role="img" aria-label="pn接合のバンド図（上ほど高エネルギー）">
+      <line x1="60" y1="40" x2="60" y2="410" stroke="#999" stroke-width="1.2"/>
+      <polygon points="60,34 56,46 64,46" fill="#999"/>
+      <text x="50" y="52" text-anchor="end" font-size="14" fill="#666">エネルギー高い↑</text>
+      <line x1="60" y1="410" x2="850" y2="410" stroke="#999" stroke-width="1.2"/>
+      <polygon points="856,410 844,406 844,414" fill="#999"/>
+      <text x="840" y="430" text-anchor="end" font-size="14" fill="#666">位置（n型 → p型）→</text>
+
+      <text x="250" y="32" text-anchor="middle" font-size="18" font-weight="bold" fill="#1C3A5E">n型</text>
+      <text x="650" y="32" text-anchor="middle" font-size="18" font-weight="bold" fill="#1C3A5E">p型</text>
+      <line id="midline" x1="450" y1="44" x2="450" y2="410" stroke="#1C3A5E" stroke-width="1" stroke-dasharray="3 4" opacity="0"/>
+
+      <!-- 伝導帯(上)・価電子帯(下)。バンドギャップ=禁制帯 -->
+      <path id="condBand" d="" fill="#cfe0f2" stroke="#1F6FB2" stroke-width="1.5"/>
+      <path id="valBand"  d="" fill="#f3d6d2" stroke="#C0392B" stroke-width="1.5"/>
+      <!-- フェルミ準位 Ef -->
+      <path id="fermiN" d="" fill="none" stroke="#7E3FA0" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <path id="fermiP" d="" fill="none" stroke="#7E3FA0" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <g id="fermiGap" opacity="0">
+        <line id="gapLine" x1="525" y1="0" x2="525" y2="0" stroke="#7E3FA0" stroke-width="1.5"/>
+        <text id="gapText" x="535" y="0" font-size="12" fill="#7E3FA0" font-weight="bold">Ef差</text>
+      </g>
+
+      <text id="condLabel" x="150" y="135" font-size="13" fill="#1F6FB2">伝導帯（電子が動ける）</text>
+      <text id="gapLabel"  x="150" y="218" font-size="12" fill="#999">バンドギャップ（禁制帯）</text>
+      <text id="valLabel"  x="150" y="305" font-size="13" fill="#C0392B">価電子帯（正孔が動く）</text>
+      <text id="efLabel" x="700" y="120" font-size="13" fill="#7E3FA0" opacity="0">フェルミ準位 Ef</text>
+
+      <g id="electrons"></g>
+      <g id="holes"></g>
+      <text id="note" x="455" y="448" text-anchor="middle" font-size="14" fill="#555"></text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="band" style="background:#cfe0f2;border:1px solid #1F6FB2"></i>伝導帯（上＝高エネ）</span>
+    <span><i class="band" style="background:#f3d6d2;border:1px solid #C0392B"></i>価電子帯（下＝低エネ）</span>
+    <span><i class="ferm"></i>フェルミ準位 Ef</span>
+    <span><i class="dot" style="background:#1F6FB2"></i>電子</span>
+    <span><i class="dot" style="background:#fff;border:2px solid #C0392B"></i>正孔</span>
+  </div>
+
+  <div class="panel">
+    <h2 id="pTitle"></h2>
+    <p id="pBody"></p>
+    <p id="pPoint" style="color:#7E3FA0;"></p>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+const condBand=document.getElementById("condBand");
+const valBand=document.getElementById("valBand");
+const fermiN=document.getElementById("fermiN");
+const fermiP=document.getElementById("fermiP");
+const efLabel=document.getElementById("efLabel");
+const midline=document.getElementById("midline");
+const eG=document.getElementById("electrons");
+const hG=document.getElementById("holes");
+const note=document.getElementById("note");
+const fermiGap=document.getElementById("fermiGap");
+const gapLine=document.getElementById("gapLine");
+const gapText=document.getElementById("gapText");
+
+let loopTimers=[];
+function clearLoops(){ loopTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); loopTimers=[]; }
+
+const X0=60, X1=850, XL=395, XR=505;  // 接合の傾斜区間（崖をなだらかに）
+// 帯パス：n側(固定)→傾斜→p側(pShift)。崖はXL〜XRでなだらかな坂。
+function bandPath(baseTop, th, shiftR){
+  const tL=baseTop, tR=baseTop+shiftR, bL=tL+th, bR=tR+th;
+  return `M${X0} ${tL} L${XL} ${tL} L${XR} ${tR} L${X1} ${tR} L${X1} ${bR} L${XR} ${bR} L${XL} ${bL} L${X0} ${bL} Z`;
+}
+function topYat(x, baseTop, shiftR){
+  const tL=baseTop, tR=baseTop+shiftR;
+  if(x<=XL) return tL;
+  if(x>=XR) return tR;
+  return tL+(tR-tL)*((x-XL)/(XR-XL));
+}
+function mkCarrier(x,y,type){
+  const g=document.createElementNS(SVGNS,"g");
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",x); c.setAttribute("cy",y); c.setAttribute("r",9);
+  const t=document.createElementNS(SVGNS,"text");
+  t.setAttribute("x",x); t.setAttribute("y",y+4); t.setAttribute("text-anchor","middle");
+  t.setAttribute("font-size","12"); t.setAttribute("font-weight","bold");
+  if(type==="e"){ c.setAttribute("fill","#1F6FB2"); t.setAttribute("fill","#fff"); t.textContent="−"; }
+  else { c.setAttribute("fill","#fff"); c.setAttribute("stroke","#C0392B"); c.setAttribute("stroke-width","2.2"); t.setAttribute("fill","#C0392B"); t.textContent="＋"; }
+  g.appendChild(c); g.appendChild(t);
+  g.dataset.x=x; g.dataset.y=y;
+  return g;
+}
+function moveG(g,x,y){
+  g.querySelector("circle").setAttribute("cx",x);
+  g.querySelector("circle").setAttribute("cy",y);
+  g.querySelector("text").setAttribute("x",x);
+  g.querySelector("text").setAttribute("y",y+4);
+  g.dataset.x=x; g.dataset.y=y;
+}
+
+// レイアウト（上=高エネルギー・Ef基準）
+const TH=32, BG=60;
+const COND_TOP=150;               // n側伝導帯上辺（固定）
+const VAL_TOP=COND_TOP+TH+BG;     // n側価電子帯上辺 =242
+const EF_N=COND_TOP+TH+10;        // n型Ef=192（伝導帯寄り＝上）
+const PSHIFT_EQ=EF_N-(VAL_TOP-10);// 平衡pShift =-40
+const BIAS_FWD=32, BIAS_REV=40;
+
+function setBands(pShift, showMid){
+  condBand.setAttribute("d", bandPath(COND_TOP, TH, pShift));
+  valBand.setAttribute("d",  bandPath(VAL_TOP,  TH, pShift));
+  // Ef：n側固定EF_N、p側=価電子帯上端-10（pShift追従）
+  const yL=EF_N, yR=(VAL_TOP-10)+pShift;
+  fermiN.setAttribute("d", `M${X0} ${yL} L${XL} ${yL} L${XR} ${yR}`);
+  fermiP.setAttribute("d", `M${XR} ${yR} L${X1} ${yR}`);
+  midline.setAttribute("opacity", showMid?1:0);
+  const diff=Math.abs(yR-yL);
+  if(diff>=10){
+    const top=Math.min(yL,yR), bot=Math.max(yL,yR);
+    gapLine.setAttribute("y1",top); gapLine.setAttribute("y2",bot);
+    gapText.setAttribute("y",(top+bot)/2+4);
+    fermiGap.setAttribute("opacity",1);
+  } else fermiGap.setAttribute("opacity",0);
+}
+
+let electrons=[], holes=[];
+function buildCarriers(pShift){
+  eG.innerHTML=""; hG.innerHTML=""; electrons=[]; holes=[];
+  // 電子：n側の伝導帯（上）の中
+  [110,180,250,320].forEach(x=>{ const y=topYat(x,COND_TOP,pShift)+TH/2; const g=mkCarrier(x,y,"e"); eG.appendChild(g); electrons.push(g); });
+  // 正孔：p側の価電子帯（下）の中
+  [560,630,700,770].forEach(x=>{ const y=topYat(x,VAL_TOP,pShift)+TH/2; const g=mkCarrier(x,y,"h"); hG.appendChild(g); holes.push(g); });
+}
+
+const states={
+  apart:{ title:"① くっつける前", tag:["第5週の復習","eq"],
+    body:"n型は電子が多く、<span class='key'>フェルミ準位 Ef が伝導帯の近く（上）</span>にあります。p型は正孔が多く、<span class='key'>Ef が価電子帯の近く（下）</span>。電子は伝導帯（上の帯）に、正孔は価電子帯（下の帯）にいます。",
+    point:"Ef の位置の違い＝電子のたまり具合の違い。第5週で見たとおりです。" },
+  equil:{ title:"② 平衡：Ef が一直線にそろう", tag:["つり合い","eq"],
+    body:"くっつけると<span class='key'>左右の Ef がそろおうとして一直線になります</span>。そのために<span class='key'>帯が境界でなだらかな坂（崖）状に曲がります</span>。電子は坂を登れず、つり合って止まる。これが空乏層の「電気の壁」の正体です。",
+    point:"本編の「壁・坂」＝この帯の曲がり。空乏層の分だけ、なだらかな坂になります。" },
+  fwd:{ title:"③ 順方向：坂が低くなって流れる", tag:["流れる","on"],
+    body:"順方向の電圧で<span class='key'>坂が低く（なだらかに）なります</span>。すると<span class='key'>電子は伝導帯の坂を越えてp側へ流れ込み</span>、正孔は価電子帯を逆向きに進む。坂が低いので次々と越えていける＝<span class='key'>電流が流れます</span>。",
+    point:"坂が低い＝越えやすい＝流れる。そろっていた Ef は、p側が電圧のぶんだけ低い方へずれます。" },
+  rev:{ title:"④ 逆方向：坂が高くて流れない", tag:["流れない","off"],
+    body:"逆方向では<span class='key'>坂がさらに急に高くなります</span>。電子から見れば登る坂が高くなり、<span class='key'>越えられません</span>。だから電流はほとんど流れない。",
+    point:"坂が高い＝越えられない＝流れない。そろっていた Ef は、p側が電圧のぶんだけ高い方へずれます。" }
+};
+
+function applyState(name){
+  clearLoops();
+  const s=states[name];
+  document.getElementById("pTitle").innerHTML = s.title + ` <span class="flowtag ${s.tag[1]}">${s.tag[0]}</span>`;
+  document.getElementById("pBody").innerHTML = s.body;
+  document.getElementById("pPoint").innerHTML = s.point;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.state===name));
+  efLabel.setAttribute("opacity", name==="apart"?0:1);
+
+  if(name==="apart"){ setBands(0,false); buildCarriers(0); note.textContent="n型はEfが伝導帯寄り（上）、p型は価電子帯寄り（下）。まだ別々"; }
+  else if(name==="equil"){ setBands(PSHIFT_EQ,true); buildCarriers(PSHIFT_EQ); note.textContent="Efが一直線にそろい、帯がなだらかな坂状に曲がる＝壁"; climbBalance(); }
+  else if(name==="fwd"){ setBands(PSHIFT_EQ+BIAS_FWD,true); buildCarriers(PSHIFT_EQ+BIAS_FWD); note.textContent="坂が低い → 電子が越えて流れ込む（電流）"; forwardFlow(); }
+  else if(name==="rev"){ setBands(PSHIFT_EQ-BIAS_REV,true); buildCarriers(PSHIFT_EQ-BIAS_REV); note.textContent="坂が高い → 電子は越えられず跳ね返る（流れない）"; reverseBounce(); }
+}
+
+function climbBalance(){
+  const e=electrons[3], ps=PSHIFT_EQ;
+  function run(){
+    const x0=330, xpeak=450, start=performance.now(), dur=2000;
+    function step(now){ let t=Math.min(1,(now-start)/dur);
+      let x=t<.5?x0+(xpeak-x0)*(t/.5):xpeak-(xpeak-x0)*((t-.5)/.5);
+      moveG(e,x,topYat(x,COND_TOP,ps)+TH/2); if(t<1)requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  run(); loopTimers.push(setInterval(run,2300));
+}
+function forwardFlow(){
+  const ps=PSHIFT_EQ+BIAS_FWD;
+  function pulse(){
+    electrons.forEach((e,k)=>{ const sx=110+k*70; moveG(e,sx,topYat(sx,COND_TOP,ps)+TH/2); e.style.opacity=1;
+      const start=performance.now(), dur=2200, tx=820;
+      (function step(now){ let t=Math.min(1,(now-start)/dur); let x=sx+(tx-sx)*t;
+        moveG(e,x,topYat(x,COND_TOP,ps)+TH/2);
+        if(t<1)requestAnimationFrame(step); else {e.style.opacity=0; moveG(e,sx,topYat(sx,COND_TOP,ps)+TH/2);} })(performance.now());
+    });
+    holes.forEach((h,k)=>{ const sx=560+k*70; moveG(h,sx,topYat(sx,VAL_TOP,ps)+TH/2); h.style.opacity=1;
+      const start=performance.now(), dur=2200, tx=100;
+      (function step(now){ let t=Math.min(1,(now-start)/dur); let x=sx+(tx-sx)*t;
+        moveG(h,x,topYat(x,VAL_TOP,ps)+TH/2);
+        if(t<1)requestAnimationFrame(step); else {h.style.opacity=0; moveG(h,sx,topYat(sx,VAL_TOP,ps)+TH/2);} })(performance.now());
+    });
+  }
+  pulse(); loopTimers.push(setInterval(pulse,2500));
+}
+function reverseBounce(){
+  const e=electrons[3], ps=PSHIFT_EQ-BIAS_REV;
+  function run(){
+    const x0=330, reach=415, start=performance.now(), dur=1800;
+    function step(now){ let t=Math.min(1,(now-start)/dur);
+      let x=t<.45?x0+(reach-x0)*(t/.45):reach-(reach-x0)*((t-.45)/.55);
+      moveG(e,x,topYat(x,COND_TOP,ps)+TH/2); if(t<1)requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  run(); loopTimers.push(setInterval(run,2100));
+}
+
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>applyState(t.dataset.state)));
+applyState("apart");
+</script>
+</body>
+</html>

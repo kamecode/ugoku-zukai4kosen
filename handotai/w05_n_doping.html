@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第5週｜n型ドーピング：結合の手（手が5本＝1本余る）</title>
+<style>
+  :root{--navy:#1C3A5E;--ink:#222222;--blue:#1F6FB2;--red:#C0392B;--purple:#7E3FA0;--green:#2E8B57;--line:#cfd6dd;--panebg:#f6f8fa;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;color:var(--ink);font-family:"メイリオ","Meiryo",sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 60px;}
+  h1{color:var(--navy);font-size:24px;margin:0 0 4px;}
+  .sub{color:#5a6b7b;font-size:15px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .stage{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 14px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stage-title{color:var(--navy);font-size:19px;font-weight:bold;margin:2px 4px 8px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 4px;align-items:center;}
+  .btn{font-family:inherit;font-size:15px;cursor:pointer;border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:7px;padding:9px 15px;}
+  .btn:hover{background:#eef3f8;} .btn.active{background:var(--navy);color:#fff;} .btn:disabled{opacity:.4;cursor:default;}
+  .desc{background:var(--panebg);border-radius:10px;padding:12px 14px;margin:10px 4px 6px;font-size:16px;line-height:1.7;}
+  .desc b.blue{color:var(--blue);} .desc b.red{color:var(--red);} .desc b.purple{color:var(--purple);} .desc b.green{color:var(--green);}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:6px 6px 2px;font-size:14px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .sw{width:18px;height:18px;border-radius:50%;display:inline-block;}
+  .sw.si{background:#dfe6ee;border:1.5px solid #8a93a0;} .sw.p{background:#e7dcf0;border:1.5px solid var(--purple);}
+  .sw.e{background:var(--blue);}
+  svg{display:block;width:100%;height:auto;} .hint{font-size:13.5px;color:#6a7785;margin:4px 6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第5週｜n型ドーピング：結合の「手」で見る</h1>
+  <p class="sub">シリコンは手が4本。手が5本の不純物（リン）を1個混ぜると、1本の手が余って自由電子になります。</p>
+
+  <div class="stage">
+    <div class="stage-title" id="title">① 純粋なシリコン：手が4本ずつ、ぴったり噛み合う</div>
+    <svg id="svg" viewBox="0 0 1000 520" aria-label="n型ドーピングのアニメ"></svg>
+    <div class="controls">
+      <button class="btn active" id="b0">純粋なSi</button>
+      <button class="btn" id="b1">リン(P)を置く</button>
+      <button class="btn" id="b2">電子が余って動く</button>
+    </div>
+    <div class="desc" id="desc">
+      シリコン（Si）は結合の手が<b class="purple">4本</b>。隣どうしで手をつなぎ合い、すべての手がふさがって安定しています。
+      この状態では自由に動ける電子はほとんどありません（＝第4週の真性半導体）。
+    </div>
+    <div class="legend">
+      <span><i class="sw si"></i> シリコン（Si・手4本）</span>
+      <span><i class="sw p"></i> リン（P・手5本）</span>
+      <span><i class="sw e"></i> 自由電子（−）</span>
+      <span>━━ ＝ 共有結合（電子2個を共有）</span>
+    </div>
+    <p class="hint" id="hint">ボタンで「純Si → リンを置く → 電子が動く」と進めてください。</p>
+  </div>
+</div>
+
+<script>
+const NAVY="#1C3A5E",BLUE="#1F6FB2",RED="#C0392B",PURPLE="#7E3FA0",GREEN="#2E8B57",LINE="#cfd6dd",SIFILL="#dfe6ee",SISTROKE="#8a93a0";
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function txt(s,x,y,str,o={}){const t=el("text",{x,y,"font-size":o.size||15,"font-family":'"メイリオ",Meiryo,sans-serif',
+  fill:o.fill||"#222","text-anchor":o.anchor||"middle","font-weight":o.weight||"normal"});t.textContent=str;s.appendChild(t);return t;}
+function atom(s,cx,cy,label,kind){ // kind: 'si' | 'p'
+  const r=34, fill=kind==="p"?"#e7dcf0":SIFILL, stroke=kind==="p"?PURPLE:SISTROKE;
+  s.appendChild(el("circle",{cx,cy,r,fill,stroke,"stroke-width":2}));
+  txt(s,cx,cy+6,label,{size:18,weight:"bold",fill:kind==="p"?PURPLE:NAVY});
+}
+function electron(s,cx,cy,r=11){const g=el("g",{});g.appendChild(el("circle",{cx,cy,r,fill:BLUE}));
+  const m=el("text",{x:cx,y:cy+5,"font-size":14,fill:"#fff","text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="−";g.appendChild(m);s.appendChild(g);return g;}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+const svg=document.getElementById("svg");
+// 3x3 格子の中央(1,1)をドープ対象に。座標
+const COLS=3,ROWS=3, X0=210,Y0=130, DX=290,DY=150;
+function gx(c){return X0+c*DX;} function gy(r){return Y0+r*DY;}
+const centerC=1,centerR=1;
+
+// 結合(手)：隣接ペアを線で結ぶ。各ペアに電子対(2個)を中点付近に。
+function bonds(){
+  const list=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(c<COLS-1) list.push([[c,r],[c+1,r]]); // 横
+    if(r<ROWS-1) list.push([[c,r],[c,r+1]]); // 縦
+  }
+  return list;
+}
+let state=0; // 0純Si,1リン,2電子動く
+let anim=null, freeElec={x:0,y:0}, t0=0;
+
+// 共有結合＝電子対（平行2本線）。隣接ペアを2本の線で結び、電子2個を添える。
+function drawBondLine(a,b,opts={}){
+  const x1=gx(a[0]),y1=gy(a[1]),x2=gx(b[0]),y2=gy(b[1]);
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len,R=36;
+  const sx=x1+ux*R,sy=y1+uy*R,ex=x2-ux*R,ey=y2-uy*R;
+  // 法線方向にオフセットして2本（電子対）
+  const nx=-uy, ny=ux, off=5;
+  const color=opts.color||"#aab3bd", w=3;
+  svg.appendChild(el("line",{x1:sx+nx*off,y1:sy+ny*off,x2:ex+nx*off,y2:ey+ny*off,stroke:color,"stroke-width":w}));
+  svg.appendChild(el("line",{x1:sx-nx*off,y1:sy-ny*off,x2:ex-nx*off,y2:ey-ny*off,stroke:color,"stroke-width":w}));
+  // 共有されている電子対（小さな点2個）を結合の中点付近に
+  if(opts.showPair!==false){
+    const mx=(sx+ex)/2, my=(sy+ey)/2;
+    svg.appendChild(el("circle",{cx:mx+nx*off,cy:my+ny*off,r:3.2,fill:"#6a7785"}));
+    svg.appendChild(el("circle",{cx:mx-nx*off,cy:my-ny*off,r:3.2,fill:"#6a7785"}));
+  }
+}
+
+function draw(progress=1){
+  clear(svg);
+  // タイトル下の小見出しは HTML 側
+  // 結合の手（線）
+  const bl=bonds();
+  bl.forEach(([a,b])=>drawBondLine(a,b));
+  // 原子
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const isCenter=(c===centerC&&r===centerR);
+    if(isCenter && state>=1){ atom(svg,gx(c),gy(r),"P","p"); }
+    else atom(svg,gx(c),gy(r),"Si","si");
+  }
+  // 余った5本目の手＝自由電子
+  if(state===1){
+    // リンの近くに「余った電子」を静止表示＋注記
+    const ex=gx(centerC)+0, ey=gy(centerR)-70;
+    // 余った手（短い線）
+    svg.appendChild(el("line",{x1:gx(centerC),y1:gy(centerR)-36,x2:ex,y2:ey+12,stroke:PURPLE,"stroke-width":3,"stroke-dasharray":"5 4"}));
+    electron(svg,ex,ey,12);
+    txt(svg,ex,ey-22,"余った5本目の手＝電子",{size:14,fill:PURPLE,weight:"bold"});
+  }
+  if(state===2){
+    // 自由電子が格子のすき間を動く（progressで周回）
+    const path=[
+      {x:gx(1),y:gy(1)-70},{x:gx(2)-60,y:gy(0)+60},{x:gx(2),y:gy(2)-60},
+      {x:gx(0)+60,y:gy(2)-60},{x:gx(0)+60,y:gy(0)+60},
+    ];
+    const seg=path.length;
+    const tt=(progress*seg)%seg;
+    const i=Math.floor(tt), f=tt-i;
+    const p0=path[i], p1=path[(i+1)%seg];
+    const ex=p0.x+(p1.x-p0.x)*easeIO(f), ey=p0.y+(p1.y-p0.y)*easeIO(f);
+    electron(svg,ex,ey,12);
+    txt(svg,gx(1),gy(1)+95,"この電子が自由に動き回る＝電気を運ぶ主役（多数キャリア）",{size:15,fill:BLUE,weight:"bold"});
+  }
+  // リンの＋表示（電子が出ていくと、リンは＋イオンとして残る：state2のみ軽く）
+  if(state===2){
+    txt(svg,gx(centerC),gy(centerR)+52,"P⁺（電子を1個放出）",{size:13,fill:PURPLE});
+  }
+}
+
+function setState(n){
+  state=n;
+  document.getElementById("b0").classList.toggle("active",n===0);
+  document.getElementById("b1").classList.toggle("active",n===1);
+  document.getElementById("b2").classList.toggle("active",n===2);
+  const title=document.getElementById("title"), desc=document.getElementById("desc"), hint=document.getElementById("hint");
+  if(anim){cancelAnimationFrame(anim);anim=null;}
+  if(n===0){
+    title.textContent="① 純粋なシリコン：手が4本ずつ、ぴったり噛み合う";
+    desc.innerHTML='シリコン（Si）は結合の手が<b class="purple">4本</b>。隣どうしが電子を1個ずつ出し合い、<b class="purple">電子2個を共有する結合（共有結合）</b>を作ります。図の2本線が1組の結合（電子対）です。すべての手がふさがって安定し、自由に動ける電子はほとんどありません（＝第4週の真性半導体）。';
+    hint.textContent="ボタンで「純Si → リンを置く → 電子が動く」と進めてください。";
+    draw();
+  }else if(n===1){
+    title.textContent="② リン(P)を1個置く：手が5本＝1本余る";
+    desc.innerHTML='中央のSiを、手が<b class="purple">5本</b>のリン（P）に置き換えました。4本は隣のSiと手をつなげますが、<b class="purple">5本目の手は相手がいなくて余ります</b>。この余った手の電子は、軽く揺さぶられるだけで離れて自由電子になります。';
+    hint.textContent="次の「電子が余って動く」を押すと、余った電子が格子の中を動き出します。";
+    draw();
+  }else{
+    title.textContent="③ 余った電子が自由に動く：n型のできあがり";
+    desc.innerHTML='余った電子が離れて<b class="blue">自由電子</b>になり、格子のすき間を動き回ります。混ぜたぶんだけ電子が増える＝<b class="blue">電子が多数キャリア</b>。これが<b class="blue">n型</b>（negative＝マイナスを運ぶ）です。電子を放出したリンは<b class="purple">＋イオン</b>として格子に残りますが、動きません。';
+    hint.textContent="電子が1個、格子の中をぐるぐる動き続けます（=電気を運べる状態）。";
+    t0=performance.now();
+    const loop=(now)=>{const prog=((now-t0)/4200)%1; draw(prog); anim=requestAnimationFrame(loop);};
+    anim=requestAnimationFrame(loop);
+  }
+}
+document.getElementById("b0").addEventListener("click",()=>setState(0));
+document.getElementById("b1").addEventListener("click",()=>setState(1));
+document.getElementById("b2").addEventListener("click",()=>setState(2));
+setState(0);
+</script>
+</body>
+</html>

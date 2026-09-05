@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoWoS：AIチップの作り方｜第13週</title>
+<style>
+  :root{
+    --ink:#1b2733; --sub:#5a6b7a; --line:#cfd8e0;
+    --paper:#f4f1ea; --card:#ffffff;
+    --pos:#1F6FB2; --emph:#7E3FA0; --task:#2E8B57; --neg:#C0392B;
+    --pcb:#2E7D5B; --interposer:#8a94a2; --interface:#aeb8c4;
+    --gpu:#7E3FA0; --hbm:#1F6FB2; --bump:#d4a531;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),var(--paper);
+    color:var(--ink);min-height:100vh;padding:22px 16px 56px;}
+  .wrap{max-width:920px;margin:0 auto;}
+  .eyebrow{font-size:13px;letter-spacing:.18em;color:var(--emph);font-weight:700;margin-bottom:6px;}
+  h1{font-size:24px;margin:0 0 4px;line-height:1.3;}
+  .lead{color:var(--sub);font-size:14.5px;margin:0 0 14px;line-height:1.7;}
+  .analogy{display:inline-block;background:#fff7e8;border:1px solid #f0d9a8;color:#8a6a1f;font-size:13px;padding:6px 12px;border-radius:999px;margin-bottom:16px;}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px 6px;box-shadow:0 10px 30px -18px rgba(20,40,60,.4);}
+  .svgbox{width:100%;height:auto;display:block;}
+  .info{display:flex;gap:14px;align-items:flex-start;padding:12px 4px 12px;}
+  .stepnum{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--emph);color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;}
+  .info h2{margin:0 0 3px;font-size:18px;}
+  .info .en{color:#93a1ad;font-size:11.5px;font-weight:600;}
+  .info p{margin:4px 0 0;color:var(--sub);font-size:14px;line-height:1.7;}
+  .info p.key{color:var(--neg);font-weight:700;}
+  .progress{display:flex;gap:6px;margin:10px 4px 0;}
+  .dot{flex:1;height:5px;border-radius:3px;background:#dde4ea;}
+  .dot.on{background:var(--emph);}
+  .nav{display:flex;gap:8px;margin-top:10px;}
+  .nav button{border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+  .prev{flex:1;background:#e7edf2;color:var(--ink);} .next{flex:2;background:var(--pos);color:#fff;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+  .controls{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 6px;}
+  .controls button{border:1px solid var(--line);background:#fff;color:var(--sub);padding:7px 10px;border-radius:9px;font-size:11.5px;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s;}
+  .controls button:hover{border-color:var(--emph);color:var(--emph);}
+  .controls button.active{background:var(--emph);border-color:var(--emph);color:#fff;}
+  .done{text-align:center;color:var(--task);font-weight:700;font-size:14px;margin-top:12px;padding:11px;background:#eef7f1;border-radius:12px;border:1px solid #c7e6d4;}
+  .done.hidden{display:none;}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub);margin:10px 4px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:15px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.15);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第13週 ｜ 砂からチップへ ②</div>
+  <h1>CoWoS：AIチップの作り方</h1>
+  <p class="lead">微細化だけが進化ではありません。小さなチップを並べて1つにまとめる「先端パッケージ」も、性能を稼ぐ大事な方法です。</p>
+  <div class="analogy">🍱 イメージは「幕の内弁当」── おかずを別々に作って、1つの箱に詰める</div>
+
+  <div class="stage">
+    <svg class="svgbox" viewBox="0 0 760 340" role="img" aria-label="CoWoSの断面">
+      <ellipse cx="380" cy="300" rx="300" ry="11" fill="#000" opacity="0.05"/>
+      <g id="scene"></g>
+    </svg>
+  </div>
+
+  <div class="info">
+    <div class="stepnum" id="stepnum">1</div>
+    <div>
+      <h2 id="steptitle"></h2>
+      <div class="en" id="stepen"></div>
+      <p id="stepdesc"></p>
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="nav">
+    <button class="prev" id="prev">← 前へ</button>
+    <button class="next" id="next">次へ →</button>
+  </div>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="done hidden" id="done">✅ NVIDIAなどのAIチップは、この作り方。TSMCがCoWoSの製造能力を増強中</div>
+
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+
+function drawScene(i){
+  const scene=document.getElementById("scene");
+  scene.innerHTML="";
+  const add=s=>scene.insertAdjacentHTML("beforeend",s);
+
+  // 共通の積層パーツ描画関数
+  function substrate(){ // パッケージ基板（最下）
+    add(`<rect x="180" y="250" width="400" height="34" rx="4" fill="${cssv('--pcb')}"/>`);
+    add(`<text x="380" y="272" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">パッケージ基板</text>`);
+    // 下のはんだボール
+    add(`<g fill="#aab2bd">`+[210,260,310,360,410,460,510].map(x=>`<circle cx="${x}" cy="288" r="6"/>`).join("")+`</g>`);
+  }
+  function interposer(){ // インターポーザ（中継板）
+    add(`<rect x="210" y="220" width="340" height="30" rx="3" fill="${cssv('--interposer')}"/>`);
+    add(`<text x="380" y="240" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">インターポーザ（中継板）</text>`);
+    // 微細配線のすじ
+    add(`<g stroke="#c8d0da" stroke-width="1" opacity="0.7">`+[225,235].map(y=>`<line x1="220" y1="${y}" x2="540" y2="${y}"/>`).join("")+`</g>`);
+    // 基板へのバンプ
+    add(`<g fill="${cssv('--bump')}">`+[240,300,380,460,520].map(x=>`<circle cx="${x}" cy="250" r="3.5"/>`).join("")+`</g>`);
+  }
+  function hbm(x,label){ // HBM＝積層メモリ（青を何層も）
+    for(let k=0;k<4;k++){
+      add(`<rect x="${x}" y="${188-k*14}" width="70" height="12" rx="2" fill="${cssv('--hbm')}" stroke="#15527f" stroke-width="1"/>`);
+    }
+    if(label) add(`<text x="${x+35}" y="${188-3*14-12}" text-anchor="middle" font-size="11" fill="${cssv('--hbm')}" font-weight="700">HBM</text>`);
+  }
+  function gpu(){ // GPU（大きめの紫チップ）
+    add(`<rect x="330" y="160" width="100" height="40" rx="3" fill="${cssv('--gpu')}"/>`);
+    add(`<text x="380" y="184" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">GPU</text>`);
+  }
+  function bumps(){ // チップ↔インターポーザのマイクロバンプ
+    add(`<g fill="${cssv('--bump')}">`+
+      [248,278,308,345,365,385,405,425,475,505,535].map(x=>`<circle cx="${x}" cy="218" r="2.6"/>`).join("")+`</g>`);
+  }
+
+  if(i===0){ // 問題：大きな1個は不良が増える
+    // 巨大な1チップ＋欠陥
+    add(`<rect x="240" y="150" width="280" height="120" rx="6" fill="${cssv('--interface')}" stroke="#6f7a88" stroke-width="2"/>`);
+    add(`<text x="380" y="200" text-anchor="middle" font-size="15" fill="#3a4654" font-weight="700">巨大な1個のチップ</text>`);
+    // 欠陥（×）
+    add(`<g>`+[[300,180],[420,230],[350,245]].map(([x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="20" fill="${cssv('--neg')}" font-weight="800">×</text>`).join("")+`</g>`);
+    add(`<text x="380" y="295" text-anchor="middle" font-size="12" fill="${cssv('--neg')}" font-weight="700">1つでも欠陥があると、全部がムダに</text>`);
+  }
+  else if(i===1){ // 発想の転換：小さく分ける
+    // 小さなチップ4個（うち1個に×→捨てる）
+    const chips=[[250,1],[340,1],[430,1],[520,0]]; // [x, good?]
+    chips.forEach(([x,good])=>{
+      add(`<rect x="${x}" y="170" width="70" height="60" rx="4" fill="${good?cssv('--interface'):'#e3b7b1'}" stroke="#6f7a88" stroke-width="2"/>`);
+      if(!good) add(`<text x="${x+35}" y="206" text-anchor="middle" font-size="20" fill="${cssv('--neg')}" font-weight="800">×</text>`);
+      else add(`<text x="${x+35}" y="206" text-anchor="middle" font-size="13" fill="#3a4654" font-weight="700">良</text>`);
+    });
+    add(`<text x="380" y="150" text-anchor="middle" font-size="13" fill="${cssv('--ink')}" font-weight="700">小さなチップ（チップレット）に分けて作る</text>`);
+    add(`<text x="380" y="262" text-anchor="middle" font-size="12" fill="${cssv('--task')}" font-weight="700">不良の1個だけ捨てて、良品だけ使える → 歩留まり向上</text>`);
+  }
+  else if(i===2){ // 土台：基板
+    substrate();
+  }
+  else if(i===3){ // 基板＋インターポーザ
+    substrate(); interposer();
+    // 強調
+    add(`<text x="600" y="235" font-size="11" fill="${cssv('--sub')}" font-weight="700">↑ 超微細な配線で</text>`);
+    add(`<text x="600" y="250" font-size="11" fill="${cssv('--sub')}" font-weight="700">　チップ同士をつなぐ</text>`);
+  }
+  else if(i===4){ // 基板＋インターポーザ＋チップを並べる
+    substrate(); interposer(); bumps();
+    hbm(240,true); gpu(); hbm(450,true);
+    add(`<text x="275" y="250" text-anchor="middle" font-size="0" fill="none"></text>`);
+  }
+  else if(i===5){ // 完成：CoWoS
+    substrate(); interposer(); bumps();
+    hbm(240,true); gpu(); hbm(450,true);
+    // チップ間の高速接続を強調
+    add(`<g stroke="${cssv('--task')}" stroke-width="2.5" fill="none">
+      <path d="M 312 208 L 330 185" /><path d="M 430 185 L 448 208"/></g>`);
+    add(`<text x="380" y="120" text-anchor="middle" font-size="13" fill="${cssv('--task')}" font-weight="700">チップ間が近い＋太い配線 ＝ 超高速</text>`);
+  }
+}
+
+const steps=[
+ {t:"問題：大きな1個は作りにくい",en:"The problem",
+  desc:"高性能チップは巨大化します。でも大きいほど欠陥に当たる確率が上がり、1つの欠陥で全部がムダに。歩留まりが激減し、製造できるサイズにも限界があります。",key:1},
+ {t:"発想の転換：小さく分けて並べる",en:"Chiplets",
+  desc:"1個の大きなチップをやめ、小さなチップ（チップレット）に分けて作ります。良品だけを選んで並べれば、歩留まりが上がり、種類の違うチップも組み合わせられます。"},
+ {t:"土台：パッケージ基板",en:"Substrate",
+  desc:"一番下は、外の世界（基板の足）とつなぐパッケージ基板です。"},
+ {t:"中継板：インターポーザ",en:"Interposer",
+  desc:"基板の上に、シリコンの中継板（インターポーザ）を置きます。表面に超微細な配線があり、この上に載せるチップ同士を、太い帯域でつなぐ役目をします。"},
+ {t:"チップを並べる",en:"Place chiplets",
+  desc:"インターポーザの上に、GPU（演算するチップ）とHBM（積み重ねたメモリ）などのチップレットを、横に並べて載せます。小さなバンプ（金の粒）でつなぎます。"},
+ {t:"完成：CoWoS",en:"CoWoS complete",done:1,
+  desc:"複数の小さなチップが、1つの大きなチップのように働きます。チップ間の距離が近く配線も太いので、データを超高速でやり取りできる。これがNVIDIAなどAIチップの作り方です。"},
+];
+
+let cur=0;
+const $=id=>document.getElementById(id);
+function render(i){
+  const s=steps[i];
+  drawScene(i);
+  $("stepnum").textContent=i+1;
+  $("steptitle").textContent=s.t; $("stepen").textContent=s.en;
+  const p=$("stepdesc"); p.textContent=s.desc; p.className=s.key?"key":"";
+  document.querySelectorAll(".dot").forEach((d,idx)=>d.classList.toggle("on",idx<=i));
+  $("done").classList.toggle("hidden", !s.done);
+  $("prev").disabled=i===0; $("next").disabled=i===steps.length-1;
+  document.querySelectorAll("#controls button").forEach((b,idx)=>b.classList.toggle("active",idx===i));
+  // 凡例は積層が出る③以降だけ
+  $("legend").style.visibility = i>=2 ? "visible":"hidden";
+}
+// 凡例
+$("legend").innerHTML=[
+ ["--pcb","パッケージ基板"],["--interposer","インターポーザ"],
+ ["--gpu","GPU（演算）"],["--hbm","HBM（積層メモリ）"],["--bump","バンプ（接続の粒）"],
+].map(([c,l])=>`<span><span class="sw" style="background:${cssv(c)}"></span>${l}</span>`).join("");
+
+const ctr=$("controls");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.textContent=`${i+1}. ${s.t}`;b.onclick=()=>{cur=i;render(cur);};ctr.appendChild(b);});
+const pg=$("progress");
+steps.forEach(()=>{const d=document.createElement("div");d.className="dot";pg.appendChild(d);});
+$("prev").onclick=()=>{if(cur>0){cur--;render(cur);}};
+$("next").onclick=()=>{if(cur<steps.length-1){cur++;render(cur);}};
+render(0);
+</script>
+</body>
+</html>

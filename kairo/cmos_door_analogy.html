@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMOSインバータ アナロジー：上下2枚の自動ドア</title>
+<style>
+  :root{
+    --pmos:#6A1B9A; --nmos:#2E7D32; --in:#1565C0; --vdd:#D32F2F;
+    --mark:#E65100; --gray:#9E9E9E; --head:#0D3C6E; --ink:#1a2230;
+    --paper:#ffffff; --panel:#f7f9fc; --line:#cdd6e3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#eef2f7;color:var(--ink);
+    font-family:"Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 20px 30px;}
+  h1{color:var(--head);font-size:21px;margin:6px 0 2px;}
+  .sub{color:#5a6b82;font-size:13px;margin:0 0 14px;}
+  .stage{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:stretch;}
+  @media(max-width:820px){.stage{grid-template-columns:1fr;}}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;box-shadow:0 1px 3px rgba(20,40,80,.06);}
+  .card h2{font-size:14px;color:var(--head);margin:0 0 8px;}
+  svg{display:block;width:100%;height:auto;}
+  .control{margin-top:16px;background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:14px 18px;box-shadow:0 1px 3px rgba(20,40,80,.06);}
+  .ctop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctop label{font-size:13px;color:#42526b;font-weight:600;}
+  input[type=range]{flex:1 1 240px;min-width:200px;accent-color:var(--in);height:5px;}
+  .btns{display:flex;gap:8px;margin-left:auto;}
+  button{font-family:inherit;font-size:13px;border:1px solid var(--line);background:#fff;
+    color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;}
+  button:hover{background:var(--panel);}
+  button.play{background:var(--head);color:#fff;border-color:var(--head);}
+  .readout{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;}
+  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);}
+  .pill.vin{border-color:var(--in);color:var(--in);}
+  .pill.state{font-weight:700;}
+  .map{font-size:12px;color:#5a6b82;line-height:1.7;}
+  .map b{color:var(--head);}
+  .map .row{display:flex;gap:8px;align-items:baseline;margin:2px 0;}
+  .map .k{flex:0 0 96px;color:var(--ink);font-weight:600;}
+  .note{font-size:12px;color:#6a7890;margin-top:8px;line-height:1.55;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#5a6b82;margin-top:8px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:13px;height:13px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>たとえで見る CMOSインバータ ― 上下2枚の自動ドア</h1>
+  <p class="sub">入力 Vin を動かすと、上下のドアが入れ替わって開閉します。切り替わる一瞬だけ両方が半開きになり、上から下へ風（＝貫通電流）が吹き抜けます。</p>
+
+  <div class="stage">
+    <!-- LEFT: door analogy -->
+    <div class="card">
+      <h2>たとえ：2階建ての自動ドア</h2>
+      <svg id="door" viewBox="0 0 280 420" aria-label="自動ドアのアナロジー">
+        <!-- top reservoir (VDD = 上の高い水/空気) -->
+        <rect x="40" y="20" width="200" height="40" rx="6" fill="#fde3e3" stroke="var(--vdd)" stroke-width="2"/>
+        <text x="140" y="45" text-anchor="middle" font-size="13" fill="var(--vdd)" font-weight="700">上（電源 VDD）＝ 高い側</text>
+
+        <!-- upper door frame (PMOS) -->
+        <rect x="70" y="80" width="140" height="80" rx="4" fill="#f3e9fa" stroke="var(--pmos)" stroke-width="2"/>
+        <text x="140" y="74" text-anchor="middle" font-size="12" fill="var(--pmos)" font-weight="700">上のドア（PMOS）</text>
+        <!-- upper door panels (slide horizontally) -->
+        <rect id="pDoorL" x="78" y="86" width="60" height="68" fill="var(--pmos)" opacity="0.85"/>
+        <rect id="pDoorR" x="142" y="86" width="60" height="68" fill="var(--pmos)" opacity="0.85"/>
+
+        <!-- middle corridor = output node -->
+        <rect x="40" y="180" width="200" height="36" rx="6" fill="#fff3e6" stroke="var(--mark)" stroke-width="2"/>
+        <text x="140" y="203" text-anchor="middle" font-size="12" fill="var(--mark)" font-weight="700">真ん中の通路 ＝ 出力 Vout</text>
+
+        <!-- lower door frame (NMOS) -->
+        <rect x="70" y="236" width="140" height="80" rx="4" fill="#e8f5e9" stroke="var(--nmos)" stroke-width="2"/>
+        <text x="140" y="332" text-anchor="middle" font-size="12" fill="var(--nmos)" font-weight="700">下のドア（NMOS）</text>
+        <rect id="nDoorL" x="78" y="242" width="60" height="68" fill="var(--nmos)" opacity="0.85"/>
+        <rect id="nDoorR" x="142" y="242" width="60" height="68" fill="var(--nmos)" opacity="0.85"/>
+
+        <!-- bottom reservoir (GND) -->
+        <rect x="40" y="356" width="200" height="40" rx="6" fill="#eceff1" stroke="#607d8b" stroke-width="2"/>
+        <text x="140" y="381" text-anchor="middle" font-size="13" fill="#455a64" font-weight="700">下（GND）＝ 低い側</text>
+
+        <!-- wind particles (drawn dynamically) -->
+        <g id="wind"></g>
+        <!-- shoot label -->
+        <text id="shoot" x="140" y="218" text-anchor="middle" font-size="12" fill="var(--vdd)" font-weight="700" opacity="0">⚡ 風が吹き抜ける ⚡</text>
+      </svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--pmos)"></i>上=PMOS</span>
+        <span><i class="sw" style="background:var(--nmos)"></i>下=NMOS</span>
+        <span><i class="sw" style="background:var(--vdd)"></i>風＝貫通電流</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: real circuit mini + mapping -->
+    <div class="card">
+      <h2>本物の回路ではこうなっています</h2>
+      <svg id="mini" viewBox="0 0 260 300" aria-label="対応するCMOS回路">
+        <line x1="40" y1="24" x2="220" y2="24" stroke="var(--vdd)" stroke-width="3"/>
+        <text x="40" y="18" font-size="11" fill="var(--vdd)" font-weight="700">VDD</text>
+        <line x1="40" y1="282" x2="220" y2="282" stroke="#444" stroke-width="3"/>
+        <text x="40" y="296" font-size="11" fill="#444" font-weight="700">GND</text>
+
+        <!-- PMOS -->
+        <line x1="186" y1="24" x2="186" y2="74" stroke="var(--vdd)" stroke-width="2"/>
+        <line x1="186" y1="74" x2="172" y2="74" stroke="var(--vdd)" stroke-width="2"/>
+        <line x1="172" y1="74" x2="172" y2="80" stroke="var(--vdd)" stroke-width="2"/>
+        <line x1="172" y1="80" x2="162" y2="80" stroke="var(--vdd)" stroke-width="2"/>
+        <line id="mpch" x1="162" y1="80" x2="162" y2="112" stroke="var(--gray)" stroke-width="5"/>
+        <line x1="150" y1="78" x2="150" y2="114" stroke="var(--in)" stroke-width="2.5"/>
+        <circle cx="143" cy="96" r="3.5" fill="#fff" stroke="var(--in)" stroke-width="1.6"/>
+        <line x1="120" y1="96" x2="139.5" y2="96" stroke="var(--in)" stroke-width="2"/>
+        <text x="196" y="70" font-size="9" fill="var(--pmos)">S</text>
+        <line x1="162" y1="112" x2="172" y2="112" stroke="var(--pmos)" stroke-width="2"/>
+        <line x1="172" y1="112" x2="172" y2="118" stroke="var(--pmos)" stroke-width="2"/>
+        <line x1="172" y1="118" x2="186" y2="118" stroke="var(--pmos)" stroke-width="2"/>
+        <text x="196" y="116" font-size="9" fill="var(--pmos)">D</text>
+        <line x1="186" y1="118" x2="186" y2="150" stroke="var(--pmos)" stroke-width="2"/>
+        <text x="120" y="64" font-size="10" fill="var(--pmos)" font-weight="700">PMOS</text>
+
+        <!-- output -->
+        <circle cx="186" cy="150" r="3.5" fill="var(--mark)"/>
+        <line x1="186" y1="150" x2="222" y2="150" stroke="var(--mark)" stroke-width="2"/>
+        <text x="222" y="144" text-anchor="end" font-size="10" fill="var(--mark)" font-weight="700">Vout</text>
+
+        <!-- NMOS -->
+        <line x1="186" y1="150" x2="186" y2="182" stroke="var(--nmos)" stroke-width="2"/>
+        <line x1="186" y1="182" x2="172" y2="182" stroke="var(--nmos)" stroke-width="2"/>
+        <line x1="172" y1="182" x2="172" y2="188" stroke="var(--nmos)" stroke-width="2"/>
+        <line x1="172" y1="188" x2="162" y2="188" stroke="var(--nmos)" stroke-width="2"/>
+        <text x="196" y="180" font-size="9" fill="var(--nmos)">D</text>
+        <line id="mnch" x1="162" y1="188" x2="162" y2="220" stroke="var(--gray)" stroke-width="5"/>
+        <line x1="150" y1="186" x2="150" y2="222" stroke="var(--in)" stroke-width="2.5"/>
+        <line x1="120" y1="204" x2="150" y2="204" stroke="var(--in)" stroke-width="2"/>
+        <line x1="162" y1="220" x2="172" y2="220" stroke="var(--nmos)" stroke-width="2"/>
+        <line x1="172" y1="220" x2="172" y2="226" stroke="var(--nmos)" stroke-width="2"/>
+        <line x1="172" y1="226" x2="186" y2="226" stroke="var(--nmos)" stroke-width="2"/>
+        <text x="196" y="224" font-size="9" fill="var(--nmos)">S</text>
+        <line x1="186" y1="226" x2="186" y2="282" stroke="var(--nmos)" stroke-width="2"/>
+        <text x="120" y="240" font-size="10" fill="var(--nmos)" font-weight="700">NMOS</text>
+
+        <!-- Vin -->
+        <line x1="120" y1="96" x2="120" y2="204" stroke="var(--in)" stroke-width="2.5"/>
+        <circle cx="120" cy="150" r="3.5" fill="var(--in)"/>
+        <line x1="40" y1="150" x2="120" y2="150" stroke="var(--in)" stroke-width="2"/>
+        <text x="38" y="146" text-anchor="end" font-size="10" fill="var(--in)" font-weight="700">Vin</text>
+
+        <!-- mini wind -->
+        <g id="miniWind"></g>
+      </svg>
+
+      <div class="map">
+        <div class="row"><span class="k">上のドア</span><span>＝ PMOS。<b>入力が低い</b>と開く（高い側とつながる）</span></div>
+        <div class="row"><span class="k">下のドア</span><span>＝ NMOS。<b>入力が高い</b>と開く（低い側とつながる）</span></div>
+        <div class="row"><span class="k">真ん中の通路</span><span>＝ 出力 Vout。どちらのドアが開くかで高/低が決まる</span></div>
+        <div class="row"><span class="k">風</span><span>＝ 貫通電流。両ドア半開きの一瞬だけ上→下へ吹く</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="control">
+    <div class="ctop">
+      <label for="vin">入力 Vin（低い ← → 高い）</label>
+      <input id="vin" type="range" min="0" max="8" step="0.05" value="0">
+      <div class="btns">
+        <button id="play" class="play">▶ 自動掃引</button>
+        <button id="reset">リセット</button>
+      </div>
+    </div>
+    <div class="readout">
+      <span class="pill vin">Vin = <b id="rVin">0.00</b> V</span>
+      <span class="pill state" id="rState">入力が低い → 上のドアが開く → 出力は高い</span>
+    </div>
+    <p class="note">※「上のドア＝入力が低いと開く」「下のドア＝入力が高いと開く」は、PMOS・NMOSのオンになる向きそのものです。ふだんはどちらか一方だけが開いているので、上から下へは風が通りません（＝電流が流れない＝省電力）。<b>切り替わる一瞬だけ両方が半開き</b>になり、その時だけ風＝貫通電流が吹き抜けます。</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const VDD=8.0, c=3.7; // transition center
+  const slider=document.getElementById('vin');
+  const rVin=document.getElementById('rVin'), rState=document.getElementById('rState');
+  const pL=document.getElementById('pDoorL'), pR=document.getElementById('pDoorR');
+  const nL=document.getElementById('nDoorL'), nR=document.getElementById('nDoorR');
+  const wind=document.getElementById('wind'), miniWind=document.getElementById('miniWind');
+  const shoot=document.getElementById('shoot');
+  const mpch=document.getElementById('mpch'), mnch=document.getElementById('mnch');
+
+  // openness 0..1
+  const pOpen = vin => 1/(1+Math.exp((vin-c)*1.9));   // PMOS: open when Vin low
+  const nOpen = vin => 1/(1+Math.exp(-(vin-c)*1.9));  // NMOS: open when Vin high
+  // both half-open => wind. product peaks at center.
+  const windAmt = vin => { const p=pOpen(vin),n=nOpen(vin); return Math.min(1, 4*p*n); };
+
+  // door geometry: closed => panels meet at center (corridor blocked)
+  //                 open   => panels slide fully into side walls (corridor clear)
+  // frameX=70, frameW=140 => inner 74..206, center=140, each panel max ~64 wide
+  function setDoor(L,R, open, frameX, frameW){
+    const innerX=frameX+4, innerW=frameW-8;       // 74 .. 202
+    const center=frameX+frameW/2;                 // 140
+    const full=innerW/2;                          // 66 (panel width when fully closed)
+    const w = full*(1-open);                      // shrinks to 0 as it opens
+    // left panel anchored at left wall, right panel anchored at right wall
+    L.setAttribute('x', innerX);
+    L.setAttribute('width', Math.max(0.5,w));
+    R.setAttribute('x', center + (full - w));
+    R.setAttribute('width', Math.max(0.5,w));
+  }
+
+  function chColor(open, base){
+    const g=[158,158,158]; const col=base==='n'?[46,125,50]:[106,27,154];
+    const r=Math.round(g[0]+(col[0]-g[0])*open), gg=Math.round(g[1]+(col[1]-g[1])*open), b=Math.round(g[2]+(col[2]-g[2])*open);
+    return `rgb(${r},${gg},${b})`;
+  }
+
+  let phase=0;
+  function drawWind(amt){
+    // wind blows straight DOWN the central corridor (x≈140) from upper door to lower
+    let s='', ms='';
+    if(amt>0.04){
+      const n=Math.round(4+amt*8);
+      for(let i=0;i<n;i++){
+        const t=((phase + i/n)%1);
+        const y=92 + t*220;                  // from upper door (≈92) down through corridor to lower door (≈312)
+        const x=140 + 9*Math.sin((t*2+i)*3.14); // gentle sway around center
+        const op=(amt*(0.45+0.55*Math.sin(t*3.14))).toFixed(2);
+        const r=(2.4+amt*1.6).toFixed(1);
+        s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="var(--vdd)" opacity="${op}"/>`;
+      }
+      // mini circuit: particles fall down the trunk x=186
+      const mn=Math.round(2+amt*5);
+      for(let i=0;i<mn;i++){
+        const t=((phase + i/mn)%1);
+        const y=30 + t*250;
+        ms+=`<circle cx="186" cy="${y.toFixed(1)}" r="2.4" fill="var(--vdd)" opacity="${(amt*0.9).toFixed(2)}"/>`;
+      }
+    }
+    wind.innerHTML=s; miniWind.innerHTML=ms;
+  }
+
+  function update(){
+    const vin=parseFloat(slider.value);
+    const po=pOpen(vin), no=nOpen(vin), w=windAmt(vin);
+    rVin.textContent=vin.toFixed(2);
+
+    setDoor(pL,pR, po, 70,140);
+    setDoor(nL,nR, no, 70,140);
+    pL.setAttribute('fill','var(--pmos)'); pR.setAttribute('fill','var(--pmos)');
+    nL.setAttribute('fill','var(--nmos)'); nR.setAttribute('fill','var(--nmos)');
+    // closed (open≈0) => solid barrier; open (≈1) => faint & narrow
+    pL.setAttribute('opacity',(0.9-0.55*po).toFixed(2)); pR.setAttribute('opacity',(0.9-0.55*po).toFixed(2));
+    nL.setAttribute('opacity',(0.9-0.55*no).toFixed(2)); nR.setAttribute('opacity',(0.9-0.55*no).toFixed(2));
+
+    mpch.setAttribute('stroke',chColor(po,'p')); mpch.setAttribute('stroke-width',(3+po*4).toFixed(1));
+    mnch.setAttribute('stroke',chColor(no,'n')); mnch.setAttribute('stroke-width',(3+no*4).toFixed(1));
+
+    shoot.setAttribute('opacity', w>0.3? Math.min(1,(w-0.3)/0.4).toFixed(2):0);
+
+    let st;
+    if(vin < c-0.8) st='入力が低い → 上のドアが開く → 出力は高い';
+    else if(vin > c+0.8) st='入力が高い → 下のドアが開く → 出力は低い';
+    else st='⚡ 両方半開き → 風（貫通電流）が吹き抜ける';
+    rState.textContent=st;
+    rState.style.color = (vin>c-0.8&&vin<c+0.8)?'var(--vdd)':'var(--head)';
+
+    drawWind(w);
+  }
+  slider.addEventListener('input',update);
+
+  function tick(){ phase=(phase+0.018)%1; update(); requestAnimationFrame(tick); }
+  requestAnimationFrame(tick);
+
+  let sweeping=false,dir=1; const playBtn=document.getElementById('play');
+  playBtn.addEventListener('click',()=>{sweeping=!sweeping;playBtn.textContent=sweeping?'⏸ 停止':'▶ 自動掃引';if(sweeping)sweep();});
+  function sweep(){ if(!sweeping)return; let v=parseFloat(slider.value)+dir*0.035; if(v>=8){v=8;dir=-1;} if(v<=0){v=0;dir=1;} slider.value=v; setTimeout(()=>requestAnimationFrame(sweep),16); }
+  document.getElementById('reset').addEventListener('click',()=>{sweeping=false;playBtn.textContent='▶ 自動掃引';dir=1;slider.value=0;});
+
+  update();
+})();
+</script>
+</body>
+</html>

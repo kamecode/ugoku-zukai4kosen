@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仮想短絡＝シーソーの自動バランス（反転増幅）</title>
+<style>
+  :root{
+    --in:#1565C0;      /* 入力・Vin・−入力 */
+    --out:#E65100;     /* 出力・注目点 */
+    --vplus:#D32F2F;   /* 電源プラス・+入力基準 */
+    --gnd:#9E9E9E;     /* GND・基準 */
+    --head:#0D3C6E;    /* 見出し濃紺 */
+    --ok:#2E7D32;      /* 電流・つり合い */
+    --ink:#1b2733;
+    --paper:#fbfaf6;
+    --rail:#b00020;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Sans CJK JP","Hiragino Sans","Yu Gothic",sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 20px 28px;}
+  h1{font-size:21px;color:var(--head);margin:4px 0 2px;letter-spacing:.02em;}
+  .sub{font-size:13px;color:#5a6573;margin:0 0 14px;}
+  .tabs{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap;}
+  .tab{border:1.5px solid #c7cdd6;background:#fff;border-radius:999px;
+    padding:7px 16px;font-size:13.5px;cursor:pointer;color:#4a5560;
+    font-weight:600;transition:.15s;}
+  .tab:hover{border-color:#9aa3ad;}
+  .tab.active{background:var(--head);color:#fff;border-color:var(--head);}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;}
+  .panel{background:#fff;border:1.5px solid #e3e1d8;border-radius:14px;
+    padding:14px 14px 8px;box-shadow:0 2px 10px rgba(30,40,60,.05);}
+  .panel h2{font-size:14px;margin:0 0 6px;color:var(--head);
+    display:flex;align-items:center;gap:7px;}
+  .panel h2 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  svg{width:100%;height:auto;display:block;}
+  .controls{margin:16px 0 6px;background:#fff;border:1.5px solid #e3e1d8;
+    border-radius:14px;padding:14px 18px;}
+  .ctrl-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctrl-row label{font-size:13px;font-weight:700;color:#444;min-width:96px;}
+  input[type=range]{flex:1;min-width:200px;accent-color:var(--in);height:5px;}
+  .gainbtns{display:flex;gap:6px;}
+  .gainbtns button{border:1.5px solid #c7cdd6;background:#fff;border-radius:8px;
+    padding:5px 12px;font-size:13px;cursor:pointer;font-weight:700;color:#445;}
+  .gainbtns button.on{background:var(--out);color:#fff;border-color:var(--out);}
+  .readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+  .rcard{border:1.5px solid #eee;border-radius:10px;padding:8px 10px;text-align:center;
+    background:#fcfcfa;}
+  .rcard .k{font-size:11.5px;color:#7a8590;margin-bottom:3px;}
+  .rcard .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .note{font-size:12.5px;color:#5a6573;margin:12px 2px 0;line-height:1.7;
+    background:#f4f6f9;border-left:4px solid var(--head);padding:9px 12px;border-radius:0 8px 8px 0;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+    margin-left:6px;vertical-align:middle;}
+  .badge.warn{background:#fdecea;color:var(--rail);}
+  .badge.ok{background:#e8f5e9;color:var(--ok);}
+  text{font-family:"Noto Sans CJK JP","Hiragino Sans",sans-serif;}
+  .modeline{font-size:13px;color:#444;margin:2px 2px 12px;min-height:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>仮想短絡＝シーソーの自動バランス</h1>
+  <p class="sub">反転増幅回路：OPアンプは「2本の入力が同じ高さ（同じ電圧）」になるよう、出力を猛烈に素早く自動調整する。だから −入力 は + 入力（ここでは0V）と同じに見える＝仮想短絡。</p>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="ideal">① 理想動作（仮想短絡と利得）</button>
+    <button class="tab" data-mode="clip">② 出力飽和（レール張り付き）</button>
+    <button class="tab" data-mode="real">③ オフセット・帯域（理想からのズレ）</button>
+  </div>
+  <div class="modeline" id="modeline"></div>
+
+  <div class="stage">
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--head)"></span>シーソー：いつも水平に保とうとする</h2>
+      <svg id="seesaw" viewBox="0 0 460 320" aria-label="シーソー図"></svg>
+    </div>
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--out)"></span>反転増幅回路：Vout = −(Rf/Rin)·Vin</h2>
+      <svg id="circuit" viewBox="0 0 460 320" aria-label="反転増幅回路図"></svg>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <label for="vin">入力 Vin</label>
+      <input type="range" id="vin" min="-2" max="2" step="0.05" value="0.5">
+      <span id="vinval" style="font-weight:800;color:var(--in);min-width:74px;text-align:right;font-variant-numeric:tabular-nums;">+0.50 V</span>
+    </div>
+    <div class="ctrl-row" style="margin-top:12px;">
+      <label>利得（抵抗比）</label>
+      <div class="gainbtns" id="gainbtns">
+        <button data-g="-1">×1（Rf=Rin）</button>
+        <button data-g="-10" class="on">×10（Rf=10·Rin）</button>
+        <button data-g="-22">×22</button>
+      </div>
+      <span style="font-size:12.5px;color:#7a8590;">利得 A = −Rf / Rin（負号＝反転）</span>
+    </div>
+
+    <div class="readout">
+      <div class="rcard"><div class="k">入力 Vin</div><div class="v" id="rd-vin" style="color:var(--in)">—</div></div>
+      <div class="rcard"><div class="k">利得 A = −Rf/Rin</div><div class="v" id="rd-gain" style="color:var(--head)">—</div></div>
+      <div class="rcard"><div class="k">出力 Vout</div><div class="v" id="rd-vout" style="color:var(--out)">—</div></div>
+      <div class="rcard"><div class="k">−入力の電位</div><div class="v" id="rd-vminus" style="color:var(--ok)">—</div></div>
+    </div>
+
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<script>
+// ====== 状態 ======
+const VEE = -5, VCC = 5;        // 電源レール ±5V
+const RAIL = 4.6;               // 実飽和レベル（レールにわずか届かない＝NJM4558の現実）
+let mode = "ideal";
+let gain = -10;                 // A = -Rf/Rin
+let vin = 0.5;
+let Voff = 0.0;                 // 入力オフセット（③で使用）
+let bwLoss = 1.0;               // 帯域による利得低下係数（③で使用）
+
+const $ = id => document.getElementById(id);
+
+// ====== 計算 ======
+function compute(){
+  const a = gain * bwLoss;
+  let videal = a * (vin + Voff);
+  let vout = videal, clipped = false;
+  let vminus;
+  if(mode==="ideal"){
+    // 理想モードは飽和を適用しない（仮想短絡と利得の素直な対応だけを見せる）。
+    // 範囲設計上 vout はレール内に収まる。−入力は常に0V。
+    vminus = 0;
+  } else {
+    // ②③：レール飽和を適用
+    if(vout > RAIL){ vout = RAIL; clipped = true; }
+    if(vout < -RAIL){ vout = -RAIL; clipped = true; }
+    if(clipped){
+      // 飽和時：仮想短絡が破れ、−入力が0Vからずれる（帰還点の電位を簡略表示）
+      // 節点電位 ≈ Vin と Vout を Rin:Rf で分圧した点（A=-Rf/Rin より Rf/Rin=|a|）
+      const ratio = Math.abs(gain); // Rf/Rin
+      vminus = (vin*ratio + vout) / (ratio + 1);
+    } else {
+      vminus = Voff; // 仮想短絡：+入力(0V)に対しオフセット分だけずれる
+    }
+  }
+  return {a, videal, vout, clipped, vminus};
+}
+
+// ====== シーソー描画 ======
+function drawSeesaw(s){
+  const cx=230, cy=170, halfLen=150;     // 支点と腕の長さ
+  // 傾き角：Vinの符号で傾けて「自動で水平へ戻る」を見せる。
+  // 理想＝即座に水平（傾き≈0）。飽和＝戻しきれず傾いたまま。
+  let tilt; // ラジアン、左下がり正
+  if(mode==="ideal"){ tilt = s.clipped?0:0; }
+  if(mode==="clip"){ tilt = s.clipped ? (s.vout>0? -0.16 : 0.16) : 0; }
+  if(mode==="real"){ tilt = Voff*0.05; } // わずかに傾く
+  // 描画ヘルパ
+  const lx = cx - halfLen*Math.cos(tilt), ly = cy + halfLen*Math.sin(tilt);
+  const rx = cx + halfLen*Math.cos(tilt), ry = cy - halfLen*Math.sin(tilt);
+  // 入力側(左)＝Vin、出力側(右)＝Vout の重り
+  const inLabel = (vin>=0?"+":"")+vin.toFixed(2)+"V";
+  const outLabel = (s.vout>=0?"+":"")+s.vout.toFixed(2)+"V";
+  let extra="";
+  if(mode==="clip" && s.clipped){
+    extra=`<text x="230" y="40" text-anchor="middle" font-size="14" fill="#b00020" font-weight="800">傾いたまま！ 出力がレールで止まり、水平に戻せない</text>`;
+  }
+  if(mode==="ideal"){
+    extra=`<text x="230" y="40" text-anchor="middle" font-size="14" fill="#2E7D32" font-weight="800">いつも水平 → −入力 ＝ +入力(0V)＝仮想短絡</text>`;
+  }
+  if(mode==="real"){
+    extra=`<text x="230" y="40" text-anchor="middle" font-size="13.5" fill="#0D3C6E" font-weight="700">入力オフセットの分だけ、ほんの少し傾いた水平</text>`;
+  }
+  return `
+  <rect x="0" y="0" width="460" height="320" fill="#fff"/>
+  ${extra}
+  <!-- 水平の基準線 -->
+  <line x1="60" y1="${cy}" x2="400" y2="${cy}" stroke="#cfd6de" stroke-dasharray="5 5" stroke-width="1.5"/>
+  <text x="406" y="${cy+4}" font-size="11" fill="#9aa3ad">水平=0V</text>
+  <!-- 支点（三角・仮想短絡点） -->
+  <polygon points="${cx},${cy} ${cx-16},${cy+30} ${cx+16},${cy+30}" fill="#0D3C6E"/>
+  <text x="${cx}" y="${cy+48}" text-anchor="middle" font-size="11.5" fill="#0D3C6E" font-weight="700">支点＝仮想短絡点（−入力）</text>
+  <!-- 腕 -->
+  <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="#3a4654" stroke-width="7" stroke-linecap="round"/>
+  <!-- 左の重り：Vin -->
+  <circle cx="${lx}" cy="${ly}" r="20" fill="#1565C0"/>
+  <text x="${lx}" y="${ly-28}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">入力側</text>
+  <text x="${lx}" y="${ly+5}" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">${inLabel}</text>
+  <!-- 右の重り：Vout -->
+  <circle cx="${rx}" cy="${ry}" r="20" fill="#E65100"/>
+  <text x="${rx}" y="${ry-28}" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">出力側</text>
+  <text x="${rx}" y="${ry+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${outLabel}</text>
+  <!-- 自動調整の矢印 -->
+  <text x="${rx}" y="${ry+ (s.vout>=0?42:-40)}" text-anchor="middle" font-size="11" fill="#E65100">↕ 自動調整</text>
+  `;
+}
+
+// ====== 反転増幅回路 描画 ======
+function drawCircuit(s){
+  // ノード座標
+  const vinX=40, nodeY=150;       // Vin入口
+  const sumX=170;                  // 加算点（−入力ノード）
+  const opX=250, opTop=110, opBot=200, opTip=300; // OPアンプ三角
+  const outX=410, outY=155;
+  // 電流イメージ（理想：Rin→Rfを同じ電流が流れる）
+  const aTxt = (s.a).toFixed(s.a%1===0?0:1);
+  const railNote = s.clipped ? `<text x="350" y="40" text-anchor="middle" font-size="12.5" fill="#b00020" font-weight="800">出力がレール(±${RAIL}V)で飽和</text>`:"";
+  // −入力電位表示
+  const vmTxt = (s.vminus>=0?"+":"")+s.vminus.toFixed(2)+"V";
+  let vmSub = "(仮想短絡≈0V)";
+  if(mode==="clip" && s.clipped) vmSub = "(仮想短絡が破れる)";
+  if(mode==="real") vmSub = "(オフセット分ずれる)";
+  return `
+  <rect x="0" y="0" width="460" height="320" fill="#fff"/>
+  ${railNote}
+  <!-- Vin源 -->
+  <text x="${vinX}" y="${nodeY-22}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">Vin</text>
+  <circle cx="${vinX}" cy="${nodeY}" r="5" fill="#1565C0"/>
+  <!-- Rin -->
+  <line x1="${vinX}" y1="${nodeY}" x2="${sumX-46}" y2="${nodeY}" stroke="#1565C0" stroke-width="2.5"/>
+  <rect x="${sumX-46}" y="${nodeY-9}" width="40" height="18" fill="#fff" stroke="#1565C0" stroke-width="2"/>
+  <text x="${sumX-26}" y="${nodeY-15}" text-anchor="middle" font-size="11" fill="#1565C0" font-weight="700">Rin</text>
+  <line x1="${sumX-6}" y1="${nodeY}" x2="${sumX}" y2="${nodeY}" stroke="#1565C0" stroke-width="2.5"/>
+  <!-- 加算点(−入力ノード) -->
+  <circle cx="${sumX}" cy="${nodeY}" r="4.5" fill="#2E7D32"/>
+  <text x="${sumX-4}" y="${nodeY+24}" text-anchor="middle" font-size="10.5" fill="#2E7D32" font-weight="700">−入力 ${vmTxt}</text>
+  <text x="${sumX-4}" y="${nodeY+38}" text-anchor="middle" font-size="9.5" fill="#2E7D32">${vmSub}</text>
+  <!-- 加算点→OP -入力 -->
+  <line x1="${sumX}" y1="${nodeY}" x2="${opX}" y2="${opTop+22}" stroke="#3a4654" stroke-width="2"/>
+  <!-- Rf 帰還：加算点上を回って出力へ -->
+  <line x1="${sumX}" y1="${nodeY}" x2="${sumX}" y2="80" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="${sumX}" y1="80" x2="320" y2="80" stroke="#E65100" stroke-width="2.5"/>
+  <rect x="220" y="71" width="44" height="18" fill="#fff" stroke="#E65100" stroke-width="2"/>
+  <text x="242" y="66" text-anchor="middle" font-size="11" fill="#E65100" font-weight="700">Rf</text>
+  <line x1="320" y1="80" x2="320" y2="${outY}" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="320" y1="${outY}" x2="${outX}" y2="${outY}" stroke="#E65100" stroke-width="2.5"/>
+  <!-- +入力＝GND -->
+  <line x1="${opX-70}" y1="${opBot-22}" x2="${opX}" y2="${opBot-22}" stroke="#9E9E9E" stroke-width="2"/>
+  <line x1="${opX-70}" y1="${opBot-22}" x2="${opX-70}" y2="${opBot+6}" stroke="#9E9E9E" stroke-width="2"/>
+  <line x1="${opX-82}" y1="${opBot+6}" x2="${opX-58}" y2="${opBot+6}" stroke="#9E9E9E" stroke-width="2.5"/>
+  <line x1="${opX-77}" y1="${opBot+12}" x2="${opX-63}" y2="${opBot+12}" stroke="#9E9E9E" stroke-width="2"/>
+  <text x="${opX-100}" y="${opBot-18}" font-size="10.5" fill="#9E9E9E" font-weight="700">+入力=0V</text>
+  <!-- OPアンプ三角 -->
+  <polygon points="${opX},${opTop} ${opX},${opBot} ${opTip},155" fill="#fff" stroke="#0D3C6E" stroke-width="2.5"/>
+  <text x="${opX+12}" y="${opTop+26}" font-size="13" fill="#1565C0" font-weight="800">−</text>
+  <text x="${opX+12}" y="${opBot-12}" font-size="13" fill="#D32F2F" font-weight="800">+</text>
+  <text x="${opX+34}" y="160" font-size="11" fill="#0D3C6E" font-weight="700">∞</text>
+  <!-- 出力 -->
+  <line x1="${opTip}" y1="155" x2="${outX}" y2="155" stroke="#E65100" stroke-width="2.5"/>
+  <circle cx="${outX}" cy="155" r="5" fill="#E65100"/>
+  <text x="${outX}" y="140" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">Vout</text>
+  <!-- 数値ボックス -->
+  <rect x="300" y="240" width="150" height="62" rx="9" fill="#fff7f0" stroke="#E65100" stroke-width="1.5"/>
+  <text x="375" y="260" text-anchor="middle" font-size="12" fill="#444">Vout = A · Vin</text>
+  <text x="375" y="282" text-anchor="middle" font-size="15" fill="#E65100" font-weight="800">${(s.vout>=0?"+":"")+s.vout.toFixed(2)} V</text>
+  <text x="375" y="297" text-anchor="middle" font-size="10.5" fill="#7a8590">A=${aTxt}, Vin=${(vin>=0?"+":"")+vin.toFixed(2)}V</text>
+  `;
+}
+
+// 利得に応じてVinスライダー範囲を調整（理想モードでVoutがレール内に収まるよう）
+function adjustVinRange(){
+  const vr = $("vin");
+  if(mode==="ideal"){
+    const lim = Math.min(2, (RAIL-0.3)/Math.abs(gain)); // レール内に収まる上限
+    vr.min = (-lim).toFixed(2); vr.max = lim.toFixed(2);
+    vr.step = (lim/40).toFixed(3);
+    if(vin>lim) vin=lim; if(vin<-lim) vin=-lim;
+  } else {
+    // 飽和を見せたいので、レールを超える範囲まで許す
+    const lim = Math.min(2, (RAIL*1.6)/Math.abs(gain));
+    vr.min = (-lim).toFixed(2); vr.max = lim.toFixed(2);
+    vr.step = (lim/40).toFixed(3);
+    if(vin>lim) vin=lim; if(vin<-lim) vin=-lim;
+  }
+  vr.value = vin;
+}
+function noteText(s){
+  if(mode==="ideal"){
+    return `理想OPアンプは利得が極めて大きく、出力を調整して −入力 を +入力(0V)に一致させます（仮想短絡＝バーチャルショート, virtual short）。`
+      +`このとき Rin と Rf には同じ電流が流れ、出力は <b>Vout = −(Rf/Rin)·Vin = ${s.a.toFixed(1)} × ${vin.toFixed(2)} = ${s.videal.toFixed(2)} V</b> に決まります。`
+      +`利得は2本の抵抗の比だけで決まる＝<b>自分で設計できる</b>のがポイントです。`;
+  }
+  if(mode==="clip"){
+    return `理想式では Vout=${s.videal.toFixed(2)}V ですが、出力は電源レール（ここでは ±${RAIL}V）より外へは出られません。`
+      +(s.clipped
+        ?`<b>いまレールに張り付いています（${s.vout.toFixed(2)}V）。</b>こうなると出力をこれ以上動かせず、シーソーを水平に戻せない＝<b>仮想短絡が破れます</b>。`
+        :`Vinを大きくして A·Vin が ±${RAIL}V を超えると張り付きます。`)
+      +`実機ではこの飽和を「波形の頭が平らに潰れる」形で必ず観察します。`;
+  }
+  // real
+  return `現実のNJM4558は理想と少しずれます。<b>入力オフセット電圧</b>のせいで Vin=0 でも出力がわずかにずれ、`
+    +`<b>有限の帯域</b>のせいで入力が速くなる（高周波）ほど利得が落ちます（いまの利得係数 ${bwLoss.toFixed(2)}）。`
+    +`このズレを「つまずき」でなく「測って考える対象」として実験で確かめます。`;
+}
+
+// ====== 描画統括 ======
+function render(){
+  adjustVinRange();
+  const s = compute();
+  $("seesaw").innerHTML = drawSeesaw(s);
+  $("circuit").innerHTML = drawCircuit(s);
+  $("rd-vin").textContent = (vin>=0?"+":"")+vin.toFixed(2)+" V";
+  $("rd-gain").textContent = (s.a).toFixed(s.a%1===0?0:1);
+  $("rd-vout").textContent = (s.vout>=0?"+":"")+s.vout.toFixed(2)+" V"+(s.clipped?" ⚠":"");
+  $("rd-vminus").textContent = (s.vminus>=0?"+":"")+s.vminus.toFixed(2)+" V";
+  $("note").innerHTML = noteText(s);
+  $("vinval").textContent = (vin>=0?"+":"")+vin.toFixed(2)+" V";
+}
+
+// ====== モード切替 ======
+const modeLines = {
+  ideal:"スライダーでVinを動かすと、シーソーは即座に水平へ。−入力は常に0Vに見え、Voutは抵抗比で決まります。",
+  clip:"Vinを大きく振ってみてください。理想式の出力がレール(±"+RAIL+"V)を超えると、出力が張り付いて水平に戻せなくなります。",
+  real:"理想からのズレ（オフセット・帯域）。Vin=0でも出力が少しずれ、速い入力ほど利得が落ちます。"
+};
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    mode=t.dataset.mode;
+    $("modeline").textContent = modeLines[mode];
+    // モードごとの既定値
+    if(mode==="ideal"){ Voff=0; bwLoss=1.0; }
+    if(mode==="clip"){ Voff=0; bwLoss=1.0; }
+    if(mode==="real"){ Voff=0.03; bwLoss=0.7; } // オフセット30mV相当・利得3割減のイメージ
+    render();
+  });
+});
+
+// ====== コントロール ======
+$("vin").addEventListener("input",e=>{ vin=parseFloat(e.target.value); render(); });
+document.querySelectorAll("#gainbtns button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#gainbtns button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    gain=parseFloat(b.dataset.g);
+    render();
+  });
+});
+
+// 初期化
+$("modeline").textContent = modeLines.ideal;
+render();
+
+// PNG書き出し用フック（Playwrightから呼ぶ）
+window.__setState = function(o){
+  if(o.mode){ document.querySelector(`.tab[data-mode="${o.mode}"]`).click(); }
+  if(o.gain!==undefined){ gain=o.gain; document.querySelectorAll("#gainbtns button").forEach(x=>x.classList.toggle("on", parseFloat(x.dataset.g)===o.gain)); }
+  if(o.vin!==undefined){ vin=o.vin; $("vin").value=o.vin; }
+  if(o.Voff!==undefined) Voff=o.Voff;
+  if(o.bwLoss!==undefined) bwLoss=o.bwLoss;
+  render();
+};
+</script>
+</body>
+</html>

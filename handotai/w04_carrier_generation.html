@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第4週｜自由電子と正孔：キャリアの発生と移動</title>
+<style>
+  :root{
+    --navy:#1C3A5E;
+    --ink:#222222;
+    --blue:#1F6FB2;   /* 電子・ポジティブ・流れる */
+    --red:#C0392B;    /* 正孔・ネガティブ・止まる */
+    --purple:#7E3FA0; /* 強調・水位線 */
+    --green:#2E8B57;  /* 課題・これから */
+    --line:#cfd6dd;
+    --panebg:#f6f8fa;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#FFFFFF;color:var(--ink);
+    font-family:"メイリオ","Meiryo",sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 60px;}
+  h1{color:var(--navy);font-size:24px;margin:0 0 4px;}
+  .sub{color:#5a6b7b;font-size:15px;margin:0 0 18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;}
+  .tab{font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;
+    border:1.5px solid var(--navy);background:#fff;color:var(--navy);
+    border-radius:8px;padding:10px 16px;transition:.15s;}
+  .tab:hover{background:#eef3f8;}
+  .tab.active{background:var(--navy);color:#fff;}
+  .stage{border:1px solid var(--line);border-radius:12px;background:#fff;
+    padding:14px 14px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stage-title{color:var(--navy);font-size:19px;font-weight:bold;margin:2px 4px 8px;}
+  .desc{background:var(--panebg);border-radius:10px;padding:12px 14px;margin:10px 4px 6px;
+    font-size:16px;line-height:1.7;}
+  .desc b.blue{color:var(--blue);}
+  .desc b.red{color:var(--red);}
+  .desc b.purple{color:var(--purple);}
+  .desc b.green{color:var(--green);}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 4px;align-items:center;}
+  .btn{font-family:inherit;font-size:15px;cursor:pointer;border:1.5px solid var(--navy);
+    background:#fff;color:var(--navy);border-radius:7px;padding:8px 14px;}
+  .btn:hover{background:#eef3f8;}
+  .btn.primary{background:var(--navy);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:default;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:6px 6px 2px;font-size:14px;color:#444;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .swatch{width:16px;height:16px;border-radius:50%;display:inline-block;}
+  .swatch.e{background:var(--blue);}
+  .swatch.h{background:#fff;border:2.5px solid var(--red);}
+  .swatch.fixed{background:#fff;border:2px dashed #9aa7b3;}
+  svg{display:block;width:100%;height:auto;}
+  .hidden{display:none;}
+  .hint{font-size:13.5px;color:#6a7785;margin:4px 6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第4週｜自由電子と正孔：キャリアの「発生」と「移動」</h1>
+  <p class="sub">電気を運ぶ主役は2人。どう生まれて、どう動くのかを見てみましょう。（授業ではこのページをブラウザで開いて動かします）</p>
+
+  <div class="tabs">
+    <button class="tab active" data-view="pair">① 対生成（ペアで生まれる）</button>
+    <button class="tab" data-view="hole">② 正孔の移動（空席が動く）</button>
+    <button class="tab" data-view="terrain">③ 地形で見る（上＝高エネルギー）</button>
+  </div>
+
+  <div class="stage">
+    <!-- ============ VIEW 1: 対生成 ============ -->
+    <div id="view-pair" class="viewpane">
+      <div class="stage-title">伝導帯（電子の地形）と価電子帯（正孔の地形）。熱で電子が飛び上がるとペアができる</div>
+      <svg id="svg-pair" viewBox="0 0 1040 460" aria-label="対生成のアニメ"></svg>
+      <div class="controls">
+        <button class="btn primary" id="pair-go">▶ 熱を加える（対生成）</button>
+        <button class="btn" id="pair-reset">↺ もとに戻す</button>
+      </div>
+      <div class="desc" id="pair-desc">
+        純粋なシリコンでは、価電子帯（下）の席はほぼ満席。<b class="green">熱のエネルギー</b>をもらうと、電子が1個だけ隙間を飛び越えて伝導帯（上）へ。
+        飛び立った跡には<b class="red">空席（正孔）</b>が1個残ります。<b class="purple">電子と正孔は必ずペアで生まれる＝対生成</b>です。
+      </div>
+      <p class="hint">ポイント：片方だけは生まれません。1個飛べば、必ず空席が1個。だから真性半導体では電子数＝正孔数。</p>
+    </div>
+
+    <!-- ============ VIEW 2: 正孔の移動 ============ -->
+    <div id="view-hole" class="viewpane hidden">
+      <div class="stage-title">満員電車の空席：人が詰めると、空席が逆向きに動いていく</div>
+      <svg id="svg-hole" viewBox="0 0 1040 360" aria-label="正孔の移動アニメ"></svg>
+      <div class="controls">
+        <button class="btn primary" id="hole-go">▶ 隣の人が詰める</button>
+        <button class="btn" id="hole-loop">⟳ くり返し再生</button>
+        <button class="btn" id="hole-reset">↺ もとに戻す</button>
+        <label style="font-size:14px;color:#444;margin-left:6px;">
+          <input type="checkbox" id="hole-seat"> 「席」で見る（正孔の視点）
+        </label>
+      </div>
+      <div class="desc" id="hole-desc">
+        満員電車で1人ぶんの<b class="red">空席</b>があります。<b class="blue">隣の人（電子）</b>が空席へ移ると、その人がいた場所が新しい空席に。
+        これをくり返すと、<b class="blue">人（電子）は右へ</b>動き、<b class="red">空席（正孔）は左へ</b>動いて見えます。
+        同じ現象を「人で見るか」「席で見るか」の違いです。空席を1個の<b class="red">＋の粒＝正孔</b>と見なすと、話がぐっと楽になります。
+      </div>
+      <p class="hint">チェックを入れると、無数の電子ではなく「空席ひとつ」を主役として追えます。これが正孔という見方の正体です。</p>
+    </div>
+
+    <!-- ============ VIEW 3: 地形で見る ============ -->
+    <div id="view-terrain" class="viewpane hidden">
+      <div class="stage-title">上ほどエネルギーが高い「地形図」：電子は下へ沈み、正孔は上へ浮く</div>
+      <svg id="svg-terrain" viewBox="0 0 1040 470" aria-label="地形イメージ"></svg>
+      <div class="controls">
+        <button class="btn primary" id="terr-go">▶ 落ち着く先を見る</button>
+        <button class="btn" id="terr-reset">↺ もとに戻す</button>
+      </div>
+      <div class="desc" id="terr-desc">
+        このあと（第5・6週）使う「地形図」を先取り。教科書と同じ標準形で、<b class="purple">上ほどエネルギーが高い</b>と約束します。
+        すると<b class="blue">電子（−）は重いボールのように伝導帯の底へ沈み</b>、<b class="red">正孔（＋）は軽い泡のように価電子帯の上端へ浮き上がります</b>。
+        この「重力の直感」が、第6週の<b class="purple">崖（壁）を越える／越えられない</b>の話にそのままつながります。
+      </div>
+      <p class="hint">覚え方：「電子＝沈む」「正孔＝浮く」。この向き（上＝高エネルギー）のまま、第6週の崖の図まで一貫して使います。</p>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch e"></i> 電子（−）：青のボール</span>
+    <span><i class="swatch h"></i> 正孔（＋）：赤い輪＝空席</span>
+    <span><i class="swatch fixed"></i> 動かない原子・席</span>
+  </div>
+</div>
+
+<script>
+const NAVY="#1C3A5E", BLUE="#1F6FB2", RED="#C0392B", PURPLE="#7E3FA0", GREEN="#2E8B57", LINE="#cfd6dd";
+const SVGNS="http://www.w3.org/2000/svg";
+
+function el(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function txt(svg,x,y,s,o={}){const t=el("text",{x,y,"font-size":o.size||16,"font-family":'"メイリオ",Meiryo,sans-serif',
+  fill:o.fill||"#222","text-anchor":o.anchor||"middle","font-weight":o.weight||"normal"});t.textContent=s;svg.appendChild(t);return t;}
+function electron(svg,x,y,r=11){const g=el("g",{});g.appendChild(el("circle",{cx:x,cy:y,r,fill:BLUE}));
+  const m=el("text",{x,y:y+5,"font-size":15,fill:"#fff","text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="−";g.appendChild(m);svg.appendChild(g);return g;}
+function hole(svg,x,y,r=11){const g=el("g",{});g.appendChild(el("circle",{cx:x,cy:y,r,fill:"#fff",stroke:RED,"stroke-width":3}));
+  const m=el("text",{x,y:y+5,"font-size":15,fill:RED,"text-anchor":"middle","font-weight":"bold","font-family":"sans-serif"});m.textContent="+";g.appendChild(m);svg.appendChild(g);return g;}
+function easeIO(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+/* ====== タブ切替 ====== */
+const tabs=document.querySelectorAll(".tab");
+const panes={pair:document.getElementById("view-pair"),hole:document.getElementById("view-hole"),terrain:document.getElementById("view-terrain")};
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  tabs.forEach(x=>x.classList.remove("active"));t.classList.add("active");
+  for(const k in panes)panes[k].classList.add("hidden");
+  panes[t.dataset.view].classList.remove("hidden");
+  if(t.dataset.view==="pair")drawPair();
+  if(t.dataset.view==="hole")drawHole();
+  if(t.dataset.view==="terrain")drawTerrain();
+}));
+
+/* =================================================================
+   VIEW 1: 対生成
+   ================================================================= */
+const svgPair=document.getElementById("svg-pair");
+// 帯のレイアウト（上＝高エネルギー・標準形：伝導帯を上に）
+const P={ W:1040,
+  condY:120,    condH:90,      // 伝導帯（上・青）
+  valenceY:300, valenceH:90,   // 価電子帯（下・赤）
+  cols:8, left:160, right:980 };
+let pairAnim=null, pairDone=false;
+
+function pairSeatX(i){const span=(P.right-P.left)/(P.cols-1);return P.left+span*i;}
+
+function drawPair(jump=0){ // jump 0..1 : 電子が飛ぶ進捗
+  clear(svgPair);
+  // 軸ラベル（エネルギー：上ほど高い・標準形）
+  const ax=el("line",{x1:70,y1:410,x2:70,y2:90,stroke:"#9aa7b3","stroke-width":2,"marker-end":"url(#parrow)"});
+  const defs=el("defs",{});const mk=el("marker",{id:"parrow",markerWidth:10,markerHeight:10,refX:5,refY:5,orient:"auto"});
+  mk.appendChild(el("path",{d:"M0,0 L10,5 L0,10 z",fill:"#9aa7b3"}));defs.appendChild(mk);svgPair.appendChild(defs);svgPair.appendChild(ax);
+  txt(svgPair,70,80,"エネルギー高い",{size:13,fill:"#7a8794"});
+  txt(svgPair,70,428,"↑ 上ほど高エネルギー",{size:13,fill:"#7a8794"});
+
+  // 伝導帯（上・青・電子の地形）
+  svgPair.appendChild(el("rect",{x:P.left-40,y:P.condY,width:(P.right-P.left)+80,height:P.condH,rx:8,fill:"#e3eff8",stroke:BLUE,"stroke-width":1.5}));
+  txt(svgPair,P.left-50,P.condY+P.condH/2+6,"伝導帯",{anchor:"end",fill:BLUE,weight:"bold",size:15});
+  txt(svgPair,P.left-50,P.condY+P.condH/2+24,"（電子の地形）",{anchor:"end",fill:BLUE,size:12});
+  // 価電子帯（下・赤・正孔の地形）
+  svgPair.appendChild(el("rect",{x:P.left-40,y:P.valenceY,width:(P.right-P.left)+80,height:P.valenceH,rx:8,fill:"#fbe6e3",stroke:RED,"stroke-width":1.5}));
+  txt(svgPair,P.left-50,P.valenceY+P.valenceH/2+6,"価電子帯",{anchor:"end",fill:RED,weight:"bold",size:15});
+  txt(svgPair,P.left-50,P.valenceY+P.valenceH/2+24,"（正孔の地形）",{anchor:"end",fill:RED,size:12});
+  // バンドギャップ表示
+  txt(svgPair,(P.left+P.right)/2,(P.condY+P.condH+P.valenceY)/2+6,"すき間（バンドギャップ）＝熱で飛び越える",{fill:"#7a8794",size:14});
+
+  const vY=P.valenceY+P.valenceH/2, cY=P.condY+P.condH/2;
+  const jumpCol=4; // 4番目の電子が飛ぶ
+  // 価電子帯：満席の電子（飛ぶ1個を除く）
+  for(let i=0;i<P.cols;i++){
+    if(i===jumpCol){
+      // 飛ぶ電子 or 残った空席
+      if(jump<1){
+        const x=pairSeatX(i), y=vY+(cY-vY)*easeIO(jump);
+        electron(svgPair,x,y);
+      }
+      if(jump>0.15){ // 空席が見えてくる
+        hole(svgPair,pairSeatX(i),vY);
+      }
+    }else{
+      electron(svgPair,pairSeatX(i),vY);
+    }
+  }
+  // 伝導帯：基本は空。飛びきったら電子をそこに置く
+  if(jump>=1){ electron(svgPair,pairSeatX(jumpCol),cY); }
+  // 注釈
+  if(jump>=1){
+    txt(svgPair,pairSeatX(jumpCol),cY-46,"自由電子（動ける）",{fill:BLUE,size:14,weight:"bold"});
+    txt(svgPair,pairSeatX(jumpCol),vY+56,"正孔（空席が残った）",{fill:RED,size:14,weight:"bold"});
+    // ペア強調の波括弧的ライン
+    svgPair.appendChild(el("line",{x1:pairSeatX(jumpCol)+30,y1:vY,x2:pairSeatX(jumpCol)+30,y2:cY,stroke:PURPLE,"stroke-width":2,"stroke-dasharray":"5 4"}));
+    txt(svgPair,pairSeatX(jumpCol)+120,(vY+cY)/2,"ペアで誕生",{fill:PURPLE,size:14,weight:"bold"});
+  }
+}
+function pairRun(){
+  if(pairAnim)cancelAnimationFrame(pairAnim);
+  const dur=1100,t0=performance.now();
+  document.getElementById("pair-go").disabled=true;
+  function step(now){const p=Math.min(1,(now-t0)/dur);drawPair(p);
+    if(p<1){pairAnim=requestAnimationFrame(step);}else{pairDone=true;document.getElementById("pair-go").disabled=false;}}
+  pairAnim=requestAnimationFrame(step);
+}
+document.getElementById("pair-go").addEventListener("click",pairRun);
+document.getElementById("pair-reset").addEventListener("click",()=>{if(pairAnim)cancelAnimationFrame(pairAnim);pairDone=false;document.getElementById("pair-go").disabled=false;drawPair(0);});
+
+/* =================================================================
+   VIEW 2: 正孔の移動（満員電車の空席）
+   ================================================================= */
+const svgHole=document.getElementById("svg-hole");
+const H={ n:9, left:120, right:920, y:170, r:16 };
+let holeState={ emptyIndex:7 }; // 右端寄りに空席
+let holeAnim=null, holeLooping=false, holeTimer=null;
+
+function holeX(i){const span=(H.right-H.left)/(H.n-1);return H.left+span*i;}
+
+function drawHole(progress=0, moving=null){
+  // moving = {from, to} 電子が from→to へ動いている（=空席が to→from へ移る）
+  clear(svgHole);
+  const seatY=H.y;
+  // 電車の床ライン
+  svgHole.appendChild(el("rect",{x:H.left-50,y:H.y-50,width:(H.right-H.left)+100,height:120,rx:14,fill:"#f6f8fa",stroke:LINE,"stroke-width":1.5}));
+  txt(svgHole,(H.left+H.right)/2,H.y-30,"満員電車（価電子帯）：席はほぼ満席",{fill:"#5a6b7b",size:14});
+  // 各席
+  const showSeat=document.getElementById("hole-seat").checked;
+  for(let i=0;i<H.n;i++){
+    // 席の枠
+    svgHole.appendChild(el("rect",{x:holeX(i)-20,y:seatY-20,width:40,height:40,rx:6,fill:"#fff",stroke:"#c2ccd6","stroke-width":1.5}));
+  }
+  // 空席の現在位置を計算
+  let empty=holeState.emptyIndex;
+  // 描画：電子（人）
+  for(let i=0;i<H.n;i++){
+    if(moving){
+      // 移動中：from の電子は from→to へ動く。空席は to にあって from へ移る
+      if(i===moving.to) continue; // 行き先は今は空（電子が来る途中）
+      if(i===moving.from){
+        const x=holeX(moving.from)+(holeX(moving.to)-holeX(moving.from))*easeIO(progress);
+        electron(svgHole,x,seatY,H.r);
+        continue;
+      }
+      electron(svgHole,holeX(i),seatY,H.r);
+    }else{
+      if(i===empty) continue;
+      electron(svgHole,holeX(i),seatY,H.r);
+    }
+  }
+  // 空席（正孔）の表示
+  if(showSeat){
+    let ex;
+    if(moving){
+      // 空席は to から from へ移る
+      ex=holeX(moving.to)+(holeX(moving.from)-holeX(moving.to))*easeIO(progress);
+    }else{ ex=holeX(empty); }
+    hole(svgHole,ex,seatY,H.r);
+    txt(svgHole,ex,seatY+50,"正孔（＋）",{fill:RED,size:13,weight:"bold"});
+  }else{
+    // 空席は「空き枠」をうっすら示すだけ
+    let ei = moving? null : empty;
+    if(ei!==null){
+      svgHole.appendChild(el("rect",{x:holeX(ei)-20,y:seatY-20,width:40,height:40,rx:6,fill:"#fdecea",stroke:RED,"stroke-width":2,"stroke-dasharray":"4 3"}));
+      txt(svgHole,holeX(ei),seatY+50,"空席",{fill:RED,size:13});
+    }
+  }
+  // 方向の矢印
+  txt(svgHole,H.left-30,H.y+95,"電子（人）→ 右へ",{anchor:"start",fill:BLUE,size:14,weight:"bold"});
+  txt(svgHole,H.right+30,H.y+95,"空席（正孔）← 左へ",{anchor:"end",fill:RED,size:14,weight:"bold"});
+}
+
+function holeStep(){
+  // 空席を1つ左へ動かす（＝左隣の電子が空席へ詰める）
+  if(holeState.emptyIndex<=0){ // 端に来たら戻す
+    holeState.emptyIndex=H.n-2;
+    drawHole(0);
+    return;
+  }
+  const from=holeState.emptyIndex-1; // 詰める電子
+  const to=holeState.emptyIndex;     // 空席（行き先）
+  const dur=620,t0=performance.now();
+  if(holeAnim)cancelAnimationFrame(holeAnim);
+  function step(now){const p=Math.min(1,(now-t0)/dur);drawHole(p,{from,to});
+    if(p<1){holeAnim=requestAnimationFrame(step);}
+    else{holeState.emptyIndex=from;drawHole(0);
+      if(holeLooping){holeTimer=setTimeout(holeStep,420);}}}
+  holeAnim=requestAnimationFrame(step);
+}
+document.getElementById("hole-go").addEventListener("click",()=>{holeLooping=false;if(holeTimer)clearTimeout(holeTimer);holeStep();});
+document.getElementById("hole-loop").addEventListener("click",()=>{holeLooping=!holeLooping;
+  const b=document.getElementById("hole-loop");b.textContent=holeLooping?"■ 停止":"⟳ くり返し再生";b.classList.toggle("primary",holeLooping);
+  if(holeLooping)holeStep();else if(holeTimer)clearTimeout(holeTimer);});
+document.getElementById("hole-reset").addEventListener("click",()=>{holeLooping=false;if(holeTimer)clearTimeout(holeTimer);if(holeAnim)cancelAnimationFrame(holeAnim);
+  holeState.emptyIndex=7;document.getElementById("hole-loop").textContent="⟳ くり返し再生";document.getElementById("hole-loop").classList.remove("primary");drawHole(0);});
+document.getElementById("hole-seat").addEventListener("change",()=>drawHole(0));
+
+/* =================================================================
+   VIEW 3: 地形で見る
+   ================================================================= */
+const svgTerr=document.getElementById("svg-terrain");
+const T={ W:1040, conTop:90, conBot:175, valTop:300, valBot:385, left:140, right:900 }; // 標準形：伝導帯=上, 価電子帯=下
+let terrAnim=null;
+
+function drawTerrain(progress=0){ // progress 0..1 : ボール下へ・泡上へ
+  clear(svgTerr);
+  // エネルギー軸（上が高い・標準形）
+  svgTerr.appendChild(el("line",{x1:70,y1:70,x2:70,y2:410,stroke:"#9aa7b3","stroke-width":2}));
+  txt(svgTerr,70,60,"エネルギー高い",{size:13,fill:"#7a8794"});
+  txt(svgTerr,70,430,"↑ 上ほど高エネルギー",{size:13,fill:"#7a8794"});
+
+  // 伝導帯（上・青）＝電子の地形（ボールは帯の底へ沈む）
+  svgTerr.appendChild(el("rect",{x:T.left,y:T.conTop,width:T.right-T.left,height:T.conBot-T.conTop,rx:8,fill:"#e3eff8",stroke:BLUE,"stroke-width":1.5}));
+  txt(svgTerr,T.left-12,(T.conTop+T.conBot)/2+5,"伝導帯",{anchor:"end",fill:BLUE,weight:"bold",size:15});
+  txt(svgTerr,(T.left+T.right)/2,T.conTop-12,"電子は「重いボール」のように帯の底へ沈む",{fill:BLUE,size:14});
+  // 価電子帯（下・赤）＝正孔の地形（泡は帯の上端へ浮く）
+  svgTerr.appendChild(el("rect",{x:T.left,y:T.valTop,width:T.right-T.left,height:T.valBot-T.valTop,rx:8,fill:"#fbe6e3",stroke:RED,"stroke-width":1.5}));
+  txt(svgTerr,T.left-12,(T.valTop+T.valBot)/2+5,"価電子帯",{anchor:"end",fill:RED,weight:"bold",size:15});
+  txt(svgTerr,(T.left+T.right)/2,T.valBot+26,"正孔は「軽い泡」のように帯の上端へ浮く",{fill:RED,size:14});
+
+  // 電子（ボール）：伝導帯の中を、上から帯の底へ沈む
+  const p=easeIO(progress);
+  const eX=460, eStartY=T.conTop+24, eEndY=T.conBot-22;
+  electron(svgTerr, eX, eStartY+(eEndY-eStartY)*p, 13);
+  // 正孔（泡）：価電子帯の中を、下から帯の上端へ浮く
+  const hX=600, hStartY=T.valBot-24, hEndY=T.valTop+22;
+  hole(svgTerr, hX, hStartY+(hEndY-hStartY)*p, 13);
+
+  // 動きの矢印（塗り図形・幅ゼロ矢印を使わない方針に合わせ簡素な三角で示す）
+  if(progress>0.05){
+    // 電子：下向き
+    svgTerr.appendChild(el("path",{d:`M${eX+24},${eStartY} L${eX+24},${eEndY-14}`,stroke:BLUE,"stroke-width":2.5}));
+    svgTerr.appendChild(el("path",{d:`M${eX+18},${eEndY-18} L${eX+30},${eEndY-18} L${eX+24},${eEndY-6} z`,fill:BLUE}));
+    // 正孔：上向き
+    svgTerr.appendChild(el("path",{d:`M${hX+24},${hStartY} L${hX+24},${hEndY+14}`,stroke:RED,"stroke-width":2.5}));
+    svgTerr.appendChild(el("path",{d:`M${hX+18},${hEndY+18} L${hX+30},${hEndY+18} L${hX+24},${hEndY+6} z`,fill:RED}));
+  }
+  if(progress>=1){
+    txt(svgTerr,(T.left+T.right)/2,455,"この「重力の直感」が第6週の崖（壁）につながります",{fill:PURPLE,size:14,weight:"bold"});
+  }
+}
+function terrRun(){if(terrAnim)cancelAnimationFrame(terrAnim);const dur=1200,t0=performance.now();
+  document.getElementById("terr-go").disabled=true;
+  function step(now){const p=Math.min(1,(now-t0)/dur);drawTerrain(p);
+    if(p<1)terrAnim=requestAnimationFrame(step);else document.getElementById("terr-go").disabled=false;}
+  terrAnim=requestAnimationFrame(step);}
+document.getElementById("terr-go").addEventListener("click",terrRun);
+document.getElementById("terr-reset").addEventListener("click",()=>{if(terrAnim)cancelAnimationFrame(terrAnim);document.getElementById("terr-go").disabled=false;drawTerrain(0);});
+
+/* 初期描画 */
+drawPair(0);
+</script>
+</body>
+</html>

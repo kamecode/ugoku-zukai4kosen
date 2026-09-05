@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMOSができるまで（フルプロセス）｜第12週</title>
+<style>
+  :root{
+    --ink:#1b2733; --sub:#5a6b7a; --line:#cfd8e0;
+    --paper:#f4f1ea; --card:#ffffff;
+    --pos:#1F6FB2; --neg:#C0392B; --emph:#7E3FA0; --task:#2E8B57;
+    --si:#7d8794;
+    --pwell:#e8b8b0; --nwell:#adc8e0;
+    --nplus:#1F6FB2; --pplus:#C0392B;
+    --film:#bfae8e;     /* 保護膜・絶縁膜（中間で使う膜） */
+    --resist:#3aa6c9;   /* レジスト */
+    --poly:#9b7fb0;     /* ポリシリコン（ゲート材料・未加工） */
+    --gateox:#e0a44a;   /* ゲート酸化膜 */
+    --gate:#7E3FA0;     /* ゲート電極 */
+    --metal:#5a6b7a;    /* 配線 */
+    --ild:#d8cdbb;      /* 層間絶縁膜 */
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #fdfcf8, transparent),var(--paper);
+    color:var(--ink);min-height:100vh;padding:20px 16px 56px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  .eyebrow{font-size:13px;letter-spacing:.18em;color:var(--emph);font-weight:700;margin-bottom:6px;}
+  h1{font-size:25px;margin:0 0 4px;line-height:1.3;}
+  .lead{color:var(--sub);font-size:14.5px;margin:0 0 14px;line-height:1.7;}
+
+  /* 章タブ */
+  .chapters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .chapters button{
+    border:1px solid var(--line);background:#fff;color:var(--sub);
+    padding:7px 11px;border-radius:9px;font-size:12px;cursor:pointer;
+    font-family:inherit;font-weight:700;transition:.15s;
+  }
+  .chapters button:hover{border-color:var(--emph);color:var(--emph);}
+  .chapters button.active{background:var(--emph);border-color:var(--emph);color:#fff;}
+
+  .stage{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:16px 18px 8px;box-shadow:0 10px 30px -18px rgba(20,40,60,.4);
+  }
+  .chaptitle{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .chaptitle .name{font-size:16px;font-weight:800;color:var(--emph);}
+  .chaptitle .count{font-size:12px;color:var(--sub);background:#f0eef4;padding:4px 10px;border-radius:999px;font-weight:700;}
+  .svgbox{width:100%;height:auto;display:block;}
+
+  .lithotag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11.5px;padding:4px 10px;border-radius:999px;font-weight:700;margin:2px 0 0;
+  }
+  .lithotag.on{background:#fff7e8;border:1px solid #f0d9a8;color:#8a6a1f;}
+  .lithotag.special{background:#f0e8f6;border:1px solid #d9c2ea;color:#6a2f8a;}
+  .lithotag.implant{background:#fdeee2;border:1px solid #f3c89e;color:#b8600b;}
+
+  .stepinfo{display:flex;gap:14px;align-items:flex-start;padding:12px 4px 14px;}
+  .stepnum{
+    flex:0 0 auto;width:44px;height:44px;border-radius:11px;background:var(--emph);
+    color:#fff;font-weight:800;font-size:15px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;line-height:1.05;
+  }
+  .stepnum small{font-size:9px;font-weight:600;opacity:.85;}
+  .steptext h2{margin:0 0 3px;font-size:18px;}
+  .steptext .en{color:#93a1ad;font-size:11.5px;font-weight:600;}
+  .steptext p{margin:4px 0 0;color:var(--sub);font-size:13.5px;line-height:1.7;}
+  .steptext p.key{color:var(--neg);font-weight:700;}
+
+  .barwrap{margin:8px 4px 0;}
+  .bar{height:6px;border-radius:3px;background:#e2e8ee;overflow:hidden;}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--emph),#a96fc9);width:0;transition:.25s;}
+  .barlabel{font-size:11px;color:var(--sub);margin-top:5px;text-align:right;}
+
+  .nav{display:flex;gap:8px;margin-top:12px;}
+  .nav button{border:none;border-radius:11px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+  .prev{flex:1;background:#e7edf2;color:var(--ink);}
+  .next{flex:2;background:var(--pos);color:#fff;}
+  .play{flex:1;background:var(--task);color:#fff;}
+  .nav button:disabled{opacity:.35;cursor:default;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11.5px;color:var(--sub);margin:12px 4px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:15px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.15);}
+
+  .countnote{text-align:center;font-size:12.5px;color:var(--sub);margin-top:10px;}
+  .countnote b{color:var(--emph);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">第12週 ｜ 砂からチップへ ①</div>
+  <h1>CMOSができるまで（フルプロセス・全36ステップ）</h1>
+  <p class="lead">第8〜10週のNMOS・PMOSを、実際に作ってみます。フォトリソの6ステップを<b>一切省かず</b>くり返すので長いですが、それこそが「チップ作りはこんなに手間がかかる」という実感です。<br>「次へ」で1ステップずつ、章タブで大工程ごとにジャンプできます。</p>
+
+  <div class="chapters" id="chapters"></div>
+
+  <div class="stage">
+    <div class="chaptitle">
+      <span class="name" id="chapname"></span>
+      <span class="count" id="chapcount"></span>
+    </div>
+
+    <svg class="svgbox" viewBox="0 0 820 360" role="img" aria-label="CMOS断面のフルプロセス">
+      <defs>
+        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="2" opacity="0.4"/>
+        </pattern>
+        <linearGradient id="lightg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffe98a" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#ffe98a" stop-opacity="0.10"/>
+        </linearGradient>
+      </defs>
+
+      <ellipse cx="410" cy="320" rx="340" ry="12" fill="#000" opacity="0.06"/>
+
+      <!-- シリコン基板（常時） -->
+      <rect x="60" y="200" width="700" height="110" rx="4" fill="var(--si)"/>
+      <text id="sub-label" x="410" y="285" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">シリコン基板（ウェハ）</text>
+
+      <!-- ウェル -->
+      <g id="el-pwell" opacity="0"><rect x="62" y="200" width="348" height="78" rx="2" fill="var(--pwell)"/>
+        <text x="120" y="272" text-anchor="middle" font-size="12" fill="#8a4a40" font-weight="700">pウェル</text></g>
+      <g id="el-nwell" opacity="0"><rect x="410" y="200" width="348" height="78" rx="2" fill="var(--nwell)"/>
+        <text x="700" y="272" text-anchor="middle" font-size="12" fill="#2a5580" font-weight="700">nウェル</text></g>
+
+      <!-- 上にのせる「膜」：全面の保護膜/絶縁膜（成膜ステップで出す） -->
+      <g id="el-film" opacity="0"><rect x="60" y="184" width="700" height="16" fill="var(--film)"/></g>
+      <!-- 全面レジスト -->
+      <g id="el-resist-full" opacity="0"><rect x="60" y="166" width="700" height="18" fill="var(--resist)"/></g>
+      <!-- 左だけ穴のレジスト（pウェル現像後） -->
+      <g id="el-resist-Lhole" opacity="0">
+        <rect x="60" y="166" width="60" height="18" fill="var(--resist)"/>
+        <rect x="320" y="166" width="440" height="18" fill="var(--resist)"/>
+      </g>
+      <!-- 右だけ穴のレジスト（nウェル現像後） -->
+      <g id="el-resist-Rhole" opacity="0">
+        <rect x="60" y="166" width="440" height="18" fill="var(--resist)"/>
+        <rect x="700" y="166" width="60" height="18" fill="var(--resist)"/>
+      </g>
+      <!-- 左だけ膜に穴（pウェル エッチング後）：左の保護膜を消す -->
+      <g id="el-film-Lhole" opacity="0">
+        <rect x="60" y="184" width="60" height="16" fill="var(--film)"/>
+        <rect x="320" y="184" width="440" height="16" fill="var(--film)"/>
+      </g>
+      <g id="el-film-Rhole" opacity="0">
+        <rect x="60" y="184" width="440" height="16" fill="var(--film)"/>
+        <rect x="700" y="184" width="60" height="16" fill="var(--film)"/>
+      </g>
+
+      <!-- ゲート酸化膜（全面の薄い膜→ゲート工程） -->
+      <g id="el-gateox-full" opacity="0"><rect x="60" y="194" width="700" height="6" fill="var(--gateox)"/></g>
+      <!-- ポリシリコン全面（ゲート成膜） -->
+      <g id="el-poly-full" opacity="0"><rect x="60" y="168" width="700" height="26" fill="var(--poly)"/></g>
+      <!-- ポリ上の全面レジスト -->
+      <g id="el-resist-poly" opacity="0"><rect x="60" y="150" width="700" height="18" fill="var(--resist)"/></g>
+      <!-- 配線工程用レジスト：層間絶縁膜(上端y=120)の上に乗る -->
+      <g id="el-resist-ild" opacity="0"><rect x="60" y="102" width="700" height="18" fill="var(--resist)"/></g>
+      <!-- ゲート形に残ったレジスト（露光・現像後） -->
+      <g id="el-resist-gate" opacity="0">
+        <rect x="172" y="150" width="126" height="18" fill="var(--resist)"/>
+        <rect x="522" y="150" width="126" height="18" fill="var(--resist)"/>
+      </g>
+
+      <!-- 完成したゲート（酸化膜＋電極）左右 -->
+      <g id="el-gate-n" opacity="0">
+        <rect x="168" y="194" width="134" height="6" fill="var(--gateox)"/>
+        <rect x="172" y="162" width="126" height="32" rx="2" fill="var(--gate)"/>
+        <text x="235" y="183" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">ゲート</text>
+      </g>
+      <g id="el-gate-p" opacity="0">
+        <rect x="518" y="194" width="134" height="6" fill="var(--gateox)"/>
+        <rect x="522" y="162" width="126" height="32" rx="2" fill="var(--gate)"/>
+        <text x="585" y="183" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">ゲート</text>
+      </g>
+
+      <!-- S/D保護レジスト：右を覆う（NMOS注入時） -->
+      <g id="el-cover-R" opacity="0"><rect x="412" y="150" width="348" height="50" fill="var(--resist)" opacity="0.85"/>
+        <text x="586" y="180" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">PMOS側を保護</text></g>
+      <!-- S/D保護レジスト：左を覆う（PMOS注入時） -->
+      <g id="el-cover-L" opacity="0"><rect x="60" y="150" width="348" height="50" fill="var(--resist)" opacity="0.85"/>
+        <text x="234" y="180" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">NMOS側を保護</text></g>
+
+      <!-- n+ ソース/ドレイン（左） -->
+      <g id="el-sd-n" opacity="0">
+        <rect x="95"  y="200" width="73" height="48" rx="2" fill="var(--nplus)"/>
+        <rect x="302" y="200" width="73" height="48" rx="2" fill="var(--nplus)"/>
+        <text x="131" y="229" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">n+</text>
+        <text x="338" y="229" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">n+</text>
+      </g>
+      <!-- p+ ソース/ドレイン（右） -->
+      <g id="el-sd-p" opacity="0">
+        <rect x="445" y="200" width="73" height="48" rx="2" fill="var(--pplus)"/>
+        <rect x="652" y="200" width="73" height="48" rx="2" fill="var(--pplus)"/>
+        <text x="481" y="229" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">p+</text>
+        <text x="688" y="229" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">p+</text>
+      </g>
+
+      <!-- セルフアラインの「影」強調（n+注入・p+注入時） -->
+      <g id="el-shadow" opacity="0">
+        <!-- ゲート下に伸びる影 -->
+        <text x="410" y="40" text-anchor="middle" font-size="12.5" fill="#b8600b" font-weight="700">↓ 不純物を打ち込む</text>
+      </g>
+      <g id="el-shadow-n" opacity="0">
+        <rect x="172" y="200" width="126" height="48" fill="url(#hatch)" opacity="0.5"/>
+        <rect x="172" y="200" width="126" height="48" fill="none" stroke="#6a2f8a" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="235" y="270" text-anchor="middle" font-size="10.5" fill="#6a2f8a" font-weight="700">ゲートの影＝注入されない</text>
+      </g>
+      <g id="el-shadow-p" opacity="0">
+        <rect x="522" y="200" width="126" height="48" fill="url(#hatch)" opacity="0.5"/>
+        <rect x="522" y="200" width="126" height="48" fill="none" stroke="#6a2f8a" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="585" y="270" text-anchor="middle" font-size="10.5" fill="#6a2f8a" font-weight="700">ゲートの影＝注入されない</text>
+      </g>
+
+      <!-- 層間絶縁膜（配線工程）。下の構造が透けるよう半透明に -->
+      <g id="el-ild" opacity="0"><rect x="60" y="120" width="700" height="80" fill="var(--ild)" opacity="0.45"/>
+        <text x="108" y="134" text-anchor="middle" font-size="10" fill="#8a7d63" font-weight="700">層間絶縁膜</text></g>
+      <!-- 絶縁膜の上から、ゲート・酸化膜・S/Dの輪郭を再掲してくっきり見せる -->
+      <g id="el-front" opacity="0">
+        <!-- ゲート酸化膜＋電極（NMOS） -->
+        <rect x="168" y="194" width="134" height="6" fill="var(--gateox)"/>
+        <rect x="172" y="162" width="126" height="32" rx="2" fill="var(--gate)"/>
+        <text x="235" y="183" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">ゲート</text>
+        <!-- ゲート酸化膜＋電極（PMOS） -->
+        <rect x="518" y="194" width="134" height="6" fill="var(--gateox)"/>
+        <rect x="522" y="162" width="126" height="32" rx="2" fill="var(--gate)"/>
+        <text x="585" y="183" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">ゲート</text>
+        <!-- S/Dの輪郭（塗りつぶしは下にあるので、ここは枠線で強調） -->
+        <g fill="none" stroke-width="1.5">
+          <rect x="95"  y="200" width="73" height="48" rx="2" stroke="#0e4c82"/>
+          <rect x="302" y="200" width="73" height="48" rx="2" stroke="#0e4c82"/>
+          <rect x="445" y="200" width="73" height="48" rx="2" stroke="#7a2018"/>
+          <rect x="652" y="200" width="73" height="48" rx="2" stroke="#7a2018"/>
+        </g>
+      </g>
+      <!-- コンタクトホール（エッチング後の穴／配線前） -->
+      <g id="el-holes" opacity="0">
+        <g fill="#ffffff" stroke="#8a7d63" stroke-width="1">
+          <rect x="126" y="120" width="10" height="80"/><rect x="326" y="120" width="10" height="80"/>
+          <rect x="484" y="120" width="10" height="80"/><rect x="684" y="120" width="10" height="80"/>
+          <rect x="229" y="120" width="12" height="44"/><rect x="579" y="120" width="12" height="44"/>
+        </g>
+      </g>
+      <!-- 配線 -->
+      <g id="el-wire" opacity="0">
+        <g fill="var(--metal)">
+          <rect x="126" y="138" width="10" height="62"/><rect x="684" y="138" width="10" height="62"/>
+        </g>
+        <text x="131" y="132" text-anchor="middle" font-size="9.5" fill="var(--metal)" font-weight="700">GND</text>
+        <text x="689" y="132" text-anchor="middle" font-size="9.5" fill="var(--metal)" font-weight="700">電源</text>
+        <g fill="var(--pos)">
+          <rect x="326" y="128" width="10" height="72"/><rect x="484" y="128" width="10" height="72"/>
+          <rect x="326" y="128" width="168" height="8"/>
+        </g>
+        <text x="410" y="122" text-anchor="middle" font-size="10.5" fill="var(--pos)" font-weight="700">出力（ドレイン同士）</text>
+        <g fill="var(--gate)">
+          <rect x="229" y="100" width="12" height="64"/><rect x="579" y="100" width="12" height="64"/>
+          <rect x="229" y="100" width="362" height="8"/>
+        </g>
+        <text x="410" y="94" text-anchor="middle" font-size="10.5" fill="var(--gate)" font-weight="700">入力（ゲート同士）</text>
+      </g>
+
+      <g id="el-final" opacity="0" font-weight="800">
+        <text x="235" y="305" text-anchor="middle" font-size="13" fill="var(--neg)">NMOS</text>
+        <text x="585" y="305" text-anchor="middle" font-size="13" fill="var(--pos)">PMOS</text>
+      </g>
+
+      <!-- 露光演出（マスク・光・露光部）をJSで動的に描く -->
+      <g id="el-expose"></g>
+    </svg>
+
+    <div id="lithotagwrap"></div>
+  </div>
+
+  <div class="stepinfo">
+    <div class="stepnum"><span id="stepidx">1</span><small id="steptot">/36</small></div>
+    <div class="steptext">
+      <h2 id="steptitle"></h2>
+      <div class="en" id="stepen"></div>
+      <p id="stepdesc"></p>
+    </div>
+  </div>
+
+  <div class="barwrap">
+    <div class="bar"><i id="barfill"></i></div>
+    <div class="barlabel" id="barlabel"></div>
+  </div>
+
+  <div class="nav">
+    <button class="prev" id="prev">← 前へ</button>
+    <button class="next" id="next">次へ →</button>
+    <button class="play" id="play">▶ 自動</button>
+  </div>
+
+  <div class="countnote" id="countnote"></div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:var(--si)"></span>基板</span>
+    <span><span class="sw" style="background:var(--pwell)"></span>pウェル</span>
+    <span><span class="sw" style="background:var(--nwell)"></span>nウェル</span>
+    <span><span class="sw" style="background:var(--film)"></span>保護膜</span>
+    <span><span class="sw" style="background:var(--resist)"></span>レジスト</span>
+    <span><span class="sw" style="background:var(--poly)"></span>ポリシリコン</span>
+    <span><span class="sw" style="background:var(--gateox)"></span>ゲート酸化膜</span>
+    <span><span class="sw" style="background:var(--gate)"></span>ゲート電極</span>
+    <span><span class="sw" style="background:var(--nplus)"></span>n+</span>
+    <span><span class="sw" style="background:var(--pplus)"></span>p+</span>
+    <span><span class="sw" style="background:var(--ild)"></span>絶縁膜</span>
+    <span><span class="sw" style="background:var(--metal)"></span>配線</span>
+  </div>
+</div>
+
+<script>
+// ---- 表示要素ヘルパ ----
+const ALL=["el-pwell","el-nwell","el-film","el-resist-full","el-resist-Lhole","el-resist-Rhole",
+  "el-film-Lhole","el-film-Rhole","el-gateox-full","el-poly-full","el-resist-poly","el-resist-ild","el-resist-gate",
+  "el-gate-n","el-gate-p","el-cover-R","el-cover-L","el-sd-n","el-sd-p","el-shadow","el-shadow-n",
+  "el-shadow-p","el-ild","el-front","el-holes","el-wire","el-final"];
+
+// 各ステップ：show=表示する要素配列, tag=フォトリソ表示, key=重要強調
+const S=[
+ // 章0
+ {c:0,t:"ウェハを用意",en:"Wafer",show:[],desc:"きれいなシリコンの板（ウェハ）から始めます。ここに全部を作り込みます。"},
+ // 章1 pウェル（フォトリソ全工程）
+ {c:1,t:"成膜",en:"Deposition",tag:"litho",show:["el-film"],desc:"ウェハ全体に保護膜（酸化膜）をのせます。"},
+ {c:1,t:"レジスト塗布",en:"Coating",tag:"litho",show:["el-film","el-resist-full"],desc:"その上に感光材（レジスト）をぬります。"},
+ {c:1,t:"露光",en:"Exposure",tag:"litho",show:["el-film","el-resist-full"],expose:{maskY:106,rTop:166,win:[[120,320]]},desc:"マスクで【左側だけ】窓を開けて光を当てます。光が当たった所のレジストが、あとで溶けます。"},
+ {c:1,t:"現像",en:"Development",tag:"litho",show:["el-film","el-resist-Lhole"],desc:"光が当たった左側のレジストが溶けて、穴があきます。"},
+ {c:1,t:"エッチング",en:"Etching",tag:"litho",show:["el-resist-Lhole","el-film-Lhole"],desc:"穴から保護膜を削り、左側のシリコン表面を露出させます。"},
+ {c:1,t:"イオン注入",en:"Ion implant",tag:"implant",show:["el-resist-Lhole","el-film-Lhole","el-pwell","el-shadow"],desc:"露出した左側に、p型不純物（ホウ素）を打ち込みます＝pウェル。レジストと膜が右側を守ります。"},
+ {c:1,t:"レジスト剥離",en:"Strip",tag:"litho",show:["el-pwell"],desc:"残ったレジストと保護膜をはがします。pウェル（NMOSの土台）が完成。"},
+ // 章2 nウェル
+ {c:2,t:"成膜",en:"Deposition",tag:"litho",show:["el-pwell","el-film"],desc:"また全体に保護膜をのせます（もう一度フォトリソを回します！）。"},
+ {c:2,t:"レジスト塗布",en:"Coating",tag:"litho",show:["el-pwell","el-film","el-resist-full"],desc:"感光材をぬります。"},
+ {c:2,t:"露光",en:"Exposure",tag:"litho",show:["el-pwell","el-film","el-resist-full"],expose:{maskY:106,rTop:166,win:[[500,700]]},desc:"今度はマスクで【右側だけ】窓を開けます。光が当たった右側が、あとで溶けます。"},
+ {c:2,t:"現像",en:"Development",tag:"litho",show:["el-pwell","el-film","el-resist-Rhole"],desc:"右側のレジストが溶けて穴があきます。"},
+ {c:2,t:"エッチング",en:"Etching",tag:"litho",show:["el-pwell","el-resist-Rhole","el-film-Rhole"],desc:"右側のシリコンを露出させます。"},
+ {c:2,t:"イオン注入",en:"Ion implant",tag:"implant",show:["el-pwell","el-resist-Rhole","el-film-Rhole","el-nwell","el-shadow"],desc:"右側にn型不純物（リン）を打ち込みます＝nウェル。"},
+ {c:2,t:"レジスト剥離",en:"Strip",tag:"litho",show:["el-pwell","el-nwell"],desc:"はがします。nウェル完成。これで左右の土台がそろいました。"},
+ // 章3 ゲート（先に作る）
+ {c:3,t:"ゲート酸化膜を育てる",en:"Gate oxidation",tag:"litho",show:["el-pwell","el-nwell","el-gateox-full"],desc:"表面にごく薄い酸化膜（ゲート絶縁膜）を育てます。これがゲートと下を絶縁します。"},
+ {c:3,t:"成膜（ポリシリコン）",en:"Deposition",tag:"litho",show:["el-pwell","el-nwell","el-gateox-full","el-poly-full"],desc:"ゲート電極の材料（ポリシリコン）を全体にのせます。"},
+ {c:3,t:"レジスト塗布",en:"Coating",tag:"litho",show:["el-pwell","el-nwell","el-gateox-full","el-poly-full","el-resist-poly"],desc:"感光材をぬります。"},
+ {c:3,t:"露光",en:"Exposure",tag:"litho",show:["el-pwell","el-nwell","el-gateox-full","el-poly-full","el-resist-poly"],expose:{maskY:90,rTop:150,win:[[60,172],[298,522],[648,760]]},desc:"マスクで【ゲートの形以外】に光を当てます。光が当たった所が溶け、ゲートの形だけレジストが残ります。"},
+ {c:3,t:"現像",en:"Development",tag:"litho",show:["el-pwell","el-nwell","el-gateox-full","el-poly-full","el-resist-gate"],desc:"いらない部分のレジストが溶け、ゲートの形のレジストだけ残ります。"},
+ {c:3,t:"エッチング",en:"Etching",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-resist-gate"],desc:"ゲートの形以外のポリシリコンを削ります。レジストで守られた所だけ残ります。"},
+ {c:3,t:"レジスト剥離",en:"Strip",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p"],desc:"はがします。左右に2本のゲートが立ちました。S/Dより先にゲートを作るのがミソ。"},
+ // 章4 S/D セルフアライン
+ {c:4,t:"セルフアラインとは",en:"Self-alignment",tag:"special",show:["el-pwell","el-nwell","el-gate-n","el-gate-p"],key:1,
+   desc:"ここがポイント。S/Dの位置決めに、わざわざ専用マスクを使いません。さっき先に作ったゲート自身を“影”として使います。"},
+ {c:4,t:"NMOS側だけ開ける",en:"Mask PMOS",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-cover-R"],desc:"PMOS側（右）をレジストで隠し、NMOS側（左）だけ開けます。"},
+ {c:4,t:"n+注入（左）",en:"N+ implant",tag:"implant",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-cover-R","el-sd-n","el-shadow","el-shadow-n"],key:1,
+   desc:"左に高濃度n型を打ち込みます。ゲートの真下には入りません＝ゲートが影になる。ソースとドレインの間隔が、ゲート幅で自動的に決まります。"},
+ {c:4,t:"剥離→左右入れ替え",en:"Strip & swap",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-cover-L"],desc:"はがして、今度はNMOS側を隠し、PMOS側（右）を開けます。"},
+ {c:4,t:"p+注入（右）",en:"P+ implant",tag:"implant",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-cover-L","el-sd-n","el-sd-p","el-shadow","el-shadow-p"],key:1,
+   desc:"右に高濃度p型を打ち込みます。ここもゲートが影になり、位置が自動で合います。"},
+ {c:4,t:"なぜ歩留まりが上がる？",en:"Why yield improves",tag:"special",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p"],key:1,
+   desc:"マスクの位置が多少ズレても、S/Dはゲート基準でできるのでズレに強い→不良が減る＝歩留まり向上。微細化が進むほど、この“自動で合う”仕組みが効いてきます。"},
+ // 章5 配線
+ {c:5,t:"層間絶縁膜を成膜",en:"ILD deposition",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front"],desc:"全体を絶縁膜でおおいます。"},
+ {c:5,t:"レジスト塗布",en:"Coating",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-resist-ild"],desc:"絶縁膜の上に感光材をぬります。"},
+ {c:5,t:"露光",en:"Exposure",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-resist-ild"],expose:{maskY:42,rTop:102,win:[[120,142],[223,247],[320,342],[478,500],[573,597],[678,700]]},desc:"つなぎたい端子の上【だけ】窓（コンタクトホール）を開けて露光します。"},
+ {c:5,t:"現像",en:"Development",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front"],desc:"窓のレジストが溶けます。"},
+ {c:5,t:"エッチング",en:"Etching",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-holes"],desc:"絶縁膜に穴をあけ、下の端子まで貫通させます。"},
+ {c:5,t:"金属を埋める＋配線",en:"Metallization",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-wire"],desc:"穴に金属を詰め、上に配線を通します。ゲート同士＝入力（紫）、ドレイン同士＝出力（青）。"},
+ {c:5,t:"レジスト剥離",en:"Strip",tag:"litho",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-wire"],desc:"はがして配線完成。"},
+ // 章6 完成
+ {c:6,t:"CMOS完成！",en:"Complete",show:["el-pwell","el-nwell","el-gate-n","el-gate-p","el-sd-n","el-sd-p","el-ild","el-front","el-wire","el-final"],key:1,
+   desc:"左NMOS・右PMOS＝CMOSインバータ（第10週の0と1）。フォトリソは何十回もくり返しました。これがチップに何十億個も並びます。"},
+];
+
+const CH=[
+ {name:"基板の準備"},
+ {name:"① pウェル（NMOSの土台）"},
+ {name:"② nウェル（PMOSの土台）"},
+ {name:"③ ゲートを先に作る"},
+ {name:"④ S/D：セルフアライン"},
+ {name:"⑤ 配線でつなぐ"},
+ {name:"⑥ 完成"},
+];
+
+let cur=0, playing=false, timer=null;
+const $=id=>document.getElementById(id);
+
+const SVGNS="http://www.w3.org/2000/svg";
+function mk(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+function drawExpose(ex){
+  const g=$("el-expose");
+  g.innerHTML="";
+  if(!ex) return;
+  const X0=60, X1=760;          // 全体のx範囲
+  const maskY=ex.maskY, maskH=14;
+  const rTop=ex.rTop;           // レジスト上端
+  const wins=ex.win;            // 窓のx範囲リスト [[x1,x2],...]
+
+  // マスク本体（窓以外を埋める＝遮光部）。窓の隙間を残してバーを分割描画
+  let cuts=[X0];
+  wins.forEach(([a,b])=>{cuts.push(a,b);});
+  cuts.push(X1);
+  // cuts = [X0, w1a,w1b, w2a,w2b, ..., X1] → 偶数区間が遮光、奇数区間が窓
+  for(let k=0;k<cuts.length-1;k+=2){
+    const x=cuts[k], w=cuts[k+1]-cuts[k];
+    if(w>0) g.appendChild(mk("rect",{x:x,y:maskY,width:w,height:maskH,rx:2,fill:"#3a4654"}));
+  }
+  // 窓部分は黄色く（光が通る穴）
+  wins.forEach(([a,b])=>{
+    g.appendChild(mk("rect",{x:a,y:maskY,width:b-a,height:maskH,fill:"#ffe98a"}));
+  });
+  // マスクのラベル
+  const lbl=mk("text",{x:X0,y:maskY-5,"font-size":11,fill:"#3a4654","font-weight":700});
+  lbl.textContent="マスク（型紙）"; g.appendChild(lbl);
+
+  // 光（窓からレジスト上端まで降りる）
+  wins.forEach(([a,b])=>{
+    g.appendChild(mk("rect",{x:a,y:maskY+maskH,width:b-a,height:(rTop-(maskY+maskH)),fill:"url(#lightg)"}));
+    // 光の筋（細線）
+    const n=Math.max(2,Math.floor((b-a)/22));
+    for(let j=0;j<=n;j++){
+      const lx=a+(b-a)*j/n;
+      g.appendChild(mk("line",{x1:lx,y1:maskY+maskH+2,x2:lx,y2:rTop,stroke:"#e8b400","stroke-width":1.5,opacity:0.8}));
+    }
+  });
+
+  // 露光された部分のレジスト（窓の下）を薄い水色で上書き
+  wins.forEach(([a,b])=>{
+    g.appendChild(mk("rect",{x:a,y:rTop,width:b-a,height:18,fill:"#9fd6e6"}));
+  });
+}
+
+function render(i){
+  const s=S[i];
+  ALL.forEach(id=>$(id).style.opacity = s.show.includes(id)?1:0);
+  $("sub-label").style.opacity = (s.show.includes("el-pwell")||s.show.includes("el-ild")) ? 0.0 : 1;
+
+  drawExpose(s.expose);
+
+  $("stepidx").textContent=i+1; $("steptot").textContent="/"+S.length;
+  $("steptitle").textContent=s.t; $("stepen").textContent=s.en;
+  const p=$("stepdesc"); p.textContent=s.desc; p.className = s.key?"key":"";
+
+  // 章
+  $("chapname").textContent=CH[s.c].name;
+  // 章内ステップ番号
+  const inChap=S.filter(x=>x.c===s.c);
+  const posInChap=inChap.indexOf(s)+1;
+  $("chapcount").textContent=`この章 ${posInChap}/${inChap.length}`;
+  document.querySelectorAll("#chapters button").forEach((b,idx)=>b.classList.toggle("active",idx===s.c));
+
+  // フォトリソタグ
+  const w=$("lithotagwrap"); w.innerHTML="";
+  if(s.tag){
+    const tag=document.createElement("div");
+    if(s.tag==="litho"){tag.className="lithotag on";tag.textContent="🔁 フォトリソ進行中（成膜→塗布→露光→現像→エッチング→剥離）";}
+    if(s.tag==="implant"){tag.className="lithotag implant";tag.textContent="⚡ イオン注入（不純物を打ち込む）";}
+    if(s.tag==="special"){tag.className="lithotag special";tag.textContent="★ セルフアライン：ゲートがマスク代わり";}
+    w.appendChild(tag);
+  }
+
+  // バー
+  const pct=(i+1)/S.length*100;
+  $("barfill").style.width=pct+"%";
+  $("barlabel").textContent=`全${S.length}ステップ中 ${i+1} 番目`;
+
+  // 露光カウント（ここまでに露光を何回やったか）
+  const exposures=S.slice(0,i+1).filter(x=>x.t==="露光").length;
+  $("countnote").innerHTML = exposures>0 ? `ここまでに露光（パターン焼き付け）を <b>${exposures}回</b> 実行` : "&nbsp;";
+
+  $("prev").disabled=i===0; $("next").disabled=i===S.length-1;
+}
+
+// 章タブ
+const ch=$("chapters");
+CH.forEach((c,idx)=>{
+  const b=document.createElement("button");
+  b.textContent=c.name;
+  b.onclick=()=>{cur=S.findIndex(s=>s.c===idx);render(cur);stopPlay();};
+  ch.appendChild(b);
+});
+
+$("prev").onclick=()=>{if(cur>0){cur--;render(cur);}stopPlay();};
+$("next").onclick=()=>{if(cur<S.length-1){cur++;render(cur);}stopPlay();};
+
+function stopPlay(){playing=false;clearInterval(timer);$("play").textContent="▶ 自動";}
+$("play").onclick=()=>{
+  if(playing){stopPlay();return;}
+  playing=true;$("play").textContent="⏸ 停止";
+  timer=setInterval(()=>{
+    if(cur<S.length-1){cur++;render(cur);} else {stopPlay();}
+  },1400);
+};
+
+render(0);
+</script>
+</body>
+</html>

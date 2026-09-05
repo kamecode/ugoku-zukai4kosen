@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第11週 アニメ図解② 平面から立体へ：ゲートの囲み方の進化</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222; --blue:#1F6FB2; --red:#C0392B;
+    --purple:#7E3FA0; --green:#2E8B57; --line:#D9DEE5; --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{font-family:"メイリオ","Meiryo",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 24px 60px;}
+  h1{font-size:24px;color:var(--navy);margin:4px 0 2px;font-weight:bold;}
+  .sub{font-size:15px;color:#5a6675;margin:0 0 16px;}
+  .rule{height:1px;background:var(--line);border:0;margin:0 0 18px;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .tab{font-family:inherit;font-size:15px;font-weight:bold;border:1.5px solid var(--navy);
+    background:#fff;color:var(--navy);padding:10px 18px;border-radius:8px;cursor:pointer;transition:.15s;}
+  .tab:hover{background:#eef3f8;}
+  .tab.active{background:var(--navy);color:#fff;}
+  .panel{display:none;} .panel.active{display:block;}
+  .stage{border:1px solid var(--line);border-radius:12px;padding:18px;background:#fff;}
+  .stagehead{font-size:18px;color:var(--navy);font-weight:bold;margin:0 0 4px;}
+  .stagedesc{font-size:15px;color:#444;margin:0 0 8px;line-height:1.6;}
+  .readout{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;}
+  .stat{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;background:#fafbfc;min-width:130px;}
+  .stat b{display:block;font-size:13px;color:#5a6675;font-weight:normal;margin-bottom:2px;}
+  .stat span{font-size:18px;color:var(--navy);font-weight:bold;}
+  .note{margin-top:14px;font-size:14px;line-height:1.7;color:#333;background:#f7f9fb;
+    border-left:4px solid var(--navy);padding:10px 14px;border-radius:0 8px 8px 0;}
+  .note .pos{color:var(--blue);font-weight:bold;}
+  .note .neg{color:var(--red);font-weight:bold;}
+  .note .emph{color:var(--purple);font-weight:bold;}
+  .note .task{color:var(--green);font-weight:bold;}
+  svg{display:block;max-width:100%;height:auto;margin:0 auto;}
+  .cap{text-align:center;font-size:13px;color:#5a6675;margin-top:8px;}
+  .compare{margin-top:8px;}
+  table.cmp{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px;}
+  table.cmp th,table.cmp td{border:1px solid var(--line);padding:8px 10px;text-align:center;}
+  table.cmp th{background:#f2f6fa;color:var(--navy);}
+  table.cmp td.lab{background:#fafbfc;font-weight:bold;color:var(--navy);text-align:left;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第11週 アニメ図解②　平面から立体へ：ゲートの囲み方の進化</h1>
+  <p class="sub">短チャネル効果（図解①）への答え＝「ゲートでチャネルを何面から囲むか」を増やしていく</p>
+  <hr class="rule">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="planar">① 平面MOS（1面）</button>
+    <button class="tab" data-tab="fin">② FinFET（3面）</button>
+    <button class="tab" data-tab="gaa">③ GAA／ナノシート（全周）</button>
+    <button class="tab" data-tab="cmp">④ 3つを比べる</button>
+  </div>
+
+  <!-- 共通の説明 -->
+  <!-- ① 平面 -->
+  <div class="panel active" id="planar">
+    <div class="stage">
+      <p class="stagehead">これまでのMOS＝チャネルの「上1面」だけゲートが乗っている</p>
+      <p class="stagedesc">断面で見ると、チャネル（電流の通り道）の上に酸化膜＋ゲートが乗っているだけ。チャネルの下のほうはゲートから遠く、支配が届きにくい。だから図解①で見た「ドレインの電界の侵入＝リーク」が起きやすい。</p>
+      <svg id="planarSvg" viewBox="0 0 760 360" role="img" aria-label="平面MOSの断面"></svg>
+      <p class="cap">断面図：ゲートが囲んでいるのは赤くハイライトした「上1面」だけ</p>
+      <div class="readout">
+        <div class="stat"><b>ゲートが囲む面</b><span>1 面（上だけ）</span></div>
+        <div class="stat"><b>チャネルの支配</b><span style="color:var(--red);">弱い</span></div>
+        <div class="stat"><b>リーク</b><span style="color:var(--red);">起きやすい</span></div>
+      </div>
+      <div class="note">
+        チャネルを短くするほど、上1面だけでは<span class="neg">下のほう・中央を支配しきれずリークが増える</span>。<br>
+        「もっとチャネルをしっかり握りたい」——そこで発想を変えます。<span class="task">平らなチャネルを立てて、横からも握ればいい（→ FinFET）。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② FinFET -->
+  <div class="panel" id="fin">
+    <div class="stage">
+      <p class="stagehead">FinFET＝チャネルを「ヒレ（Fin）」に立てて、3面から囲む</p>
+      <p class="stagedesc">チャネルを魚のヒレ（Fin）のように縦に立て、ゲートを左・上・右の3面にかぶせます。3方向から握るので、上1面だけの平面MOSよりずっとチャネルを支配でき、リークが減ります。22nm世代あたりから主役になりました。</p>
+      <svg id="finSvg" viewBox="0 0 760 360" role="img" aria-label="FinFETの断面"></svg>
+      <p class="cap">断面図：立てたヒレ（チャネル）を、ゲートが左・上・右の3面（赤ハイライト）から囲む</p>
+      <div class="readout">
+        <div class="stat"><b>ゲートが囲む面</b><span>3 面</span></div>
+        <div class="stat"><b>チャネルの支配</b><span style="color:var(--blue);">強い</span></div>
+        <div class="stat"><b>リーク</b><span style="color:var(--blue);">かなり減る</span></div>
+      </div>
+      <div class="note">
+        3面から握ると、チャネルの大部分にゲートの支配が届く＝<span class="pos">OFFがちゃんと効く＝リークが減る</span>。<br>
+        ただし<span class="neg">ヒレの根もと（下の1面）はまだ握れていない</span>。さらに小さくすると、ここがやはり弱点に。<span class="task">→ ならば全部囲もう（→ GAA）。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ GAA -->
+  <div class="panel" id="gaa">
+    <div class="stage">
+      <p class="stagehead">GAA／ナノシート＝チャネルを薄い板にして、全周（4面）を包む</p>
+      <p class="stagedesc">チャネルを薄いシート（ナノシート）にして、その全周をゲートでぐるりと包みます。GAA＝Gate-All-Around（全周ゲート）。逃げ場がないほどチャネルを握るので、短チャネル効果をほぼ抑え込めます。さらにシートを上下に積み重ねて電流を稼ぎます。2nm世代の主役です。</p>
+      <svg id="gaaSvg" viewBox="0 0 760 380" role="img" aria-label="GAAの断面"></svg>
+      <p class="cap">断面図：薄いシート（チャネル）の全周をゲート（赤ハイライト）が包む。シートは上下に積める</p>
+      <div class="readout">
+        <div class="stat"><b>ゲートが囲む面</b><span>全周（4面）</span></div>
+        <div class="stat"><b>チャネルの支配</b><span style="color:var(--green);">最強</span></div>
+        <div class="stat"><b>リーク</b><span style="color:var(--green);">ほぼゼロ</span></div>
+      </div>
+      <div class="note">
+        全周で握る＝<span class="emph">どこにもドレインの電界が侵入する隙がない</span>。だから極小サイズでもOFFがしっかり効く。<br>
+        おまけにシートを<span class="pos">何枚も積めば電流（駆動力）も増やせる</span>＝小ささと強さを両立。<span class="task">これが「平面 → 立体」進化の到達点です。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 比較 -->
+  <div class="panel" id="cmp">
+    <div class="stage">
+      <p class="stagehead">3つ並べて一望：囲む面が増えるほど、チャネルをしっかり握れる</p>
+      <p class="stagedesc">同じチャネルを、ゲートが何面から囲んでいるか。1面→3面→全周と増えるほど、ゲートの支配（赤ハイライト）が増え、リーク（漏れ）の矢印が細っていきます。</p>
+      <svg id="cmpSvg" viewBox="0 0 920 320" role="img" aria-label="3構造の比較"></svg>
+      <div class="compare">
+        <table class="cmp">
+          <tr><th>　</th><th>平面MOS</th><th>FinFET</th><th>GAA／ナノシート</th></tr>
+          <tr><td class="lab">ゲートが囲む面</td><td>1面（上だけ）</td><td>3面</td><td>全周（4面）</td></tr>
+          <tr><td class="lab">チャネルの形</td><td>平ら（寝ている）</td><td>ヒレ（立てる）</td><td>薄いシート（積める）</td></tr>
+          <tr><td class="lab">支配の強さ</td><td style="color:var(--red);">弱い</td><td style="color:var(--blue);">強い</td><td style="color:var(--green);">最強</td></tr>
+          <tr><td class="lab">リーク</td><td style="color:var(--red);">起きやすい</td><td style="color:var(--blue);">かなり減る</td><td style="color:var(--green);">ほぼゼロ</td></tr>
+          <tr><td class="lab">主な世代</td><td>～28nm 頃</td><td>22～5nm 頃</td><td>2nm 世代～</td></tr>
+        </table>
+      </div>
+      <div class="note">
+        ひとことで：<span class="emph">「ゲートでチャネルを何面から握るか」を増やす歴史</span>。<br>
+        第9週の「ゲートの効きやすさ＝チャネルを制御する力」が、立体化でどんどん強くなってきた、という話です。<span class="task">次世代はシート同士をさらに積む・nとpを重ねる（CFET）など、囲み方と積み方の工夫が続きます。</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+function el(n,a){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(svg,x,y,s,opt){opt=opt||{};const t=el('text',{x,y,'text-anchor':opt.anchor||'middle',
+  'font-size':opt.size||14,fill:opt.fill||'#222','font-weight':opt.bold?'bold':'normal','font-family':'メイリオ'});
+  t.textContent=s;svg.appendChild(t);return t;}
+
+// 色
+const C={sub:'#EAF2FA',subL:'#1F6FB2',chan:'#D6E6F2',chanS:'#1F6FB2',
+  ox:'#E0A800',gate:'#7E3FA0',hl:'#C0392B',leak:'#C0392B'};
+
+// 下向き矢印（リーク：太さで支配の弱さを表す）
+function leakArrow(svg,x,y0,y1,w){
+  svg.appendChild(el('line',{x1:x,y1:y0,x2:x,y2:y1,stroke:C.leak,'stroke-width':w,'stroke-dasharray':'3 4',opacity:0.9}));
+  svg.appendChild(el('path',{d:`M ${x-w-2} ${y1-8} L ${x+w+2} ${y1-8} L ${x} ${y1} Z`,fill:C.leak,opacity:0.9}));
+}
+
+// ============ ① 平面MOS ============
+(function(){
+  const svg=document.getElementById('planarSvg');
+  const cx=380, baseY=210, chW=300, chH=70, chX=cx-chW/2;
+  // 基板
+  svg.appendChild(el('rect',{x:chX-90,y:baseY,width:chW+180,height:110,fill:C.sub,stroke:C.subL,'stroke-width':2,rx:6}));
+  // チャネル（平ら）
+  svg.appendChild(el('rect',{x:chX,y:baseY,width:chW,height:chH,fill:C.chan,stroke:C.chanS,'stroke-width':2}));
+  txt(svg,cx,baseY+chH/2+6,'チャネル（電流の通り道）',{fill:C.subL,bold:true,size:15});
+  // 酸化膜＋ゲート（上1面）
+  svg.appendChild(el('rect',{x:chX,y:baseY-14,width:chW,height:12,fill:C.ox}));
+  svg.appendChild(el('rect',{x:chX,y:baseY-36,width:chW,height:22,fill:C.gate,rx:3}));
+  txt(svg,cx,baseY-44,'ゲート',{fill:C.gate,bold:true,size:15});
+  // 囲んでいる面のハイライト（上辺）
+  svg.appendChild(el('rect',{x:chX,y:baseY-3,width:chW,height:5,fill:C.hl}));
+  txt(svg,cx,baseY-60,'囲めているのは上1面だけ',{fill:C.hl,bold:true,size:15});
+  // リーク矢印（太い＝支配弱い）：チャネル下方へ
+  leakArrow(svg, cx-90, baseY+chH+4, baseY+chH+40, 5);
+  leakArrow(svg, cx,    baseY+chH+4, baseY+chH+40, 5);
+  leakArrow(svg, cx+90, baseY+chH+4, baseY+chH+40, 5);
+  txt(svg,cx,baseY+chH+58,'下のほうは支配が届かず漏れやすい（リーク）',{fill:C.hl,bold:true,size:14});
+})();
+
+// ============ ② FinFET ============
+(function(){
+  const svg=document.getElementById('finSvg');
+  const cx=380, floorY=300;
+  // 基板（土台）
+  svg.appendChild(el('rect',{x:160,y:floorY,width:440,height:36,fill:C.sub,stroke:C.subL,'stroke-width':2,rx:6}));
+  // ヒレ（立てたチャネル）
+  const finW=70, finH=150, finX=cx-finW/2, finY=floorY-finH;
+  svg.appendChild(el('rect',{x:finX,y:finY,width:finW,height:finH,fill:C.chan,stroke:C.chanS,'stroke-width':2}));
+  txt(svg,cx,finY+finH/2,'チャネル',{fill:C.subL,bold:true,size:14});
+  txt(svg,cx,finY+finH/2+18,'（ヒレ）',{fill:C.subL,bold:true,size:13});
+  // ゲートがヒレを跨ぐ（左・上・右）＝コの字
+  const gpad=20, gtop=finY-gpad;
+  // 酸化膜（薄く外周）
+  svg.appendChild(el('rect',{x:finX-8,y:finY-8,width:finW+16,height:finH+8,fill:'none',stroke:C.ox,'stroke-width':6}));
+  // ゲート（コの字：左・上・右）
+  const g='M '+(finX-gpad)+' '+floorY+' L '+(finX-gpad)+' '+gtop+' L '+(finX+finW+gpad)+' '+gtop+' L '+(finX+finW+gpad)+' '+floorY;
+  svg.appendChild(el('path',{d:g,fill:'none',stroke:C.gate,'stroke-width':16,'stroke-linejoin':'round'}));
+  txt(svg,cx,gtop-14,'ゲート（3面を囲む）',{fill:C.gate,bold:true,size:15});
+  // 囲めている3面のハイライト（左・上・右の内側）
+  svg.appendChild(el('line',{x1:finX-1,y1:finY,x2:finX-1,y2:floorY,stroke:C.hl,'stroke-width':5}));      // 左
+  svg.appendChild(el('line',{x1:finX+finW+1,y1:finY,x2:finX+finW+1,y2:floorY,stroke:C.hl,'stroke-width':5}));// 右
+  svg.appendChild(el('line',{x1:finX,y1:finY-1,x2:finX+finW,y2:finY-1,stroke:C.hl,'stroke-width':5}));      // 上
+  txt(svg,cx,gtop-34,'左・上・右の3面を握れる',{fill:C.hl,bold:true,size:14});
+  // 弱点：根もと（下）
+  txt(svg,cx,floorY+24,'根もと（下1面）はまだ握れない',{fill:'#5a6675',size:13});
+  // リーク矢印（細い＝かなり減る）：根もとから下へ
+  leakArrow(svg, cx, floorY+2, floorY+28, 2.5);
+})();
+
+// ============ ③ GAA ============
+(function(){
+  const svg=document.getElementById('gaaSvg');
+  const cx=380, floorY=330;
+  // 基板
+  svg.appendChild(el('rect',{x:160,y:floorY,width:440,height:34,fill:C.sub,stroke:C.subL,'stroke-width':2,rx:6}));
+  // ナノシート3枚（積層）＋各シートの全周をゲートが包む
+  const shW=120, shH=26, gap=34;
+  const ys=[floorY-40, floorY-40-shH-gap, floorY-40-2*(shH+gap)];
+  // まずゲートの「塊」（シートを内包する大きな紫の柱）
+  const blkX=cx-shW/2-22, blkY=ys[2]-22, blkW=shW+44, blkH=(floorY-40+shH) - (ys[2]-22);
+  svg.appendChild(el('rect',{x:blkX,y:blkY,width:blkW,height:blkH,fill:'#EFE6F5',stroke:C.gate,'stroke-width':2,rx:8}));
+  txt(svg,cx,blkY-10,'ゲートがシートの全周を包む（Gate-All-Around）',{fill:C.gate,bold:true,size:15});
+  ys.forEach((y,i)=>{
+    // 酸化膜（外周・黄土）
+    svg.appendChild(el('rect',{x:cx-shW/2-7,y:y-7,width:shW+14,height:shH+14,fill:'none',stroke:C.ox,'stroke-width':5,rx:5}));
+    // 全周ハイライト（赤の枠）＝4面すべて握る
+    svg.appendChild(el('rect',{x:cx-shW/2-2,y:y-2,width:shW+4,height:shH+4,fill:'none',stroke:C.hl,'stroke-width':4,rx:4}));
+    // シート本体
+    svg.appendChild(el('rect',{x:cx-shW/2,y:y,width:shW,height:shH,fill:C.chan,stroke:C.chanS,'stroke-width':1.5,rx:3}));
+    txt(svg,cx,y+shH/2+5,'ナノシート'+(i+1),{fill:C.subL,bold:true,size:12.5});
+  });
+  txt(svg,cx,floorY+24,'シートを積むほど電流（駆動力）も増える',{fill:C.subL,size:13});
+  // リーク矢印（ほぼ消える）：点だけ
+  txt(svg,blkX-90,blkY+blkH/2,'リーク',{fill:'#9aa6b2',size:13,anchor:'middle'});
+  txt(svg,blkX-90,blkY+blkH/2+18,'ほぼゼロ',{fill:C.green,size:14,anchor:'middle',bold:true});
+})();
+
+// ============ ④ 比較（3つ横並び・ミニ断面） ============
+(function(){
+  const svg=document.getElementById('cmpSvg');
+  const cols=[140,460,780];
+  const labels=['平面MOS（1面）','FinFET（3面）','GAA（全周）'];
+  const leakW=[5,2.5,0]; // リークの太さ
+  cols.forEach((cx,idx)=>{
+    txt(svg,cx,40,labels[idx],{fill:'#1C3A5E',bold:true,size:16});
+    const floorY=210;
+    if(idx===0){
+      // 平面：平らなチャネル＋上ゲート
+      const w=150,h=44,x=cx-w/2,y=floorY-h;
+      svg.appendChild(el('rect',{x:x-30,y:floorY,width:w+60,height:40,fill:C.sub,stroke:C.subL,'stroke-width':1.5,rx:4}));
+      svg.appendChild(el('rect',{x,y,width:w,height:h,fill:C.chan,stroke:C.chanS,'stroke-width':1.5}));
+      svg.appendChild(el('rect',{x,y:y-10,width:w,height:8,fill:C.ox}));
+      svg.appendChild(el('rect',{x,y:y-26,width:w,height:16,fill:C.gate,rx:2}));
+      svg.appendChild(el('rect',{x,y:y-2,width:w,height:4,fill:C.hl})); // 上1面HL
+    } else if(idx===1){
+      // FinFET：立てたヒレ＋コの字
+      const fw=46,fh=90,fx=cx-fw/2,fy=floorY-fh;
+      svg.appendChild(el('rect',{x:cx-90,y:floorY,width:180,height:28,fill:C.sub,stroke:C.subL,'stroke-width':1.5,rx:4}));
+      svg.appendChild(el('rect',{x:fx,y:fy,width:fw,height:fh,fill:C.chan,stroke:C.chanS,'stroke-width':1.5}));
+      const gp=14,gt=fy-gp;
+      const g='M '+(fx-gp)+' '+floorY+' L '+(fx-gp)+' '+gt+' L '+(fx+fw+gp)+' '+gt+' L '+(fx+fw+gp)+' '+floorY;
+      svg.appendChild(el('path',{d:g,fill:'none',stroke:C.gate,'stroke-width':12,'stroke-linejoin':'round'}));
+      svg.appendChild(el('line',{x1:fx-1,y1:fy,x2:fx-1,y2:floorY,stroke:C.hl,'stroke-width':4}));
+      svg.appendChild(el('line',{x1:fx+fw+1,y1:fy,x2:fx+fw+1,y2:floorY,stroke:C.hl,'stroke-width':4}));
+      svg.appendChild(el('line',{x1:fx,y1:fy-1,x2:fx+fw,y2:fy-1,stroke:C.hl,'stroke-width':4}));
+    } else {
+      // GAA：シート2枚＋全周枠
+      svg.appendChild(el('rect',{x:cx-90,y:floorY,width:180,height:26,fill:C.sub,stroke:C.subL,'stroke-width':1.5,rx:4}));
+      const sw=90,sh=20,gap=26;
+      const yy=[floorY-36, floorY-36-sh-gap];
+      const blkY=yy[1]-16, blkH=(floorY-36+sh)-(yy[1]-16);
+      svg.appendChild(el('rect',{x:cx-sw/2-16,y:blkY,width:sw+32,height:blkH,fill:'#EFE6F5',stroke:C.gate,'stroke-width':1.5,rx:6}));
+      yy.forEach(y=>{
+        svg.appendChild(el('rect',{x:cx-sw/2-3,y:y-3,width:sw+6,height:sh+6,fill:'none',stroke:C.hl,'stroke-width':3.5,rx:3}));
+        svg.appendChild(el('rect',{x:cx-sw/2,y,width:sw,height:sh,fill:C.chan,stroke:C.chanS,'stroke-width':1.2,rx:2}));
+      });
+    }
+    // リーク矢印（共通の床下へ）
+    if(leakW[idx]>0){
+      leakArrow(svg, cx, floorY+44, floorY+78, leakW[idx]);
+      txt(svg,cx,floorY+96,'リーク',{fill:C.hl,size:13,bold:true});
+    } else {
+      txt(svg,cx,floorY+70,'リーク',{fill:'#9aa6b2',size:13});
+      txt(svg,cx,floorY+88,'ほぼゼロ',{fill:C.green,size:14,bold:true});
+    }
+  });
+})();
+
+// タブ切替
+const tabs=document.querySelectorAll('.tab');
+const panels=document.querySelectorAll('.panel');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  panels.forEach(p=>p.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.tab).classList.add('active');
+}));
+</script>
+</body>
+</html>

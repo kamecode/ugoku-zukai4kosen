@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6週 pn接合：境界で何が起きるか</title>
+<style>
+  :root{
+    --navy:#1C3A5E; --ink:#222222;
+    --pos:#1F6FB2; --neg:#C0392B; --emph:#7E3FA0; --task:#2E8B57;
+    --line:#cccccc;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#FFFFFF; color:var(--ink);
+    font-family:"メイリオ","Meiryo",sans-serif; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1000px; margin:0 auto; padding:24px 20px 48px;}
+  header h1{font-size:24px; color:var(--navy); margin:0 0 4px; font-weight:bold; letter-spacing:.5px;}
+  header .sub{font-size:15px; color:#555; margin:0 0 10px;}
+  .rule{height:1px; background:var(--line); border:0; margin:0 0 20px;}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .tab{font-family:inherit; font-size:15px; cursor:pointer;
+    border:1.5px solid var(--navy); background:#fff; color:var(--navy);
+    padding:9px 16px; border-radius:6px; transition:.15s;}
+  .tab:hover{background:#f0f5fb;}
+  .tab.active{background:var(--navy); color:#fff;}
+  .stage{border:1.5px solid var(--navy); border-radius:10px; padding:6px; background:#fff;}
+  svg{display:block; width:100%; height:auto;}
+  .panel{margin-top:18px; border:1px solid var(--line); border-radius:8px; padding:16px 18px;}
+  .panel h2{font-size:19px; margin:0 0 8px; color:var(--navy);}
+  .panel p{font-size:16px; line-height:1.7; margin:0 0 8px;}
+  .panel .key{font-weight:bold;}
+  .flowtag{display:inline-block; font-size:14px; font-weight:bold;
+    padding:3px 10px; border-radius:4px; margin-left:8px; vertical-align:middle;}
+  .flowtag.on{background:var(--pos); color:#fff;}
+  .flowtag.off{background:var(--neg); color:#fff;}
+  .flowtag.eq{background:#777; color:#fff;}
+  .legend{display:flex; flex-wrap:wrap; gap:18px; margin:14px 2px 0; font-size:14px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+  .sq{width:14px; height:14px; display:inline-block; border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>pn接合：境界で何が起きるか</h1>
+    <p class="sub">第6週｜ボタンで状態を切り替えて、キャリア（電子と正孔）の動きを観察しよう</p>
+    <hr class="rule">
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-state="join">① くっつけた瞬間</button>
+    <button class="tab" data-state="equil">② 平衡（壁ができて止まる）</button>
+    <button class="tab" data-state="fwd">③ 順方向（流れ続ける）</button>
+    <button class="tab" data-state="rev">④ 逆方向（流れない）</button>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 900 500" role="img" aria-label="pn接合の図">
+      <!-- ===== 上段：半導体の中のキャリア ===== -->
+      <rect id="nArea" x="60" y="56" width="360" height="190" fill="#eaf2fb"/>
+      <rect id="pArea" x="480" y="56" width="360" height="190" fill="#fdeeec"/>
+      <rect id="depletion" x="380" y="56" width="140" height="190" fill="#ffffff" stroke="#bbbbbb" stroke-dasharray="5 5"/>
+      <text id="depLabel" x="450" y="264" text-anchor="middle" font-size="14" fill="#888">空乏層</text>
+      <text id="depSub" x="450" y="281" text-anchor="middle" font-size="12" fill="#aaa">（川の中州・立入禁止ゾーン）</text>
+      <text x="240" y="44" text-anchor="middle" font-size="19" font-weight="bold" fill="#1C3A5E">n型（電子が余る）</text>
+      <text x="660" y="44" text-anchor="middle" font-size="19" font-weight="bold" fill="#1C3A5E">p型（正孔が余る）</text>
+      <rect x="60" y="56" width="780" height="190" fill="none" stroke="#1C3A5E" stroke-width="2"/>
+      <line x1="450" y1="56" x2="450" y2="246" stroke="#1C3A5E" stroke-width="1.2" stroke-dasharray="3 4"/>
+      <g id="ions" opacity="0"></g>
+      <g id="electrons"></g>
+      <g id="holes"></g>
+      <text id="batLabel" x="450" y="300" text-anchor="middle" font-size="15" font-weight="bold" opacity="0"></text>
+
+      <!-- ===== 下段：電気の壁（坂）と、坂を越えようとするキャリア ===== -->
+      <text x="70" y="345" font-size="14" fill="#555">電気の壁（坂）── 電子はこの坂を越えられるか？</text>
+      <line x1="70" y1="470" x2="830" y2="470" stroke="#ddd" stroke-width="1"/>
+      <path id="barrierPath" d="" fill="none" stroke="#1C3A5E" stroke-width="3" stroke-linejoin="round"/>
+      <!-- 坂を登ろうとする電子（ボール） -->
+      <g id="climber">
+        <circle id="climberC" cx="120" cy="470" r="12" fill="#1F6FB2"/>
+        <text id="climberT" x="120" y="475" text-anchor="middle" font-size="15" fill="#fff" font-weight="bold">−</text>
+      </g>
+      <text id="barrierNote" x="450" y="455" text-anchor="middle" font-size="13" fill="#888"></text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#1F6FB2"></i>電子（−）：n型に多い</span>
+    <span><i class="dot" style="background:#fff;border:2px solid #C0392B"></i>正孔（＋）：p型に多い＝「空席」</span>
+    <span><i class="sq" style="background:#fff;border:1px dashed #bbb"></i>空乏層：動ける担い手がいない無人地帯</span>
+  </div>
+
+  <div class="panel">
+    <h2 id="pTitle"></h2>
+    <p id="pBody"></p>
+    <p id="pPoint" style="color:#7E3FA0;"></p>
+  </div>
+</div>
+
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+const eG=document.getElementById("electrons");
+const hG=document.getElementById("holes");
+const ionG=document.getElementById("ions");
+const dep=document.getElementById("depletion");
+const depLabel=document.getElementById("depLabel");
+const depSub=document.getElementById("depSub");
+const batLabel=document.getElementById("batLabel");
+const barrierPath=document.getElementById("barrierPath");
+const barrierNote=document.getElementById("barrierNote");
+const climberC=document.getElementById("climberC");
+const climberT=document.getElementById("climberT");
+
+let loopTimers=[];
+function clearLoops(){ loopTimers.forEach(t=>{clearInterval(t); clearTimeout(t);}); loopTimers=[]; }
+
+function mkCarrier(x,y,type){
+  const g=document.createElementNS(SVGNS,"g");
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",x); c.setAttribute("cy",y); c.setAttribute("r",11);
+  const t=document.createElementNS(SVGNS,"text");
+  t.setAttribute("x",x); t.setAttribute("y",y+5); t.setAttribute("text-anchor","middle");
+  t.setAttribute("font-size","15"); t.setAttribute("font-weight","bold");
+  if(type==="e"){ c.setAttribute("fill","#1F6FB2"); t.setAttribute("fill","#fff"); t.textContent="−"; }
+  else { c.setAttribute("fill","#fff"); c.setAttribute("stroke","#C0392B"); c.setAttribute("stroke-width","2.5");
+         t.setAttribute("fill","#C0392B"); t.textContent="＋"; }
+  g.appendChild(c); g.appendChild(t);
+  g.dataset.x=x; g.dataset.y=y;
+  return g;
+}
+function ion(x,y,sign){
+  const g=document.createElementNS(SVGNS,"g");
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",x); c.setAttribute("cy",y); c.setAttribute("r",9);
+  c.setAttribute("fill","none");
+  c.setAttribute("stroke", sign==="+" ? "#C0392B":"#1F6FB2");
+  c.setAttribute("stroke-width","1.5"); c.setAttribute("stroke-dasharray","2 2");
+  const t=document.createElementNS(SVGNS,"text");
+  t.setAttribute("x",x); t.setAttribute("y",y+4); t.setAttribute("text-anchor","middle");
+  t.setAttribute("font-size","12"); t.setAttribute("fill", sign==="+" ? "#C0392B":"#1F6FB2");
+  t.textContent= sign==="+" ? "⊕":"⊖";
+  g.appendChild(c); g.appendChild(t);
+  return g;
+}
+function moveG(g,x,y){
+  g.querySelector("circle").setAttribute("cx",x);
+  g.querySelector("circle").setAttribute("cy",y);
+  g.querySelector("text").setAttribute("x",x);
+  g.querySelector("text").setAttribute("y",y+5);
+  g.dataset.x=x; g.dataset.y=y;
+}
+function animateTo(g,x,y,dur=1200,onDone){
+  const sx=parseFloat(g.dataset.x), sy=parseFloat(g.dataset.y);
+  const start=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-start)/dur);
+    const e=t<.5?2*t*t:-1+(4-2*t)*t;
+    moveG(g, sx+(x-sx)*e, sy+(y-sy)*e);
+    if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+let electrons=[], holes=[];
+function buildCarriers(){
+  eG.innerHTML=""; hG.innerHTML=""; electrons=[]; holes=[];
+  const exs=[100,150,200,250,300,350], eys=[90,130,170,210];
+  let ei=0;
+  for(const y of eys) for(const x of exs){ if(ei<18){const g=mkCarrier(x,y,"e"); eG.appendChild(g); electrons.push(g); ei++;} }
+  const hxs=[540,590,640,690,740,790], hys=[90,130,170,210];
+  let hi=0;
+  for(const y of hys) for(const x of hxs){ if(hi<18){const g=mkCarrier(x,y,"h"); hG.appendChild(g); holes.push(g); hi++;} }
+}
+function buildIons(){
+  ionG.innerHTML="";
+  for(const y of [85,125,165,205]) ionG.appendChild(ion(400,y,"+"));
+  for(const y of [85,125,165,205]) ionG.appendChild(ion(500,y,"-"));
+}
+function setDepletion(width, opacity=1){
+  dep.setAttribute("x",450-width/2); dep.setAttribute("width",width);
+  dep.setAttribute("opacity",opacity);
+  depLabel.setAttribute("opacity",opacity); depSub.setAttribute("opacity",opacity);
+}
+
+// ===== 坂（壁）の形状を返す。境界450に山。drop=山の高さ =====
+const BOT=470, LEFT=70, RIGHT=830, MID=450;
+function barrierD(drop){
+  const top=BOT-drop;
+  return `M${LEFT} ${BOT} L380 ${BOT} L${MID} ${top} L520 ${BOT} L${RIGHT} ${BOT}`;
+}
+// 坂の上のx座標に対する高さyを返す（左ふもと→頂上→右ふもとの折れ線）
+function barrierY(x, drop){
+  const top=BOT-drop;
+  if(x<=380) return BOT;
+  if(x<=MID) return BOT + (top-BOT)*((x-380)/(MID-380));
+  if(x<=520) return top + (BOT-top)*((x-MID)/(520-MID));
+  return BOT;
+}
+function setBarrier(drop, color){
+  barrierPath.setAttribute("d", barrierD(drop));
+  barrierPath.setAttribute("stroke", color||"#1C3A5E");
+}
+function placeClimber(x,drop){
+  const y=barrierY(x,drop)-14;
+  climberC.setAttribute("cx",x); climberC.setAttribute("cy",y);
+  climberT.setAttribute("x",x); climberT.setAttribute("y",y+5);
+}
+
+// 坂を登ろうとする電子のアニメ。
+// mode:'over'=越える(順) / 'balance'=つり合って戻る(平衡) / 'bounce'=跳ね返る(逆)
+function climbLoop(drop, mode, color){
+  climberC.setAttribute("fill", color||"#1F6FB2");
+  let raf=null;
+  function run(){
+    const start=performance.now();
+    const dur = mode==='over'?2600:2000;
+    function step(now){
+      let t=Math.min(1,(now-start)/dur);
+      let x;
+      if(mode==='over'){
+        x = 120 + (780-120)*t;            // 左から右へ越えていく
+      } else if(mode==='balance'){
+        // 頂上手前(430)まで登って押し返され戻る
+        const peak=0.5;
+        if(t<peak){ x=120+(430-120)*(t/peak); }
+        else { x=430-(430-120)*((t-peak)/(1-peak)); }
+      } else { // bounce
+        const peak=0.45;
+        const reach=410; // 高い山の手前で跳ね返る
+        if(t<peak){ x=120+(reach-120)*(t/peak); }
+        else { x=reach-(reach-120)*((t-peak)/(1-peak)); }
+      }
+      placeClimber(x,drop);
+      if(t<1) raf=requestAnimationFrame(step);
+    }
+    raf=requestAnimationFrame(step);
+  }
+  run();
+  const iv=setInterval(run, (mode==='over'?2600:2000)+300);
+  loopTimers.push(iv);
+}
+
+const states={
+  join:{ title:"① くっつけた瞬間", tag:["これから動く","eq"],
+    body:"n型には電子が、p型には正孔がたくさんいます。くっつけた直後、<span class='key'>多い方から少ない方へ、キャリアが境界を越えて拡散</span>し始めます。人混みが空いている方へ流れ込むのと同じです。",
+    point:"ポイント：まだ壁はありません。電子と正孔が境界で出会いに向かいます。" },
+  equil:{ title:"② 平衡：壁ができて止まる", tag:["つり合い","eq"],
+    body:"境界で出会った電子と正孔は<span class='key'>再結合して消え</span>、動けない固定イオン（⊕⊖）だけが残ります＝<span class='key'>空乏層（中州）</span>。残ったイオンが下のような<span class='key'>「電気の坂（壁）」</span>を作ります。電子は坂を登ろうとしても<span class='key'>押し返されて戻ってしまう</span>。<span class='key'>拡散したい力 ⇄ 坂が押し返す力</span>がつり合い、ぴたっと止まります。",
+    point:"ポイント：電圧ゼロでも坂ができる＝内蔵電位。式は追わず「境界に坂がある」とイメージでOK。" },
+  fwd:{ title:"③ 順方向：流れ続ける", tag:["流れる","on"],
+    body:"p側に＋、n側に−の電圧。すると<span class='key'>坂が低くなり、空乏層が縮みます</span>。低い坂なら電子はやすやす越えられる——下の電子が坂を越えていくのを見てください。キャリアが次々に境界を越えて流れ込み、再結合し、また新しいキャリアが湧く。これが<span class='key'>途切れない電流</span>です。",
+    point:"ポイント：坂を低くする向き＝全員が越えられる＝ON。動き続けているのが電流。" },
+  rev:{ title:"④ 逆方向：流れない", tag:["流れない","off"],
+    body:"逆に、p側に−、n側に＋の電圧。キャリアは境界から<span class='key'>引き離され、空乏層が広がり、坂はますます高く</span>なります。下の電子は坂の手前で<span class='key'>跳ね返されてしまう</span>。だから<span class='key'>電流はほぼ流れません</span>。",
+    point:"ポイント：坂を高くする向き＝中州が拡大＝OFF。だから次回のダイオード＝一方通行になる。" }
+};
+
+function applyState(name){
+  clearLoops();
+  const s=states[name];
+  document.getElementById("pTitle").innerHTML = s.title + ` <span class="flowtag ${s.tag[1]}">${s.tag[0]}</span>`;
+  document.getElementById("pBody").innerHTML = s.body;
+  document.getElementById("pPoint").innerHTML = s.point;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.state===name));
+  buildCarriers();
+
+  if(name==="join"){
+    ionG.setAttribute("opacity","0"); batLabel.setAttribute("opacity","0");
+    setDepletion(140,0); depLabel.textContent=""; depSub.textContent="";
+    setBarrier(0,"#ccc"); barrierNote.textContent="まだ坂（壁）はない";
+    placeClimber(120,0); climberC.setAttribute("opacity","0");
+    setTimeout(()=>{
+      animateTo(electrons[5],380,130); animateTo(electrons[11],400,170); animateTo(electrons[17],390,210);
+      animateTo(holes[0],520,90); animateTo(holes[6],510,130); animateTo(holes[12],525,170);
+    },150);
+  }
+  else if(name==="equil"){
+    buildIons(); ionG.setAttribute("opacity","1"); batLabel.setAttribute("opacity","0");
+    setDepletion(140,1); depLabel.textContent="空乏層"; depSub.textContent="（川の中州・立入禁止ゾーン）";
+    setBarrier(75,"#1C3A5E"); barrierNote.textContent="坂を登ろうとするが押し返される＝つり合い";
+    climberC.setAttribute("opacity","1");
+    [5,11,17].forEach(i=>electrons[i].style.opacity=0);
+    [0,6,12].forEach(i=>holes[i].style.opacity=0);
+    climbLoop(75,'balance',"#1C3A5E");
+  }
+  else if(name==="fwd"){
+    buildIons(); ionG.setAttribute("opacity","0.35"); batLabel.setAttribute("opacity","1");
+    batLabel.textContent="電圧：p側 ＋ / n側 −  →  坂が低くなる"; batLabel.setAttribute("fill","#1F6FB2");
+    setDepletion(60,1); depLabel.textContent="空乏層（縮む）"; depSub.textContent="";
+    setBarrier(22,"#1F6FB2"); barrierNote.textContent="坂が低い＝越えられる＝電流が流れ続ける";
+    climberC.setAttribute("opacity","1");
+    startForwardFlow(); climbLoop(22,'over',"#1F6FB2");
+  }
+  else if(name==="rev"){
+    buildIons(); ionG.setAttribute("opacity","1"); batLabel.setAttribute("opacity","1");
+    batLabel.textContent="電圧：p側 − / n側 ＋  →  坂が高くなる"; batLabel.setAttribute("fill","#C0392B");
+    setDepletion(240,1); depLabel.textContent="空乏層（広がる）"; depSub.textContent="";
+    setBarrier(125,"#C0392B"); barrierNote.textContent="坂が高い＝越えられず跳ね返る＝流れない";
+    climberC.setAttribute("opacity","1");
+    setTimeout(()=>{
+      animateTo(electrons[5],120,130,1400); animateTo(electrons[11],100,170,1400);
+      animateTo(holes[0],800,90,1400); animateTo(holes[6],820,130,1400);
+    },150);
+    climbLoop(125,'bounce',"#C0392B");
+  }
+}
+
+function startForwardFlow(){
+  const lanes=[100,140,180];
+  function pulse(){
+    lanes.forEach((y,k)=>{
+      const e=electrons[k]; moveG(e,90,y); e.style.opacity=1;
+      animateTo(e,720,y,1800,()=>{ e.style.opacity=0; moveG(e,90,y); });
+      const h=holes[k]; moveG(h,810,y); h.style.opacity=1;
+      animateTo(h,180,y,1800,()=>{ h.style.opacity=0; moveG(h,810,y); });
+    });
+  }
+  pulse();
+  const iv=setInterval(pulse,2000);
+  loopTimers.push(iv);
+}
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>applyState(t.dataset.state));
+});
+applyState("join");
+</script>
+</body>
+</html>

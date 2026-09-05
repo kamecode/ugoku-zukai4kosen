@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第11週 アニメ図解① スケーリング則と短チャネル効果</title>
+<style>
+  :root{
+    --navy:#1C3A5E;
+    --ink:#222222;
+    --blue:#1F6FB2;
+    --red:#C0392B;
+    --purple:#7E3FA0;
+    --green:#2E8B57;
+    --line:#D9DEE5;
+    --bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    font-family:"メイリオ","Meiryo",sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 24px 60px;}
+  h1{
+    font-size:24px;color:var(--navy);margin:4px 0 2px;font-weight:bold;
+  }
+  .sub{font-size:15px;color:#5a6675;margin:0 0 16px;}
+  .rule{height:1px;background:var(--line);border:0;margin:0 0 18px;}
+
+  /* タブ */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .tab{
+    font-family:inherit;font-size:15px;font-weight:bold;
+    border:1.5px solid var(--navy);background:#fff;color:var(--navy);
+    padding:10px 18px;border-radius:8px;cursor:pointer;transition:.15s;
+  }
+  .tab:hover{background:#eef3f8;}
+  .tab.active{background:var(--navy);color:#fff;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .stage{
+    border:1px solid var(--line);border-radius:12px;padding:18px;
+    background:#fff;
+  }
+  .stagehead{font-size:18px;color:var(--navy);font-weight:bold;margin:0 0 4px;}
+  .stagedesc{font-size:15px;color:#444;margin:0 0 14px;line-height:1.6;}
+
+  /* コントロール */
+  .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 4px;}
+  .controls label{font-size:15px;color:var(--navy);font-weight:bold;}
+  input[type=range]{width:280px;accent-color:var(--navy);}
+  .ctlbtn{
+    font-family:inherit;font-size:14px;font-weight:bold;
+    border:1.5px solid var(--purple);background:#fff;color:var(--purple);
+    padding:8px 14px;border-radius:8px;cursor:pointer;
+  }
+  .ctlbtn:hover{background:#f3ecf7;}
+  .ctlbtn.on{background:var(--purple);color:#fff;}
+
+  .readout{
+    display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;
+  }
+  .stat{
+    border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;
+    background:#fafbfc;min-width:120px;
+  }
+  .stat b{display:block;font-size:13px;color:#5a6675;font-weight:normal;margin-bottom:2px;}
+  .stat span{font-size:18px;color:var(--navy);font-weight:bold;}
+
+  .note{
+    margin-top:14px;font-size:14px;line-height:1.7;color:#333;
+    background:#f7f9fb;border-left:4px solid var(--navy);padding:10px 14px;border-radius:0 8px 8px 0;
+  }
+  .note .pos{color:var(--blue);font-weight:bold;}
+  .note .neg{color:var(--red);font-weight:bold;}
+  .note .emph{color:var(--purple);font-weight:bold;}
+  .note .task{color:var(--green);font-weight:bold;}
+
+  svg{display:block;max-width:100%;height:auto;margin:0 auto;}
+  .cap{text-align:center;font-size:13px;color:#5a6675;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>第11週 アニメ図解①　スケーリング則と短チャネル効果</h1>
+  <p class="sub">なぜトランジスタを小さくしたいのか（スケーリング則）／小さくすると何が困るのか（短チャネル効果・リーク）</p>
+  <hr class="rule">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="scale">① なぜ小さくする？（スケーリング則）</button>
+    <button class="tab" data-tab="short">② 小さくすると困る（短チャネル効果）</button>
+  </div>
+
+  <!-- ============ タブ① スケーリング則 ============ -->
+  <div class="panel active" id="scale">
+    <div class="stage">
+      <p class="stagehead">寸法を 1/k にすると、同じ面積に k² 個のトランジスタが入る</p>
+      <p class="stagedesc">スライダーを動かすと、トランジスタ1個が縮み、空いた場所に同じ大きさのチップへどんどん詰め込まれます。<br>「小さくする＝同じ面積にたくさん載る＝1個あたりが安い・配線が短くて速い・電圧も下げられて省電力」——これがチップを縮め続ける動機です。</p>
+
+      <div class="controls">
+        <label for="kslider">縮小率 k＝</label>
+        <input type="range" id="kslider" min="10" max="40" value="10" step="1">
+        <span id="kval" style="font-size:18px;color:var(--navy);font-weight:bold;">1.0</span>
+      </div>
+
+      <svg id="scaleSvg" viewBox="0 0 920 360" role="img" aria-label="スケーリング則の図">
+        <!-- 左：トランジスタ1個 / 右：同面積のチップに詰まる -->
+        <!-- 描画はJSで -->
+      </svg>
+      <p class="cap">左＝トランジスタ1個（k倍に縮む）／右＝同じ大きさのチップ（k×k 個に詰まる）</p>
+
+      <div class="readout">
+        <div class="stat"><b>縮小率 k</b><span id="s_k">1.0</span></div>
+        <div class="stat"><b>1個の面積</b><span id="s_area">1.00</span></div>
+        <div class="stat"><b>同じ面積に入る数</b><span id="s_num">1 個</span></div>
+      </div>
+
+      <div class="note">
+        面積は <span class="emph">1/k²</span> になります（タテもヨコも 1/k だから）。だから同じ面積には <span class="emph">k² 個</span>が入る。<br>
+        <span class="pos">k=1.4（約√2）でちょうど2倍</span>。「約2年でトランジスタ数が2倍」という<span class="emph">ムーアの法則</span>は、2年ごとに寸法を√2ずつ縮めてきた、と読み替えられます。<br>
+        <span class="task">ここがうれしい：</span>たくさん載る→1個あたり安い／配線が短い→速い／電圧も下げられる→省電力。3拍子そろうから、みんな小さくしたがるのです。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ タブ② 短チャネル効果 ============ -->
+  <div class="panel" id="short">
+    <div class="stage">
+      <p class="stagehead">小さくしすぎると、ゲートがチャネルを支配しきれなくなる</p>
+      <p class="stagedesc">第8〜10週で「ゲートがチャネルを作る・止める」を学びました。ところがチャネルを短くすると、両どなりのソース／ドレインの電界がチャネルの真ん中まで入り込み、<b>ゲートの言うことを聞かない領域</b>ができます。すると OFF にしたいのに電流がじわっと漏れる＝<b>リーク</b>。第10週で学んだ「リーク＝省電力の敵」が、ここで効いてきます。</p>
+
+      <div class="controls">
+        <label for="lslider">チャネルの長さ：</label>
+        <input type="range" id="lslider" min="0" max="100" value="0" step="1">
+        <span id="lval" style="font-size:15px;color:var(--navy);font-weight:bold;">長い（昔のMOS）</span>
+      </div>
+
+      <svg id="shortSvg" viewBox="0 0 920 380" role="img" aria-label="短チャネル効果の図">
+        <!-- 描画はJSで -->
+      </svg>
+      <p class="cap">スライダーを右へ＝チャネルを短くする。ソース／ドレインの支配（赤）がチャネル中央へ侵入していく様子</p>
+
+      <div class="readout">
+        <div class="stat"><b>チャネル長</b><span id="sh_len">長い</span></div>
+        <div class="stat"><b>ゲートの支配</b><span id="sh_gate">チャネル全体</span></div>
+        <div class="stat"><b>OFF時のリーク</b><span id="sh_leak">ほぼゼロ</span></div>
+      </div>
+
+      <div class="note">
+        長いチャネルでは、チャネルの上にいる<span class="emph">ゲートが端から端まで全体を支配</span>でき、OFFと言えばちゃんと止まります。<br>
+        短くすると、<span class="neg">ソースとドレインの電界（赤）がチャネル中央まで侵入</span>。ゲートの支配（紫）が押しのけられ、OFFにしても電流が漏れる＝<span class="neg">リーク</span>。<br>
+        この「ドレインの電界がチャネルに入り込んで壁を下げてしまう」現象が、最先端で平面MOSが行き詰まった正体です。<span class="task">→ 解決策が「ゲートで何面から囲むか」を増やす立体構造（図解②へ）。</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== タブ切替 =====
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  panels.forEach(p=>p.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.tab).classList.add('active');
+}));
+
+const NS='http://www.w3.org/2000/svg';
+function el(name, attrs){
+  const e=document.createElementNS(NS,name);
+  for(const k in attrs){ e.setAttribute(k, attrs[k]); }
+  return e;
+}
+
+// ============================================================
+// タブ① スケーリング則
+// ============================================================
+const scaleSvg = document.getElementById('scaleSvg');
+const kslider = document.getElementById('kslider');
+
+function drawScale(){
+  const kRaw = parseInt(kslider.value,10)/10; // 1.0 .. 4.0
+  const k = kRaw;
+  while(scaleSvg.firstChild) scaleSvg.removeChild(scaleSvg.firstChild);
+
+  // ---- 左：トランジスタ1個（k倍に縮む） ----
+  const lcx=210, lcy=180, base=150; // 基準サイズ
+  const size = base / k;
+  // 枠（基準の薄い影）
+  scaleSvg.appendChild(el('rect',{x:lcx-base/2,y:lcy-base/2,width:base,height:base,
+     fill:'none',stroke:'#C9D3DD','stroke-dasharray':'5 5','stroke-width':1.5}));
+  // 実トランジスタ（簡略：ゲート紫・酸化膜黄土・基板青）
+  const tx=lcx-size/2, ty=lcy-size/2;
+  scaleSvg.appendChild(el('rect',{x:tx,y:ty,width:size,height:size,fill:'#D6E6F2',stroke:'#1F6FB2','stroke-width':2,rx:4}));
+  // ソース/ドレイン
+  const sd = size*0.22;
+  scaleSvg.appendChild(el('rect',{x:tx,y:ty,width:sd,height:size,fill:'#1F6FB2',rx:2}));
+  scaleSvg.appendChild(el('rect',{x:tx+size-sd,y:ty,width:sd,height:size,fill:'#1F6FB2',rx:2}));
+  // 酸化膜＋ゲート（上部）
+  const gw=size-2*sd;
+  scaleSvg.appendChild(el('rect',{x:tx+sd,y:ty,width:gw,height:size*0.16,fill:'#E0A800'}));
+  scaleSvg.appendChild(el('rect',{x:tx+sd,y:ty,width:gw,height:size*0.10,fill:'#7E3FA0'}));
+  // ラベル
+  const lt=el('text',{x:lcx,y:lcy-base/2-12,'text-anchor':'middle','font-size':15,fill:'#1C3A5E','font-weight':'bold','font-family':'メイリオ'});
+  lt.textContent='トランジスタ1個（1/k に縮小）';
+  scaleSvg.appendChild(lt);
+
+  // ---- 右：同面積チップに詰め込む ----
+  const gx0=470, gy0=60, gW=380, gH=240; // チップ枠
+  // チップ外枠
+  scaleSvg.appendChild(el('rect',{x:gx0,y:gy0,width:gW,height:gH,fill:'none',stroke:'#1C3A5E','stroke-width':2.5,rx:6}));
+  const rt=el('text',{x:gx0+gW/2,y:gy0-12,'text-anchor':'middle','font-size':15,fill:'#1C3A5E','font-weight':'bold','font-family':'メイリオ'});
+  rt.textContent='同じ大きさのチップ（k×k 個に詰まる）';
+  scaleSvg.appendChild(rt);
+
+  // 詰め込み数：1辺あたり round(k) 個（見せ方優先で整数グリッド）
+  const n = Math.round(k);          // 1辺の個数
+  const cell = gW / n;
+  const cellH = gH / n;
+  const pad = Math.min(cell,cellH)*0.12;
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      const cx=gx0+i*cell, cy=gy0+j*cellH;
+      const s=Math.min(cell,cellH)-2*pad;
+      const ox=cx+(cell-s)/2, oy=cy+(cellH-s)/2;
+      // 個々のトランジスタ（簡略）
+      scaleSvg.appendChild(el('rect',{x:ox,y:oy,width:s,height:s,fill:'#D6E6F2',stroke:'#1F6FB2','stroke-width':1.5,rx:2}));
+      const sd2=s*0.22;
+      scaleSvg.appendChild(el('rect',{x:ox,y:oy,width:sd2,height:s,fill:'#1F6FB2'}));
+      scaleSvg.appendChild(el('rect',{x:ox+s-sd2,y:oy,width:sd2,height:s,fill:'#1F6FB2'}));
+      scaleSvg.appendChild(el('rect',{x:ox+sd2,y:oy,width:s-2*sd2,height:s*0.16,fill:'#E0A800'}));
+      scaleSvg.appendChild(el('rect',{x:ox+sd2,y:oy,width:s-2*sd2,height:s*0.10,fill:'#7E3FA0'}));
+    }
+  }
+
+  // ---- 数値更新 ----
+  const area = 1/(k*k);
+  const num = Math.round(k*k);
+  document.getElementById('kval').textContent = k.toFixed(1);
+  document.getElementById('s_k').textContent = k.toFixed(1);
+  document.getElementById('s_area').textContent = area.toFixed(2);
+  document.getElementById('s_num').textContent = num + ' 個';
+}
+kslider.addEventListener('input', drawScale);
+drawScale();
+
+// ============================================================
+// タブ② 短チャネル効果
+// ============================================================
+const shortSvg = document.getElementById('shortSvg');
+const lslider = document.getElementById('lslider');
+
+function drawShort(){
+  const t = parseInt(lslider.value,10)/100; // 0(長い) .. 1(短い)
+  while(shortSvg.firstChild) shortSvg.removeChild(shortSvg.firstChild);
+
+  const W=920, H=380;
+  // 基板領域
+  const subX=120, subY=170, subW=680, subH=150;
+  // チャネル長：長い(t=0)→短い(t=1)。S/D幅は逆に広がる。
+  const chanLen = 360*(1-t) + 120*t;  // 360 → 120（短くても矢印が見える幅を確保）
+  const sdW = (subW - chanLen)/2;
+  const chanX0 = subX + sdW;
+  const chanX1 = subX + sdW + chanLen;
+  const cy = subY + subH/2;
+
+  // ---- 基板 ----
+  shortSvg.appendChild(el('rect',{x:subX,y:subY,width:subW,height:subH,fill:'#EAF2FA',stroke:'#1F6FB2','stroke-width':2,rx:6}));
+  // ソース／ドレイン（n型・濃い青）
+  shortSvg.appendChild(el('rect',{x:subX,y:subY,width:sdW,height:subH,fill:'#1F6FB2',rx:6}));
+  shortSvg.appendChild(el('rect',{x:chanX1,y:subY,width:sdW,height:subH,fill:'#1F6FB2',rx:6}));
+  const st=el('text',{x:subX+sdW/2,y:cy+6,'text-anchor':'middle','font-size':16,fill:'#fff','font-weight':'bold','font-family':'メイリオ'});
+  st.textContent='ソース'; shortSvg.appendChild(st);
+  const dt=el('text',{x:chanX1+sdW/2,y:cy+6,'text-anchor':'middle','font-size':16,fill:'#fff','font-weight':'bold','font-family':'メイリオ'});
+  dt.textContent='ドレイン'; shortSvg.appendChild(dt);
+
+  // ---- 酸化膜＋ゲート（チャネル上） ----
+  const oxY=subY-26, oxH=10, gH2=16;
+  shortSvg.appendChild(el('rect',{x:chanX0,y:oxY+oxH,width:chanLen,height:oxH,fill:'#E0A800'}));
+  shortSvg.appendChild(el('rect',{x:chanX0,y:oxY-gH2+oxH,width:chanLen,height:gH2,fill:'#7E3FA0',rx:2}));
+  const gt=el('text',{x:(chanX0+chanX1)/2,y:oxY-gH2-4,'text-anchor':'middle','font-size':15,fill:'#7E3FA0','font-weight':'bold','font-family':'メイリオ'});
+  gt.textContent='ゲート'; shortSvg.appendChild(gt);
+
+  // ---- ゲートの支配（紫）：チャネル上から下向きに伸びる支配領域 ----
+  // 長いほどチャネル全体を覆える。短いと中央が侵食される。
+  // ゲート支配は両端から chanLen 分カバーするが、S/D侵入で中央が削られる
+  const gatePower = subH*0.85;  // ゲートが及ぼせる縦の深さ
+  // 紫の下向き矢印（ゲート支配）を数本
+  const nG = Math.max(2, Math.round(chanLen/55));
+  for(let i=0;i<nG;i++){
+    const gx = chanX0 + (i+0.5)*(chanLen/nG);
+    // 中央ほどS/Dに侵食されると支配が浅くなる（tが大きいほど顕著）
+    const distCenter = Math.abs(gx-(chanX0+chanX1)/2)/(chanLen/2); // 0(中央)..1(端)
+    const erode = t*(1-distCenter); // 短い&中央ほど削られる
+    const depth = gatePower*(1-erode);
+    shortSvg.appendChild(el('line',{x1:gx,y1:subY+4,x2:gx,y2:subY+4+depth,
+       stroke:'#7E3FA0','stroke-width':3,opacity:0.75}));
+    // 矢じり
+    shortSvg.appendChild(el('path',{d:`M ${gx-4} ${subY+4+depth-7} L ${gx+4} ${subY+4+depth-7} L ${gx} ${subY+4+depth} Z`,fill:'#7E3FA0',opacity:0.75}));
+  }
+
+  // ---- ソース／ドレインの電界侵入（赤）：tが大きいほど中央へ ----
+  // 左右から内側へ伸びる赤い矢印。長さは t に比例。
+  const intrude = chanLen*0.55*t; // 侵入の深さ
+  if(t>0.02){
+    // 左（ソース側）→右へ
+    shortSvg.appendChild(el('line',{x1:chanX0+2,y1:cy+30,x2:chanX0+2+intrude,y2:cy+30,
+       stroke:'#C0392B','stroke-width':4}));
+    shortSvg.appendChild(el('path',{d:`M ${chanX0+2+intrude-9} ${cy+25} L ${chanX0+2+intrude-9} ${cy+35} L ${chanX0+2+intrude} ${cy+30} Z`,fill:'#C0392B'}));
+    // 右（ドレイン側）→左へ
+    shortSvg.appendChild(el('line',{x1:chanX1-2,y1:cy+30,x2:chanX1-2-intrude,y2:cy+30,
+       stroke:'#C0392B','stroke-width':4}));
+    shortSvg.appendChild(el('path',{d:`M ${chanX1-2-intrude+9} ${cy+25} L ${chanX1-2-intrude+9} ${cy+35} L ${chanX1-2-intrude} ${cy+30} Z`,fill:'#C0392B'}));
+  }
+
+  // ---- リーク表示（短いとき：OFFなのに漏れる電流） ----
+  let leakTxt='ほぼゼロ', gateTxt='チャネル全体', lenTxt='長い';
+  if(t>0.66){ leakTxt='大きい'; gateTxt='中央を奪われる'; lenTxt='とても短い'; }
+  else if(t>0.33){ leakTxt='じわっと'; gateTxt='中央が弱い'; lenTxt='短い'; }
+
+  if(t>0.5){
+    // 漏れ電流の波線（ソース→ドレイン下部・基板の中に収める）
+    const ly=subY+subH-38;
+    let d=`M ${chanX0} ${ly}`;
+    const seg=10; const amp=4*((t-0.5)/0.5);
+    for(let x=chanX0;x<=chanX1;x+=seg){
+      d+=` Q ${x+seg/2} ${ly-amp} ${x+seg} ${ly}`;
+    }
+    shortSvg.appendChild(el('path',{d,fill:'none',stroke:'#C0392B','stroke-width':2.5,'stroke-dasharray':'2 4',opacity:0.95}));
+    const lk=el('text',{x:(chanX0+chanX1)/2,y:ly+18,'text-anchor':'middle','font-size':14,fill:'#C0392B','font-weight':'bold','font-family':'メイリオ'});
+    lk.textContent='OFFなのに漏れる（リーク）'; shortSvg.appendChild(lk);
+  }
+
+  // ---- 凡例 ----
+  const lgY=44;
+  function legend(x,color,label,dash){
+    shortSvg.appendChild(el('line',{x1:x,y1:lgY,x2:x+26,y2:lgY,stroke:color,'stroke-width':4,'stroke-dasharray':dash||'none'}));
+    const tx=el('text',{x:x+32,y:lgY+5,'font-size':13.5,fill:'#333','font-family':'メイリオ'});
+    tx.textContent=label; shortSvg.appendChild(tx);
+  }
+  legend(120,'#7E3FA0','ゲートの支配');
+  legend(280,'#C0392B','ソース／ドレインの侵入');
+  legend(540,'#C0392B','漏れ電流（リーク）','2 4');
+
+  // 数値
+  document.getElementById('lval').textContent = (t<0.33?'長い（昔のMOS）':(t<0.66?'短い':'とても短い（最先端）'));
+  document.getElementById('sh_len').textContent = lenTxt;
+  document.getElementById('sh_gate').textContent = gateTxt;
+  document.getElementById('sh_leak').textContent = leakTxt;
+}
+lslider.addEventListener('input', drawShort);
+drawShort();
+</script>
+</body>
+</html>
