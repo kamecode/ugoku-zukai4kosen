@@ -9,7 +9,8 @@ BASE = "https://ugoku-zukai4kosen.com"
 
 
 def main() -> None:
-    urls = ["%s/" % BASE, "%s/about.html" % BASE, "%s/privacy.html" % BASE]
+    urls = ["%s/" % BASE, "%s/videos.html" % BASE,
+            "%s/about.html" % BASE, "%s/privacy.html" % BASE]
     for d in ("handotai", "kairo"):
         for f in sorted((ROOT / d).glob("*.html")):
             urls.append("%s/%s/%s" % (BASE, d, f.name))

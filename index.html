@@ -64,6 +64,18 @@
            border-top: 1px solid var(--line); }
   .howto { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
            padding: 12px 18px; font-size: .9rem; color: var(--sub); margin-top: 20px; }
+  .videos-banner { display: flex; align-items: center; gap: 12px; margin-top: 14px;
+                   background: #0d3c6e; color: #fff; border-radius: 10px; padding: 14px 18px;
+                   text-decoration: none; transition: box-shadow .15s, transform .15s; }
+  .videos-banner:hover, .videos-banner:focus-visible {
+    box-shadow: 0 6px 18px rgba(13,60,110,.3); transform: translateY(-2px); }
+  .videos-banner .play { flex: none; width: 40px; height: 40px; border-radius: 50%;
+                         background: #ffb531; display: flex; align-items: center; justify-content: center; }
+  .videos-banner .play::before { content: ""; display: block; margin-left: 3px;
+                                 border-style: solid; border-width: 8px 0 8px 13px;
+                                 border-color: transparent transparent transparent #0d3c6e; }
+  .videos-banner strong { font-size: 1.02rem; }
+  .videos-banner span { display: block; font-size: .82rem; opacity: .85; }
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9837198638535384"
      crossorigin="anonymous"></script>
@@ -87,6 +99,12 @@
   各図解はスライダー・タブ・ボタンで操作できます。PCでもスマホでも動きます（アプリ不要・その場で動作）。
   高専・大学・工業高校での授業の予習・復習、実験レポート作成時の確認にどうぞ。</p>
 </div>
+
+<a class="videos-banner" href="videos.html">
+  <span class="play" aria-hidden="true"></span>
+  <span><strong>講義動画 ― 半導体工学(全15回)</strong>
+  <span>スライド+ナレーションの講義動画。約25分×15本・日本語字幕付き(週01〜08公開中)</span></span>
+</a>
 
 <section class="subject">
   <h2>半導体工学</h2>
@@ -320,6 +338,7 @@
 
 <footer>
   うごく図解 半導体・電子回路 — 教育目的での利用を歓迎します<br>
+  <a href="videos.html" style="color:var(--sub);">講義動画</a> ・
   <a href="about.html" style="color:var(--sub);">このサイトについて</a> ・
   <a href="privacy.html" style="color:var(--sub);">プライバシーポリシー</a>
 </footer>
