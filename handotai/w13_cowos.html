@@ -96,30 +96,38 @@ function drawScene(i){
   function substrate(){ // パッケージ基板（最下）
     add(`<rect x="180" y="250" width="400" height="34" rx="4" fill="${cssv('--pcb')}"/>`);
     add(`<text x="380" y="272" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">パッケージ基板</text>`);
-    // 下のはんだボール
+    // 下のはんだボール（外部の基板へつなぐ）
     add(`<g fill="#aab2bd">`+[210,260,310,360,410,460,510].map(x=>`<circle cx="${x}" cy="288" r="6"/>`).join("")+`</g>`);
+    add(`<text x="592" y="292" font-size="11" fill="${cssv('--sub')}" font-weight="700">はんだボール（外の基板へ）</text>`);
   }
+  const TSV_X=[240,300,380,460,520];   // TSVとC4バンプは同じ位置に並ぶ
   function interposer(){ // インターポーザ（中継板）
     add(`<rect x="210" y="220" width="340" height="30" rx="3" fill="${cssv('--interposer')}"/>`);
-    add(`<text x="380" y="240" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">インターポーザ（中継板）</text>`);
-    // 微細配線のすじ
-    add(`<g stroke="#c8d0da" stroke-width="1" opacity="0.7">`+[225,235].map(y=>`<line x1="220" y1="${y}" x2="540" y2="${y}"/>`).join("")+`</g>`);
-    // 基板へのバンプ
-    add(`<g fill="${cssv('--bump')}">`+[240,300,380,460,520].map(x=>`<circle cx="${x}" cy="250" r="3.5"/>`).join("")+`</g>`);
+    add(`<text x="380" y="245" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">インターポーザ（中継板）</text>`);
+    // 微細配線のすじ（表面のRDL）
+    add(`<g stroke="#c8d0da" stroke-width="1" opacity="0.7">`+[225,231].map(y=>`<line x1="220" y1="${y}" x2="540" y2="${y}"/>`).join("")+`</g>`);
+    // TSV（貫通電極）：インターポーザを垂直に貫き、上のチップと下の基板をつなぐ
+    add(`<g stroke="${cssv('--bump')}" stroke-width="3">`+
+      TSV_X.map(x=>`<line x1="${x}" y1="220" x2="${x}" y2="250"/>`).join("")+`</g>`);
+    add(`<text x="592" y="222" font-size="11" fill="${cssv('--sub')}" font-weight="700">縦の線＝TSV（貫通電極）</text>`);
+    // 基板へのC4バンプ
+    add(`<g fill="${cssv('--bump')}">`+TSV_X.map(x=>`<circle cx="${x}" cy="250" r="3.5"/>`).join("")+`</g>`);
   }
-  function hbm(x,label){ // HBM＝積層メモリ（青を何層も）
+  function hbm(x,label){ // HBM＝積層メモリ。最下段はベース（ロジック）ダイ、層はTSVで縦につながる
     for(let k=0;k<4;k++){
-      add(`<rect x="${x}" y="${188-k*14}" width="70" height="12" rx="2" fill="${cssv('--hbm')}" stroke="#15527f" stroke-width="1"/>`);
+      add(`<rect x="${x}" y="${203-k*14}" width="70" height="12" rx="2" fill="${k?cssv('--hbm'):'#0E3D63'}" stroke="#15527f" stroke-width="1"/>`);
     }
-    if(label) add(`<text x="${x+35}" y="${188-3*14-12}" text-anchor="middle" font-size="11" fill="${cssv('--hbm')}" font-weight="700">HBM</text>`);
+    add(`<g stroke="${cssv('--bump')}" stroke-width="1.6">`+
+      [x+18,x+35,x+52].map(v=>`<line x1="${v}" y1="161" x2="${v}" y2="215"/>`).join("")+`</g>`);
+    if(label) add(`<text x="${x+35}" y="${149}" text-anchor="middle" font-size="11" fill="${cssv('--hbm')}" font-weight="700">HBM</text>`);
   }
   function gpu(){ // GPU（大きめの紫チップ）
-    add(`<rect x="330" y="160" width="100" height="40" rx="3" fill="${cssv('--gpu')}"/>`);
-    add(`<text x="380" y="184" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">GPU</text>`);
+    add(`<rect x="330" y="175" width="100" height="40" rx="3" fill="${cssv('--gpu')}"/>`);
+    add(`<text x="380" y="199" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">GPU</text>`);
   }
-  function bumps(){ // チップ↔インターポーザのマイクロバンプ
+  function bumps(){ // チップ↔インターポーザのマイクロバンプ（C4より細かい）
     add(`<g fill="${cssv('--bump')}">`+
-      [248,278,308,345,365,385,405,425,475,505,535].map(x=>`<circle cx="${x}" cy="218" r="2.6"/>`).join("")+`</g>`);
+      [248,278,308,345,365,385,405,425,458,488,518].map(x=>`<circle cx="${x}" cy="218" r="2.6"/>`).join("")+`</g>`);
   }
 
   if(i===0){ // 問題：大きな1個は不良が増える
@@ -128,7 +136,7 @@ function drawScene(i){
     add(`<text x="380" y="200" text-anchor="middle" font-size="15" fill="#3a4654" font-weight="700">巨大な1個のチップ</text>`);
     // 欠陥（×）
     add(`<g>`+[[300,180],[420,230],[350,245]].map(([x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="20" fill="${cssv('--neg')}" font-weight="800">×</text>`).join("")+`</g>`);
-    add(`<text x="380" y="295" text-anchor="middle" font-size="12" fill="${cssv('--neg')}" font-weight="700">1つでも欠陥があると、全部がムダに</text>`);
+    add(`<text x="380" y="284" text-anchor="middle" font-size="12" fill="${cssv('--neg')}" font-weight="700">1つでも欠陥があると、全部がムダに</text>`);
   }
   else if(i===1){ // 発想の転換：小さく分ける
     // 小さなチップ4個（うち1個に×→捨てる）
@@ -147,21 +155,21 @@ function drawScene(i){
   else if(i===3){ // 基板＋インターポーザ
     substrate(); interposer();
     // 強調
-    add(`<text x="600" y="235" font-size="11" fill="${cssv('--sub')}" font-weight="700">↑ 超微細な配線で</text>`);
-    add(`<text x="600" y="250" font-size="11" fill="${cssv('--sub')}" font-weight="700">　チップ同士をつなぐ</text>`);
+    add(`<text x="592" y="238" font-size="11" fill="${cssv('--sub')}" font-weight="700">← 超微細な配線で</text>`);
+    add(`<text x="592" y="253" font-size="11" fill="${cssv('--sub')}" font-weight="700">　 チップ同士をつなぐ</text>`);
   }
   else if(i===4){ // 基板＋インターポーザ＋チップを並べる
     substrate(); interposer(); bumps();
     hbm(240,true); gpu(); hbm(450,true);
-    add(`<text x="275" y="250" text-anchor="middle" font-size="0" fill="none"></text>`);
   }
   else if(i===5){ // 完成：CoWoS
     substrate(); interposer(); bumps();
     hbm(240,true); gpu(); hbm(450,true);
-    // チップ間の高速接続を強調
+    // チップ間の接続はインターポーザの中の配線を通る
     add(`<g stroke="${cssv('--task')}" stroke-width="2.5" fill="none">
-      <path d="M 312 208 L 330 185" /><path d="M 430 185 L 448 208"/></g>`);
-    add(`<text x="380" y="120" text-anchor="middle" font-size="13" fill="${cssv('--task')}" font-weight="700">チップ間が近い＋太い配線 ＝ 超高速</text>`);
+      <path d="M 278 218 L 278 228 L 365 228 L 365 218"/>
+      <path d="M 405 218 L 405 228 L 488 228 L 488 218"/></g>`);
+    add(`<text x="380" y="120" text-anchor="middle" font-size="13" fill="${cssv('--task')}" font-weight="700">チップ間が近い＋配線の本数がケタ違い ＝ 超高速</text>`);
   }
 }
 
@@ -171,13 +179,13 @@ const steps=[
  {t:"発想の転換：小さく分けて並べる",en:"Chiplets",
   desc:"1個の大きなチップをやめ、小さなチップ（チップレット）に分けて作ります。良品だけを選んで並べれば、歩留まりが上がり、種類の違うチップも組み合わせられます。"},
  {t:"土台：パッケージ基板",en:"Substrate",
-  desc:"一番下は、外の世界（基板の足）とつなぐパッケージ基板です。"},
+  desc:"ここから下から順に構造を見ます。一番下は、外の基板とつなぐパッケージ基板です。下面のはんだボールが外の世界への出口になります。"},
  {t:"中継板：インターポーザ",en:"Interposer",
-  desc:"基板の上に、シリコンの中継板（インターポーザ）を置きます。表面に超微細な配線があり、この上に載せるチップ同士を、太い帯域でつなぐ役目をします。"},
+  desc:"その上に、シリコンの中継板（インターポーザ）を重ねます。パッケージ基板の配線は数十µm間隔までしか引けず、チップ同士を結ぶには粗すぎます。シリコンなら µm オーダーの配線を大量に引けます。板を垂直に貫くTSV（貫通電極）が、上のチップと下の基板をつなぎます。"},
  {t:"チップを並べる",en:"Place chiplets",
-  desc:"インターポーザの上に、GPU（演算するチップ）とHBM（積み重ねたメモリ）などのチップレットを、横に並べて載せます。小さなバンプ（金の粒）でつなぎます。"},
+  desc:"インターポーザの上に、GPU（演算するチップ）とHBM（積み重ねたメモリ）などのチップレットを、横に並べて載せます。銅の柱にはんだをのせた小さなマイクロバンプでつなぎます。HBMの層どうしもTSVで縦につながっています。"},
  {t:"完成：CoWoS",en:"CoWoS complete",done:1,
-  desc:"複数の小さなチップが、1つの大きなチップのように働きます。チップ間の距離が近く配線も太いので、データを超高速でやり取りできる。これがNVIDIAなどAIチップの作り方です。"},
+  desc:"複数の小さなチップが、1つの大きなチップのように働きます。チップ間の距離が近く配線の本数がケタ違いに多いので、データを超高速でやり取りできる。名前は Chip on Wafer on Substrate の略で、実際の製造も、まずインターポーザのウェハ上にチップを載せ（Chip on Wafer）、それを切り出してパッケージ基板に載せる（on Substrate）という順で進みます。これがNVIDIAなどAIチップの作り方です。"},
 ];
 
 let cur=0;

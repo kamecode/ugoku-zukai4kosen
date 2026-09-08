@@ -123,12 +123,12 @@
       <!-- 光（露光時のみ表示） -->
       <g id="g-light" opacity="0">
         <!-- マスクの開口部から下りる光。マスクの「窓」は x=250-330, x=470-540 が開いている想定 -->
-        <rect x="250" y="40" width="80" height="120" fill="url(#lightg)"/>
-        <rect x="470" y="40" width="70" height="120" fill="url(#lightg)"/>
-        <!-- 光の矢印 -->
+        <rect x="250" y="40" width="80" height="140" fill="url(#lightg)"/>
+        <rect x="470" y="40" width="70" height="140" fill="url(#lightg)"/>
+        <!-- 光の矢印。レジスト上面 y=180 まで届かせる -->
         <g stroke="#e8b400" stroke-width="2">
-          <line x1="270" y1="48" x2="270" y2="150"/><line x1="290" y1="48" x2="290" y2="150"/><line x1="310" y1="48" x2="310" y2="150"/>
-          <line x1="488" y1="48" x2="488" y2="150"/><line x1="508" y1="48" x2="508" y2="150"/><line x1="528" y1="48" x2="528" y2="150"/>
+          <line x1="270" y1="48" x2="270" y2="176"/><line x1="290" y1="48" x2="290" y2="176"/><line x1="310" y1="48" x2="310" y2="176"/>
+          <line x1="488" y1="48" x2="488" y2="176"/><line x1="508" y1="48" x2="508" y2="176"/><line x1="528" y1="48" x2="528" y2="176"/>
         </g>
       </g>
 
@@ -194,7 +194,7 @@
 
   <div class="legend">
     <span><span class="sw" style="background:var(--si)"></span>シリコン基板</span>
-    <span><span class="sw" style="background:var(--film)"></span>薄膜（酸化膜など）</span>
+    <span><span class="sw" style="background:var(--film)"></span>薄膜（酸化膜・ポリシリコンなど）</span>
     <span><span class="sw" style="background:var(--resist)"></span>レジスト（感光材）</span>
     <span><span class="sw" style="background:var(--resist-exp)"></span>光が当たったレジスト</span>
   </div>
@@ -204,7 +204,7 @@
 const steps = [
   {
     n:1, title:"成膜", en:"Deposition",
-    desc:"シリコンの上に、薄い膜を一層ぬります。料理でいう「重ね塗り・ラミネート」。この膜が、あとで回路の材料になります。",
+    desc:"シリコンの上に、薄い膜を一層つくります。酸化させて育てる方法と、材料を降り積もらせる方法があります。この膜が、あとで回路の材料になります。",
     show:{film:1}, filmW:520, filmX:120, exposed:0, mask:0, light:0,
     label:"薄い膜をのせた"
   },
@@ -216,19 +216,19 @@ const steps = [
   },
   {
     n:3, title:"露光", en:"Exposure",
-    desc:"マスク（型紙）を通して光を当てます。窓が開いた部分だけ光が通り、レジストに模様が焼きつきます。光の波長が短いほど細かく描けます（EUV＝超細ペン先）。",
+    desc:"マスク（型紙）を通して光を当てます。窓が開いた部分だけ光が通り、レジストに模様が焼きつきます。光の波長が短いほど細かく描けます（EUV＝超細ペン先）。実際の装置では、マスクの像をレンズで1/4に縮小して転写します（縮小投影）。",
     show:{film:1,resist:1}, exposed:1, mask:1, light:1,
     label:"光で模様を焼いた"
   },
   {
     n:4, title:"現像", en:"Development",
-    desc:"薬品で洗うと、光が当たった部分のレジストだけが溶けて流れます。型紙の模様が、レジストの「穴」として残りました。",
+    desc:"薬品で洗うと、光が当たった部分のレジストだけが溶けて流れます（ポジ型の場合。逆に光が当たった所が残るネガ型もあります）。型紙の模様が、レジストの「穴」として残りました。",
     show:{film:1,resist:1}, removeExposed:1, exposed:0, mask:0, light:0,
     label:"光が当たった所が溶けた"
   },
   {
     n:5, title:"エッチング", en:"Etching",
-    desc:"レジストの穴から、下の膜を溶かして削ります。彫刻刀や型抜きのイメージ。レジストで守られた所だけ膜が残ります。",
+    desc:"レジストの穴から、下の膜を薬品やプラズマで削ります。彫刻刀や型抜きのイメージ。微細な加工では、側面を垂直に立てられるプラズマ（ドライエッチング）を使います。レジストで守られた所だけ膜が残ります。",
     show:{film:1,resist:1}, removeExposed:1, etch:1, exposed:0, mask:0, light:0,
     label:"守られた所だけ膜が残った"
   },

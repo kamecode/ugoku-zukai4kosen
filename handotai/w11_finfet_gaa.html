@@ -81,7 +81,7 @@
   <div class="panel" id="fin">
     <div class="stage">
       <p class="stagehead">FinFET＝チャネルを「ヒレ（Fin）」に立てて、3面から囲む</p>
-      <p class="stagedesc">チャネルを魚のヒレ（Fin）のように縦に立て、ゲートを左・上・右の3面にかぶせます。3方向から握るので、上1面だけの平面MOSよりずっとチャネルを支配でき、リークが減ります。22nm世代あたりから主役になりました。</p>
+      <p class="stagedesc">チャネルを魚のヒレ（Fin）のように縦に立て、ゲートを左・上・右の3面にかぶせます。3方向から握るので、上1面だけの平面MOSよりずっとチャネルを支配でき、リークが減ります。22nm世代あたりから量産の中心になりました。</p>
       <svg id="finSvg" viewBox="0 0 760 360" role="img" aria-label="FinFETの断面"></svg>
       <p class="cap">断面図：立てたヒレ（チャネル）を、ゲートが左・上・右の3面（赤ハイライト）から囲む</p>
       <div class="readout">
@@ -100,7 +100,7 @@
   <div class="panel" id="gaa">
     <div class="stage">
       <p class="stagehead">GAA／ナノシート＝チャネルを薄い板にして、全周（4面）を包む</p>
-      <p class="stagedesc">チャネルを薄いシート（ナノシート）にして、その全周をゲートでぐるりと包みます。GAA＝Gate-All-Around（全周ゲート）。逃げ場がないほどチャネルを握るので、短チャネル効果をほぼ抑え込めます。さらにシートを上下に積み重ねて電流を稼ぎます。2nm世代の主役です。</p>
+      <p class="stagedesc">チャネルを薄いシート（ナノシート）にして、その全周をゲートでぐるりと包みます。GAA＝Gate-All-Around（全周ゲート）。逃げ場がないほどチャネルを握るので、短チャネル効果をほぼ抑え込めます。さらにシートを上下に積み重ねて電流を稼ぎます。3nm世代で先行採用が始まり、2nm世代から各社が本格的に使います。</p>
       <svg id="gaaSvg" viewBox="0 0 760 380" role="img" aria-label="GAAの断面"></svg>
       <p class="cap">断面図：薄いシート（チャネル）の全周をゲート（赤ハイライト）が包む。シートは上下に積める</p>
       <div class="readout">
@@ -128,7 +128,7 @@
           <tr><td class="lab">チャネルの形</td><td>平ら（寝ている）</td><td>ヒレ（立てる）</td><td>薄いシート（積める）</td></tr>
           <tr><td class="lab">支配の強さ</td><td style="color:var(--red);">弱い</td><td style="color:var(--blue);">強い</td><td style="color:var(--green);">最強</td></tr>
           <tr><td class="lab">リーク</td><td style="color:var(--red);">起きやすい</td><td style="color:var(--blue);">かなり減る</td><td style="color:var(--green);">ほぼゼロ</td></tr>
-          <tr><td class="lab">主な世代</td><td>～28nm 頃</td><td>22～5nm 頃</td><td>2nm 世代～</td></tr>
+          <tr><td class="lab">主な世代</td><td>～28nm 頃</td><td>22～3nm 頃</td><td>3nm 一部～2nm 以降</td></tr>
         </table>
       </div>
       <div class="note">
@@ -214,13 +214,20 @@ function leakArrow(svg,x,y0,y1,w){
   const svg=document.getElementById('gaaSvg');
   const cx=380, floorY=330;
   // 基板
-  svg.appendChild(el('rect',{x:160,y:floorY,width:440,height:34,fill:C.sub,stroke:C.subL,'stroke-width':2,rx:6}));
+  svg.appendChild(el('rect',{x:160,y:floorY,width:440,height:22,fill:C.sub,stroke:C.subL,'stroke-width':2,rx:6}));
   // ナノシート3枚（積層）＋各シートの全周をゲートが包む
   const shW=120, shH=26, gap=34;
-  const ys=[floorY-40, floorY-40-shH-gap, floorY-40-2*(shH+gap)];
-  // まずゲートの「塊」（シートを内包する大きな紫の柱）
-  const blkX=cx-shW/2-22, blkY=ys[2]-22, blkW=shW+44, blkH=(floorY-40+shH) - (ys[2]-22);
+  // 最下段の下にもゲートを回すため、シートの束は基板から離して積む
+  const ys=[floorY-72, floorY-72-shH-gap, floorY-72-2*(shH+gap)];
+  // ゲートの「塊」（シートを内包する大きな紫の柱）。
+  // 下端は最下段シートの酸化膜より下まで伸ばす＝下の面も握れているのがGAAの要点
+  const blkX=cx-shW/2-22, blkY=ys[2]-22, blkW=shW+44;
+  const blkBottom=ys[0]+shH+16, blkH=blkBottom-blkY;
   svg.appendChild(el('rect',{x:blkX,y:blkY,width:blkW,height:blkH,fill:'#EFE6F5',stroke:C.gate,'stroke-width':2,rx:8}));
+  // ボトム絶縁：下面まで握る代わりに、基板へ漏らさないための膜が要る
+  svg.appendChild(el('rect',{x:blkX,y:blkBottom,width:blkW,height:floorY-blkBottom,
+    fill:'#E4E7EB',stroke:'#9AA6B2','stroke-width':1.5,rx:3}));
+  txt(svg,blkX+blkW+12,floorY-9,'ボトム絶縁',{fill:'#5A6675',size:12.5,anchor:'start'});
   txt(svg,cx,blkY-10,'ゲートがシートの全周を包む（Gate-All-Around）',{fill:C.gate,bold:true,size:15});
   ys.forEach((y,i)=>{
     // 酸化膜（外周・黄土）
@@ -231,7 +238,7 @@ function leakArrow(svg,x,y0,y1,w){
     svg.appendChild(el('rect',{x:cx-shW/2,y:y,width:shW,height:shH,fill:C.chan,stroke:C.chanS,'stroke-width':1.5,rx:3}));
     txt(svg,cx,y+shH/2+5,'ナノシート'+(i+1),{fill:C.subL,bold:true,size:12.5});
   });
-  txt(svg,cx,floorY+24,'シートを積むほど電流（駆動力）も増える',{fill:C.subL,size:13});
+  txt(svg,cx,floorY+38,'シートを積むほど電流（駆動力）も増える',{fill:C.subL,size:13});
   // リーク矢印（ほぼ消える）：点だけ
   txt(svg,blkX-90,blkY+blkH/2,'リーク',{fill:'#9aa6b2',size:13,anchor:'middle'});
   txt(svg,blkX-90,blkY+blkH/2+18,'ほぼゼロ',{fill:C.green,size:14,anchor:'middle',bold:true});
@@ -269,9 +276,12 @@ function leakArrow(svg,x,y0,y1,w){
       // GAA：シート2枚＋全周枠
       svg.appendChild(el('rect',{x:cx-90,y:floorY,width:180,height:26,fill:C.sub,stroke:C.subL,'stroke-width':1.5,rx:4}));
       const sw=90,sh=20,gap=26;
-      const yy=[floorY-36, floorY-36-sh-gap];
-      const blkY=yy[1]-16, blkH=(floorY-36+sh)-(yy[1]-16);
+      // 最下段の下にもゲートが回るよう、束を基板から浮かせる（③の断面と同じ考え方）
+      const yy=[floorY-52, floorY-52-sh-gap];
+      const blkY=yy[1]-16, blkBottom=yy[0]+sh+11, blkH=blkBottom-blkY;
       svg.appendChild(el('rect',{x:cx-sw/2-16,y:blkY,width:sw+32,height:blkH,fill:'#EFE6F5',stroke:C.gate,'stroke-width':1.5,rx:6}));
+      svg.appendChild(el('rect',{x:cx-sw/2-16,y:blkBottom,width:sw+32,height:floorY-blkBottom,
+        fill:'#E4E7EB',stroke:'#9AA6B2','stroke-width':1.2,rx:2}));
       yy.forEach(y=>{
         svg.appendChild(el('rect',{x:cx-sw/2-3,y:y-3,width:sw+6,height:sh+6,fill:'none',stroke:C.hl,'stroke-width':3.5,rx:3}));
         svg.appendChild(el('rect',{x:cx-sw/2,y,width:sw,height:sh,fill:C.chan,stroke:C.chanS,'stroke-width':1.2,rx:2}));
