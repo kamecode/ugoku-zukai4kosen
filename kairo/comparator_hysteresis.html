@@ -225,7 +225,7 @@ function drawVTC(markerVin){
   arrow(X(3),Y(RAIL),X(2.9),Y(RAIL),'#c44e00');
   arrow(X(tm),Y(-0.5),X(tm),Y(-0.4),'#c44e00');
   // ラベル
-  h+=`<text x="${X(-4.5)}" y="${Y(-RAIL)+16}" font-size="11" fill="#E65100">行き（上げていく）</text>`;
+  h+=`<text x="${X(-XR)+6}" y="${Y(-RAIL)+16}" font-size="11" fill="#E65100">行き（上げていく）</text>`;
   h+=`<text x="${X(4.5)}" y="${Y(RAIL)-9}" font-size="11" text-anchor="end" fill="#c44e00">帰り（下げていく）</text>`;
 
   // 現在の動作点マーカー（アニメ時）
@@ -276,7 +276,8 @@ function drawWave(){
 
   function block(title,yTop,yBot,out,showThr){
     let h='';
-    const x0=padL,x1=W-padR, mid=(yTop+yBot)/2, yspan=(yBot-yTop)/2-10;
+    // ±レールの線が上下の注記に重ならないよう、波形の高さに余白を残す
+    const x0=padL,x1=W-padR, mid=(yTop+yBot)/2, yspan=(yBot-yTop)/2-24;
     function X(t){return x0+t*(x1-x0);}
     function Y(v){return mid-(v/RAIL)*yspan;}
     h+=`<line x1="${x0}" y1="${mid}" x2="${x1}" y2="${mid}" stroke="#ddd"/>`;
@@ -284,14 +285,14 @@ function drawWave(){
     // しきい値線
     if(showThr==='single'){
       h+=`<line x1="${x0}" y1="${Y(0)}" x2="${x1}" y2="${Y(0)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
-      h+=`<text x="${x1-2}" y="${Y(0)-5}" font-size="10" text-anchor="end" fill="#6A1B9A">しきい値（1つ・0V）</text>`;
+      h+=`<text x="${x1-2}" y="${Y(0)-5}" font-size="10" text-anchor="end" fill="#6A1B9A" paint-order="stroke" stroke="#fff" stroke-width="3.5">しきい値（1つ・0V）</text>`;
     }else{
       h+=`<line x1="${x0}" y1="${Y(tp)}" x2="${x1}" y2="${Y(tp)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
       h+=`<line x1="${x0}" y1="${Y(tm)}" x2="${x1}" y2="${Y(tm)}" stroke="#6A1B9A" stroke-width="1.4" stroke-dasharray="6 4"/>`;
       // 帯
       h+=`<rect x="${x0}" y="${Y(tp)}" width="${x1-x0}" height="${Y(tm)-Y(tp)}" fill="#6A1B9A" opacity="0.06"/>`;
-      h+=`<text x="${x1-2}" y="${Y(tp)-5}" font-size="10" text-anchor="end" fill="#6A1B9A">V_TH⁺</text>`;
-      h+=`<text x="${x1-2}" y="${Y(tm)+12}" font-size="10" text-anchor="end" fill="#6A1B9A">V_TH⁻</text>`;
+      h+=`<text x="${x1-2}" y="${Y(tp)-5}" font-size="10" text-anchor="end" fill="#6A1B9A" paint-order="stroke" stroke="#fff" stroke-width="3.5">V_TH⁺</text>`;
+      h+=`<text x="${x1-2}" y="${Y(tm)+12}" font-size="10" text-anchor="end" fill="#6A1B9A" paint-order="stroke" stroke="#fff" stroke-width="3.5">V_TH⁻</text>`;
     }
     // 入力
     let pin='';for(let i=0;i<=N;i++)pin+=(i?'L':'M')+X(i/N).toFixed(1)+' '+Y(inp[i]).toFixed(1)+' ';
@@ -302,7 +303,7 @@ function drawWave(){
     // エッジ数
     const ec=countEdges(out);
     const col = (showThr==='single' && ec>2) ? '#D32F2F' : '#2E7D32';
-    h+=`<text x="${x0+2}" y="${yBot-2}" font-size="11" font-weight="700" fill="${col}">出力の切替回数：${ec} 回</text>`;
+    h+=`<text x="${x0+2}" y="${yBot-2}" font-size="11" font-weight="700" fill="${col}" paint-order="stroke" stroke="#fff" stroke-width="3.5">出力の切替回数：${ec} 回</text>`;
     return h;
   }
   let h='';
@@ -321,7 +322,7 @@ function drawWave(){
 function drawReadout(eS,eH){
   const el=document.getElementById('readout');
   const {tp,tm}=thresholds();
-  const safe = HYS >= NOISE*2.0; // ヒステリシス幅がノイズ全振幅を上回れば安全の目安
+  const safe = eH<=2; // 表示中の結果で判定：ヒステリシス側が余計に切り替わっていなければ勝ち
   el.innerHTML =
     `しきい値：V<sub>TH</sub><sup>+</sup>=<b>${tp.toFixed(1)}V</b> / V<sub>TH</sub><sup>−</sup>=<b>${tm.toFixed(1)}V</b><br>`+
     `切替回数 → 1つ:<b>${eS}回</b> ／ ヒステリシス:<b>${eH}回</b>　`+

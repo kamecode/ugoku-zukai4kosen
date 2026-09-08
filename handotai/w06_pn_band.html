@@ -69,13 +69,15 @@
       <path id="fermiP" d="" fill="none" stroke="#7E3FA0" stroke-width="2.5" stroke-dasharray="6 4"/>
       <g id="fermiGap" opacity="0">
         <line id="gapLine" x1="525" y1="0" x2="525" y2="0" stroke="#7E3FA0" stroke-width="1.5"/>
-        <text id="gapText" x="535" y="0" font-size="12" fill="#7E3FA0" font-weight="bold">Ef差</text>
+        <text id="gapText" x="535" y="0" font-size="12" fill="#7E3FA0" font-weight="bold"
+          paint-order="stroke" stroke="#fff" stroke-width="3.5">Ef差</text>
       </g>
 
       <text id="condLabel" x="150" y="135" font-size="13" fill="#1F6FB2">伝導帯（電子が動ける）</text>
       <text id="gapLabel"  x="150" y="218" font-size="12" fill="#999">バンドギャップ（禁制帯）</text>
       <text id="valLabel"  x="150" y="305" font-size="13" fill="#C0392B">価電子帯（正孔が動く）</text>
-      <text id="efLabel" x="700" y="120" font-size="13" fill="#7E3FA0" opacity="0">フェルミ準位 Ef</text>
+      <text id="efLabel" x="700" y="120" font-size="13" fill="#7E3FA0" opacity="0"
+        paint-order="stroke" stroke="#fff" stroke-width="3.5">フェルミ準位 Ef</text>
 
       <g id="electrons"></g>
       <g id="holes"></g>
@@ -165,11 +167,13 @@ function setBands(pShift, showMid){
   fermiN.setAttribute("d", `M${X0} ${yL} L${XL} ${yL} L${XR} ${yR}`);
   fermiP.setAttribute("d", `M${XR} ${yR} L${X1} ${yR}`);
   midline.setAttribute("opacity", showMid?1:0);
+  efLabel.setAttribute("y", yR-8);   // p側Efの真上に置く（固定y=120だと伝導帯に重なる）
   const diff=Math.abs(yR-yL);
   if(diff>=10){
     const top=Math.min(yL,yR), bot=Math.max(yL,yR);
     gapLine.setAttribute("y1",top); gapLine.setAttribute("y2",bot);
-    gapText.setAttribute("y",(top+bot)/2+4);
+    // 逆方向ではp側Efが上に来て、中点がちょうど正孔の列に重なる。そのときは上へ逃がす
+    gapText.setAttribute("y", yR<yL ? top-8 : (top+bot)/2+4);
     fermiGap.setAttribute("opacity",1);
   } else fermiGap.setAttribute("opacity",0);
 }
@@ -188,7 +192,7 @@ const states={
     body:"n型は電子が多く、<span class='key'>フェルミ準位 Ef が伝導帯の近く（上）</span>にあります。p型は正孔が多く、<span class='key'>Ef が価電子帯の近く（下）</span>。電子は伝導帯（上の帯）に、正孔は価電子帯（下の帯）にいます。",
     point:"Ef の位置の違い＝電子のたまり具合の違い。第5週で見たとおりです。" },
   equil:{ title:"② 平衡：Ef が一直線にそろう", tag:["つり合い","eq"],
-    body:"くっつけると<span class='key'>左右の Ef がそろおうとして一直線になります</span>。そのために<span class='key'>帯が境界でなだらかな坂（崖）状に曲がります</span>。電子は坂を登れず、つり合って止まる。これが空乏層の「電気の壁」の正体です。",
+    body:"くっつけると<span class='key'>左右の Ef がそろおうとして一直線になります</span>。そのために<span class='key'>帯が境界でなだらかな坂（崖）状に曲がります</span>。電子は坂を登れず、つり合って止まる。これが空乏層の「電気の壁」の実体です。",
     point:"本編の「壁・坂」＝この帯の曲がり。空乏層の分だけ、なだらかな坂になります。" },
   fwd:{ title:"③ 順方向：坂が低くなって流れる", tag:["流れる","on"],
     body:"順方向の電圧で<span class='key'>坂が低く（なだらかに）なります</span>。すると<span class='key'>電子は伝導帯の坂を越えてp側へ流れ込み</span>、正孔は価電子帯を逆向きに進む。坂が低いので次々と越えていける＝<span class='key'>電流が流れます</span>。",

@@ -66,7 +66,7 @@
     <div class="card cmp">
       <div class="card-head">コンパレータ（帰還なし）<span class="tag">仮想短絡は成り立たない</span></div>
       <div class="card-body">
-        <div class="seesaw-cap">バランスを取りにいかない天秤（倒れっぱなし）</div>
+        <div class="seesaw-cap">バランスを取りにいかないシーソー（倒れっぱなし）</div>
         <svg id="cmp" width="540" height="250" viewBox="0 0 540 250"></svg>
         <div class="keyline">どちらが高いかで ＋／− レールへ倒れきる</div>
         <div class="sub">差は残ったまま。ごく小さな差でも目いっぱい振り切る</div>
@@ -88,11 +88,11 @@
 </div>
 
 <script>
-/* 共通：シーソー／天秤を描く */
+/* 共通：シーソーを描く（高い側が上がる） */
 function drawBeam(svgId, opts){
   const s=document.getElementById(svgId);
   const cx=270, pivotY=130, beamLen=150, color=opts.color;
-  const ang = opts.angleDeg*Math.PI/180; // 正=左下がり
+  const ang = opts.angleDeg*Math.PI/180; // 正=左（＋入力）側が上がる
   const lx=cx-beamLen*Math.cos(ang), ly=pivotY-beamLen*Math.sin(ang);
   const rx=cx+beamLen*Math.cos(ang), ry=pivotY+beamLen*Math.sin(ang);
   let h='';
@@ -140,20 +140,20 @@ drawBeam('amp',{
   })()
 });
 
-/* コンパレータ：左(＋入力)がわずかに重く → 大きく倒れる（倒れきり） */
+/* コンパレータ：左(＋入力)がわずかに高いだけ → 大きく倒れる（倒れきり） */
 drawBeam('cmp',{
   angleDeg:15, color:'#6A1B9A', rcolor:'#6A1B9A',
   lsub:'', rsub:'',
-  lheavy:true, rheavy:false,
+  lheavy:false, rheavy:false,
   extra:(()=>{
     let g='';
     // 倒れきりを示す矢印（左の皿の外側・上方へ）
     g+=`<path d="M 95 175 q -22 -30 -8 -66" fill="none" stroke="#E65100" stroke-width="2.5" marker-end="url(#arO2)"/>`;
-    g+=`<text x="40" y="96" font-size="13" font-weight="800" fill="#E65100">＋レールへ</text>`;
-    g+=`<text x="40" y="113" font-size="13" font-weight="800" fill="#E65100">振り切り</text>`;
+    g+=`<text x="22" y="96" font-size="13" font-weight="800" fill="#E65100">＋レールへ</text>`;
+    g+=`<text x="22" y="113" font-size="13" font-weight="800" fill="#E65100">振り切り</text>`;
     g+=`<defs><marker id="arO2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#E65100"/></marker></defs>`;
-    // 「ほんの少し重い」を＋入力ラベルの下・皿の左に
-    g+=`<text x="120" y="210" font-size="12" text-anchor="middle" fill="#777">＋入力がほんの少し重いだけ</text>`;
+    // 「ほんの少し高い」を＋入力ラベルの下・皿の左に（梁は高い側が上がる描き方）
+    g+=`<text x="120" y="210" font-size="12" text-anchor="middle" fill="#777">＋入力がほんの少し高いだけ</text>`;
     // 「差は残ったまま」を右下の余白へ
     g+=`<text x="470" y="230" font-size="12" text-anchor="end" fill="#777">差は残ったまま振り切る</text>`;
     return g;

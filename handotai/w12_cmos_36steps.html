@@ -220,7 +220,8 @@
 
       <!-- 層間絶縁膜（配線工程）。下の構造が透けるよう半透明に -->
       <g id="el-ild" opacity="0"><rect x="60" y="120" width="700" height="80" fill="var(--ild)" opacity="0.45"/>
-        <text x="108" y="134" text-anchor="middle" font-size="10" fill="#8a7d63" font-weight="700">層間絶縁膜</text></g>
+        <!-- 配線工程ではx=131にGNDの文字が出る。ぶつからない左寄せにする -->
+        <text x="66" y="134" text-anchor="start" font-size="10" fill="#8a7d63" font-weight="700">層間絶縁膜</text></g>
       <!-- 絶縁膜の上から、ゲート・酸化膜・S/Dの輪郭を再掲してくっきり見せる -->
       <g id="el-front" opacity="0">
         <!-- ゲート酸化膜＋電極（NMOS） -->

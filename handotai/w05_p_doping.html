@@ -128,7 +128,7 @@ function draw(progress=1){
     const hx=(x1+ux*36 + x2-ux*36)/2 - nx*off, hy=(y1+uy*36 + y2-uy*36)/2 - ny*off;
     hole(svg,hx,hy,11);
     txt(svg,hx,hy-26,"電子対が1個足りない＝空席（正孔）",{size:14,fill:RED,weight:"bold"});
-    txt(svg,gx(centerC),gy(centerR)+52,"B（手が3本）",{size:13,fill:RED});
+    txt(svg,gx(centerC)-120,gy(centerR)+58,"B（手が3本）",{size:13,fill:RED});
   }
   if(state===2){
     // 正孔が右へ動く：中央右→右上→…と隣のボンド中点を渡り歩く（電子が逆向きに詰める）
@@ -144,8 +144,8 @@ function draw(progress=1){
     const p0=mids[i], p1=mids[(i+1)%seg];
     const hx=p0.x+(p1.x-p0.x)*easeIO(f), hy=p0.y+(p1.y-p0.y)*easeIO(f);
     hole(svg,hx,hy,12);
-    txt(svg,gx(1),gy(1)+95,"空席（正孔）が動き回る＝プラスを運ぶ主役（多数キャリア）",{size:15,fill:RED,weight:"bold"});
-    txt(svg,gx(centerC),gy(centerR)+52,"B⁻（電子を1個受け取る）",{size:13,fill:RED});
+    txt(svg,gx(1),gy(2)+70,"空席（正孔）が動き回る＝プラスを運ぶ担い手（多数キャリア）",{size:15,fill:RED,weight:"bold"});
+    txt(svg,gx(centerC)-150,gy(centerR)+58,"B⁻（電子を1個受け取る）",{size:13,fill:RED});
   }
 }
 

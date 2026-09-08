@@ -456,7 +456,9 @@ function draw3(){
     db+=(i===0?"M":"L")+gx_frac(vd/VDS_MAX).toFixed(1)+" "+gy_frac(idb/ID_MAX).toFixed(1)+" ";
   }
   svg.appendChild(el("path",{d:db,fill:"none",stroke:"#E65100","stroke-width":2,"stroke-dasharray":"6 4"}));
-  let bl=el("text",{x:gx_frac(0.42),y:gy_frac(0.92),"font-size":11,fill:"#E65100","font-weight":"bold"});
+  // 境界線の上に載る位置なので、白フチを付けて読めるようにする
+  let bl=el("text",{x:gx_frac(0.42),y:gy_frac(0.92),"font-size":11,fill:"#E65100","font-weight":"bold",
+    "paint-order":"stroke",stroke:"#fff","stroke-width":3.5});
   bl.textContent="ピンチオフ境界"; svg.appendChild(bl);
   // 選択中のVgsカーブ（青・濃い）
   if(Vgs>Vth){

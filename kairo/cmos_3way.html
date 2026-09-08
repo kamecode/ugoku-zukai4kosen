@@ -110,7 +110,8 @@
         <!-- output node + wire to right -->
         <circle cx="288" cy="226" r="4" fill="var(--mark)"/>
         <line x1="288" y1="226" x2="326" y2="226" stroke="var(--mark)" stroke-width="2"/>
-        <text x="326" y="220" text-anchor="end" font-size="12" fill="var(--mark)" class="devlabel">Vout=<tspan id="vouttxt">8.0</tspan>V</text>
+        <!-- ラベルは節点の左上へ。右に置くとドレイン側の縦線が文字を貫く -->
+        <text x="282" y="218" text-anchor="end" font-size="12" fill="var(--mark)" class="devlabel">Vout=<tspan id="vouttxt">8.0</tspan>V</text>
 
         <!-- ==== NMOS (lower) ==== -->
         <g id="nmos">
@@ -260,8 +261,8 @@
     + `<line id="vmline" x1="${px(VM)}" y1="${pyV(VM)}" x2="${px(VM)}" y2="${H-mB}" stroke="var(--mark)" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>`
     + `<path d="${vtcPath}" fill="none" stroke="var(--mark)" stroke-width="2.5"/>`
     + `<circle cx="${px(VM)}" cy="${pyV(VM)}" r="4" fill="none" stroke="var(--head)" stroke-width="2"/>`
-    + `<text x="${px(VM)+6}" y="${pyV(VM)-6}" font-size="10" fill="var(--head)">V_M (Vout=Vin)</text>`
-    + `<text x="${px(VM)}" y="${H-mB+27}" font-size="10" fill="var(--mark)" text-anchor="middle" font-family="Arial">${VM}</text>`
+    // 値は交点のラベルに入れる（軸の下に置くと軸名 Vin [V] と重なる）
+    + `<text x="${px(VM)+6}" y="${pyV(VM)-6}" font-size="10" fill="var(--head)">V_M=${VM}V（Vout=Vin）</text>`
     + `<circle id="vtcDot" r="6" fill="var(--in)" stroke="#fff" stroke-width="2"/>`;
 
   const cur=document.getElementById('cur');

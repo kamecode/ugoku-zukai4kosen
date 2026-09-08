@@ -209,18 +209,18 @@ function drawRight(){
   <line x1="320" y1="154" x2="370" y2="154" stroke="#E65100" stroke-width="2.5"/>
   <circle cx="358" cy="154" r="4.5" fill="#E65100"/>
   <text x="385" y="150" font-size="11" fill="#E65100" font-weight="800">Vout</text>
-  <!-- フォロワ帰還：出力ノード→下→−入力 -->
-  <line x1="358" y1="154" x2="358" y2="100" stroke="#E65100" stroke-width="2.5"/>
-  <line x1="358" y1="100" x2="232" y2="100" stroke="#E65100" stroke-width="2.5"/>
-  <line x1="232" y1="100" x2="232" y2="178" stroke="#E65100" stroke-width="2.5"/>
+  <!-- フォロワ帰還：出力ノード→下→−入力（上を回すと信号源からの入力線と交差する） -->
+  <line x1="358" y1="154" x2="358" y2="214" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="358" y1="214" x2="232" y2="214" stroke="#E65100" stroke-width="2.5"/>
+  <line x1="232" y1="214" x2="232" y2="178" stroke="#E65100" stroke-width="2.5"/>
   <line x1="232" y1="178" x2="250" y2="178" stroke="#E65100" stroke-width="2.5"/>
   <circle cx="250" cy="178" r="3.5" fill="#E65100"/>
   <text x="295" y="92" font-size="9.5" fill="#E65100" text-anchor="middle">フォロワ（出力を−入力へ直結・利得1）</text>
   <!-- 読めた電圧 -->
-  <rect x="250" y="212" width="172" height="44" rx="8" fill="#fff" stroke="#2E7D32" stroke-width="1.5"/>
-  <text x="336" y="230" font-size="10.5" fill="#7a8590" text-anchor="middle">出力＝読めた電圧</text>
-  <text x="336" y="248" font-size="16" fill="#2E7D32" text-anchor="middle" font-weight="800">${vread.toFixed(2)} V ✓</text>
-  <text x="230" y="300" font-size="11.5" fill="#2E7D32" text-anchor="middle" font-weight="700">電流を吸わないから、2.50Vをそのまま読める</text>
+  <rect x="250" y="230" width="172" height="44" rx="8" fill="#fff" stroke="#2E7D32" stroke-width="1.5"/>
+  <text x="336" y="248" font-size="10.5" fill="#7a8590" text-anchor="middle">出力＝読めた電圧</text>
+  <text x="336" y="266" font-size="16" fill="#2E7D32" text-anchor="middle" font-weight="800">${vread.toFixed(2)} V ✓</text>
+  <text x="230" y="306" font-size="11.5" fill="#2E7D32" text-anchor="middle" font-weight="700">電流を吸わないから、2.50Vをそのまま読める</text>
   `;
 }
 
@@ -236,7 +236,7 @@ function noteText(){
   return `なぜフォロワ（前回の利得1バッファ）で救えるのか。OPアンプの＋入力は電流をほぼ吸わないので、`
     +`<b>信号源から見ると「何もつながっていないのと同じ」</b>＝電圧が乱れません。`
     +`そしてフォロワの出力は同じ電圧を、こんどは<b>たっぷり電流を出せる低い出力抵抗</b>で送り出せます。`
-    +`つまり「電圧はそのまま・駆動力だけ強くする」緩衝役。センサやマイクなど“か弱い信号源”を測る前段に必ず登場します。`;
+    +`「電圧はそのまま・駆動力だけ強くする」緩衝役です。センサやマイクなど“か弱い信号源”を測る前段に必ず登場します。`;
 }
 
 function render(){

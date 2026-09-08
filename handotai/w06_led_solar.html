@@ -114,7 +114,7 @@ function moveG(g,x,y){
 }
 function animateTo(g,x,y,dur,onDone){
   const sx=parseFloat(g.dataset.x), sy=parseFloat(g.dataset.y), start=performance.now();
-  (function step(now){ let t=Math.min(1,(now-start)/dur); let e=t<.5?2*t*t:-1+(4-2*t)*t;
+  (function step(now){ let t=Math.max(0,Math.min(1,(now-start)/dur)); let e=t<.5?2*t*t:-1+(4-2*t)*t;
     moveG(g, sx+(x-sx)*e, sy+(y-sy)*e);
     if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
   })(performance.now());
@@ -183,7 +183,7 @@ function applyState(name){
 // LED：電子が左から、正孔が右から境界へ→出会って消え→光が出る→繰り返し
 function ledLoop(){
   function pulse(){
-    const lanes=[100,140,180,220];
+    const lanes=[130,170,210,250];   // 枠(y=100〜290)の内側に置く。100だと粒が上辺に重なる
     lanes.forEach((y,k)=>{
       const e=mkDot(90,y,"e"); eG.appendChild(e);
       const h=mkDot(810,y,"h"); hG.appendChild(h);

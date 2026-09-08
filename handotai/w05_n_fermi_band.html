@@ -121,7 +121,7 @@ function setState(n){
     draw();
   }else{
     title.textContent="② n型：電子が増えて、フェルミ準位が伝導帯の近くへ";
-    desc.innerHTML='リンなどを混ぜて<b class="blue">自由電子をどっと増やす</b>と、電子の平均的な居場所が伝導帯（上）の近くに寄ります。つまり<b class="purple">フェルミ準位が伝導帯の近く＝「高い」</b>状態に。「電子が多い→フェルミ準位が高い」と覚えましょう。このフェルミ準位の高さが、第6週pn接合で主役になります。';
+    desc.innerHTML='リンなどを混ぜて<b class="blue">自由電子をどっと増やす</b>と、電子の平均的な居場所が伝導帯（上）の近くに寄ります。<b class="purple">フェルミ準位が伝導帯の近く＝「高い」</b>状態です。「電子が多い→フェルミ準位が高い」と覚えましょう。このフェルミ準位の高さが、第6週pn接合で要になります。';
     hint.textContent="フェルミ準位が真ん中から伝導帯の近くへ上がりました。";
     t0=performance.now();
     const run=(now)=>{const p=Math.min(1,(now-t0)/1300); draw(p); if(p<1)anim=requestAnimationFrame(run);};

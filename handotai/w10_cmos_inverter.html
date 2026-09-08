@@ -261,9 +261,10 @@ function drawInverter(svg, opts){
   if(showThrough && !sw && inp!=null){
     // OFF側に×印を付けて「ここで止まる＝素通りできない」を示す
     const offTop = (pOn===false);
-    const offY = offTop?118:268;
-    txt(svg,CX,offY+2,"✕",{anchor:"middle",bold:true,size:30,color:"#C0392B"});
-    txt(svg,CX+52,offY+5,"ここでストップ",{color:"#C0392B",bold:true,size:12});
+    // 箱の中に置くと「pMOS」「nMOS」の文字に重なる。電源側／GND側の配線上に出す
+    const offY = offTop?62:316;
+    txt(svg,CX,offY+12,"✕",{anchor:"middle",bold:true,size:30,color:"#C0392B"});
+    txt(svg,CX+40,offY+8,"ここでストップ",{color:"#C0392B",bold:true,size:12});
   }
 }
 

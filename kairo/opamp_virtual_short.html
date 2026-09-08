@@ -224,8 +224,9 @@ function drawCircuit(s){
   <line x1="${sumX-6}" y1="${nodeY}" x2="${sumX}" y2="${nodeY}" stroke="#1565C0" stroke-width="2.5"/>
   <!-- 加算点(−入力ノード) -->
   <circle cx="${sumX}" cy="${nodeY}" r="4.5" fill="#2E7D32"/>
-  <text x="${sumX-4}" y="${nodeY+24}" text-anchor="middle" font-size="10.5" fill="#2E7D32" font-weight="700">−入力 ${vmTxt}</text>
-  <text x="${sumX-4}" y="${nodeY+38}" text-anchor="middle" font-size="9.5" fill="#2E7D32">${vmSub}</text>
+  <!-- ＋入力のGND配線と重ならないよう、注記は節点の左下へ -->
+  <text x="${sumX-12}" y="${nodeY+26}" text-anchor="end" font-size="10.5" fill="#2E7D32" font-weight="700">−入力 ${vmTxt}</text>
+  <text x="${sumX-12}" y="${nodeY+40}" text-anchor="end" font-size="9.5" fill="#2E7D32">${vmSub}</text>
   <!-- 加算点→OP -入力 -->
   <line x1="${sumX}" y1="${nodeY}" x2="${opX}" y2="${opTop+22}" stroke="#3a4654" stroke-width="2"/>
   <!-- Rf 帰還：加算点上を回って出力へ -->
@@ -240,7 +241,7 @@ function drawCircuit(s){
   <line x1="${opX-70}" y1="${opBot-22}" x2="${opX-70}" y2="${opBot+6}" stroke="#9E9E9E" stroke-width="2"/>
   <line x1="${opX-82}" y1="${opBot+6}" x2="${opX-58}" y2="${opBot+6}" stroke="#9E9E9E" stroke-width="2.5"/>
   <line x1="${opX-77}" y1="${opBot+12}" x2="${opX-63}" y2="${opBot+12}" stroke="#9E9E9E" stroke-width="2"/>
-  <text x="${opX-100}" y="${opBot-18}" font-size="10.5" fill="#9E9E9E" font-weight="700">+入力=0V</text>
+  <text x="${opX-70}" y="${opBot+28}" text-anchor="middle" font-size="10.5" fill="#9E9E9E" font-weight="700">+入力=0V</text>
   <!-- OPアンプ三角 -->
   <polygon points="${opX},${opTop} ${opX},${opBot} ${opTip},155" fill="#fff" stroke="#0D3C6E" stroke-width="2.5"/>
   <text x="${opX+12}" y="${opTop+26}" font-size="13" fill="#1565C0" font-weight="800">−</text>

@@ -53,7 +53,7 @@
         <div class="secttl">回路（出力→−入力へ Rf・R1 で分圧帰還）</div>
         <svg id="ampCirc" width="560" height="200" viewBox="0 0 560 200"></svg>
         <div class="secttl">入出力波形（同じ正弦入力に対して）</div>
-        <svg id="ampWave" width="560" height="150" viewBox="0 0 560 150"></svg>
+        <svg id="ampWave" width="560" height="166" viewBox="0 0 560 166"></svg>
         <div class="keyrow"><span class="eq">V<tspan>out</tspan> = (1+Rf/R1)·V<tspan>in</tspan>（連続・比例）</span></div>
       </div>
     </div>
@@ -65,7 +65,7 @@
         <div class="secttl">回路（帰還線なし・−入力は基準 Vref）</div>
         <svg id="cmpCirc" width="560" height="200" viewBox="0 0 560 200"></svg>
         <div class="secttl">入出力波形（同じ正弦入力に対して）</div>
-        <svg id="cmpWave" width="560" height="150" viewBox="0 0 560 150"></svg>
+        <svg id="cmpWave" width="560" height="166" viewBox="0 0 560 166"></svg>
         <div class="keyrow"><span class="eq">V<tspan>out</tspan> = ＋レール / −レール（2値・判定）</span></div>
       </div>
     </div>
@@ -183,19 +183,20 @@ function drawCmpCirc(){
   // −入力ノード（三角手前）→ Vref 分圧（縦ラインは divX）
   h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${triL}" y2="${o.inMinusY}" stroke="${C.purple}" stroke-width="2.3"/>`;
   h+=`<circle cx="${nodeX}" cy="${o.inMinusY}" r="3.2" fill="${C.purple}"/>`;
-  h+=`<text x="${nodeX+4}" y="${o.inMinusY-7}" font-size="11" font-weight="700" fill="${C.purple}">V<tspan baseline-shift="sub" font-size="8">ref</tspan></text>`;
+  // Vrefはノード点と破線（帰還線なし）を避けて左上へ
+  h+=`<text x="${nodeX-8}" y="${o.inMinusY-7}" font-size="11" font-weight="700" text-anchor="end" fill="${C.purple}">V<tspan baseline-shift="sub" font-size="8">ref</tspan></text>`;
   // 中点ノードへ水平に左へ、そこから上=+8V/下=−8Vの分圧
   h+=`<line x1="${nodeX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY}" stroke="${C.purple}" stroke-width="2"/>`;
   h+=`<circle cx="${divX}" cy="${o.inMinusY}" r="2.8" fill="${C.purple}"/>`;
   // 上: 中点 → 抵抗 → +8V
-  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY-14}" stroke="${C.purple}" stroke-width="2"/>`;
-  h+=`<rect x="${divX-8}" y="${o.inMinusY-44}" width="16" height="30" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
-  h+=`<line x1="${divX}" y1="${o.inMinusY-44}" x2="${divX}" y2="${o.inMinusY-58}" stroke="${C.red}" stroke-width="2"/>`;
-  h+=`<text x="${divX}" y="${o.inMinusY-62}" font-size="9.5" text-anchor="middle" font-weight="700" fill="${C.red}">+8V</text>`;
-  // 下: 中点 → 抵抗 → −8V（Vin線はジャンプ済みなので交差しない）
-  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY+14}" stroke="${C.purple}" stroke-width="2"/>`;
-  h+=`<rect x="${divX-8}" y="${o.inMinusY+14}" width="16" height="30" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
-  h+=`<line x1="${divX}" y1="${o.inMinusY+44}" x2="${divX}" y2="${o.inPlusY+20}" stroke="${C.blue}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY-6}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<rect x="${divX-8}" y="${o.inMinusY-30}" width="16" height="24" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${o.inMinusY-30}" x2="${divX}" y2="${o.inMinusY-46}" stroke="${C.red}" stroke-width="2"/>`;
+  h+=`<text x="${divX}" y="${o.inMinusY-50}" font-size="9.5" text-anchor="middle" font-weight="700" fill="${C.red}">+8V</text>`;
+  // 下: 中点 → 抵抗 → −8V（抵抗の下端は Vin線のジャンプより上で終える）
+  h+=`<line x1="${divX}" y1="${o.inMinusY}" x2="${divX}" y2="${o.inMinusY+6}" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<rect x="${divX-8}" y="${o.inMinusY+6}" width="16" height="24" fill="#fff" stroke="${C.purple}" stroke-width="2"/>`;
+  h+=`<line x1="${divX}" y1="${o.inMinusY+30}" x2="${divX}" y2="${o.inPlusY+20}" stroke="${C.blue}" stroke-width="2"/>`;
   h+=`<text x="${divX}" y="${o.inPlusY+34}" font-size="9.5" text-anchor="middle" font-weight="700" fill="${C.blue}">−8V</text>`;
 
   // 出力（帰還線なし！を強調）
@@ -217,7 +218,8 @@ function drawCmpCirc(){
 /* ===== 波形 ===== */
 function drawWave(svgId, mode){
   const s=document.getElementById(svgId);
-  const W=560,H=150,padL=30,padR=14,padT=12,padB=18;
+  // 上下に余白を取り、凡例と注記が振り切り波形（±レール）に重ならないようにする
+  const W=560,H=166,padL=30,padR=14,padT=26,padB=30;
   const x0=padL,x1=W-padR,y0=padT,y1=H-padB,mid=(y0+y1)/2,yspan=(y1-y0)/2-4;
   const RAIL=7;
   function X(t){return x0+t*(x1-x0);}
@@ -239,12 +241,13 @@ function drawWave(svgId, mode){
   h+=`<path d="${pout}" fill="none" stroke="${C.orange}" stroke-width="2.6"/>`;
   h+=`<path d="${pin}" fill="none" stroke="${C.blue}" stroke-width="2"/>`;
   // 凡例
-  h+=`<line x1="${x1-150}" y1="${y0+4}" x2="${x1-134}" y2="${y0+4}" stroke="${C.blue}" stroke-width="2"/><text x="${x1-130}" y="${y0+8}" font-size="9.5" fill="${C.blue}">入力</text>`;
-  h+=`<line x1="${x1-92}" y1="${y0+4}" x2="${x1-76}" y2="${y0+4}" stroke="${C.orange}" stroke-width="2.6"/><text x="${x1-72}" y="${y0+8}" font-size="9.5" fill="${C.orange}">出力</text>`;
+  const ylg=y0-10;
+  h+=`<line x1="${x1-150}" y1="${ylg-4}" x2="${x1-134}" y2="${ylg-4}" stroke="${C.blue}" stroke-width="2"/><text x="${x1-130}" y="${ylg}" font-size="9.5" fill="${C.blue}">入力</text>`;
+  h+=`<line x1="${x1-92}" y1="${ylg-4}" x2="${x1-76}" y2="${ylg-4}" stroke="${C.orange}" stroke-width="2.6"/><text x="${x1-72}" y="${ylg}" font-size="9.5" fill="${C.orange}">出力</text>`;
   if(mode==='amp'){
-    h+=`<text x="${x0+4}" y="${y1-2}" font-size="10" fill="#888">入力と同じ形のまま比例して増幅</text>`;
+    h+=`<text x="${x0+4}" y="${y1+18}" font-size="10" fill="#888">入力と同じ形のまま比例して増幅</text>`;
   }else{
-    h+=`<text x="${x0+4}" y="${y1-2}" font-size="10" fill="#888">0Vを跨ぐたびに矩形へ振り切り</text>`;
+    h+=`<text x="${x0+4}" y="${y1+18}" font-size="10" fill="#888">0Vを跨ぐたびに矩形へ振り切り</text>`;
   }
   s.innerHTML=h;
 }

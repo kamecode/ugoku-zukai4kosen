@@ -79,10 +79,13 @@ function opTriangle(cx, top, bot, tip, mid){
 (function(){
   const ax=820, top=120, bot=200, tip=900, mid=160;
   let g="";
-  // 入力源 → +入力
-  g+=`<text x="580" y="${bot-18-18}" font-size="12" fill="${IN}" font-weight="800">Vin</text>`;
-  g+=`<circle cx="580" cy="${bot-18}" r="5" fill="${IN}"/>`;
-  g+=`<line x1="580" y1="${bot-18}" x2="${ax}" y2="${bot-18}" stroke="${IN}" stroke-width="2.5"/>`;
+  // 入力源 → +入力（Rin→GND の枝より下を通す。枝を突っ切らないように）
+  const vy=232;
+  g+=`<text x="580" y="${vy-16}" font-size="12" fill="${IN}" font-weight="800">Vin</text>`;
+  g+=`<circle cx="580" cy="${vy}" r="5" fill="${IN}"/>`;
+  g+=`<line x1="580" y1="${vy}" x2="790" y2="${vy}" stroke="${IN}" stroke-width="2.5"/>`;
+  g+=`<line x1="790" y1="${vy}" x2="790" y2="${bot-18}" stroke="${IN}" stroke-width="2.5"/>`;
+  g+=`<line x1="790" y1="${bot-18}" x2="${ax}" y2="${bot-18}" stroke="${IN}" stroke-width="2.5"/>`;
   // −入力ノード：Rin→GND, Rf→出力
   const ndx=740;
   g+=`<line x1="${ax}" y1="${top+18}" x2="${ndx}" y2="${top+18}" stroke="${INK}" stroke-width="1.8"/>`;

@@ -108,8 +108,8 @@ function buildOut(){
       let d=(ip-im)/(2/N);
       outs.push(-d*k);
     }
-    // 方形/三角の微分はスパイク/段になる。クリップして見やすく
-    outs=outs.map(v=>Math.max(-1,Math.min(1,v)));
+    // ここで±1にクリップすると、正弦波の微分（余弦）まで台形に潰れる。
+    // この後の正規化で±0.92に収まるので、クリップはしない。
   }
   // 正規化（±1に収める）
   let mx=Math.max(...outs.map(Math.abs))||1;

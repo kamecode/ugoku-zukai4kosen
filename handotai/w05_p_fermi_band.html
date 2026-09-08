@@ -114,7 +114,7 @@ function setState(n){
     draw();
   }else{
     title.textContent="② p型：正孔が増えて、フェルミ準位が価電子帯の近くへ";
-    desc.innerHTML='ホウ素などを混ぜて<b class="red">正孔をどっと増やす</b>と、電子の平均的な居場所が価電子帯（下）の近くに寄ります。つまり<b class="purple">フェルミ準位が価電子帯の近く＝「低い」</b>状態に。「正孔が多い→フェルミ準位が低い」と覚えましょう。n型（高い）とちょうど対称です。この高低差が、第6週pn接合で崖を作ります。';
+    desc.innerHTML='ホウ素などを混ぜて<b class="red">正孔をどっと増やす</b>と、電子の平均的な居場所が価電子帯（下）の近くに寄ります。<b class="purple">フェルミ準位が価電子帯の近く＝「低い」</b>状態です。「正孔が多い→フェルミ準位が低い」と覚えましょう。n型（高い）とちょうど対称です。この高低差が、第6週pn接合で崖を作ります。';
     hint.textContent="フェルミ準位が真ん中から価電子帯の近くへ下がりました。";
     t0=performance.now();
     const run=(now)=>{const p=Math.min(1,(now-t0)/1300); draw(p); if(p<1)anim=requestAnimationFrame(run);};

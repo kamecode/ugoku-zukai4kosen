@@ -142,8 +142,9 @@ const PXV=15;        // 15px per V (bar)
 const dotsV1=document.getElementById('dotsV1'), dotsV2=document.getElementById('dotsV2');
 
 // 配線経路（電流粒が流れるパス）。点の配列で表現。
-const pathV1=[[276,290],[450,290],[450,306],[600,306]];           // R1出口→加算ノード→-入力
-const pathV2=[[276,360],[450,360],[450,306],[600,306]];           // R2出口→加算ノード→-入力
+// −入力には流れ込まない（入力電流ゼロ）。合流した電流はそのまま Rf を通って出力へ抜ける。
+const pathV1=[[276,290],[450,290],[450,170],[840,170],[840,350]]; // R1出口→加算ノード→Rf→出力
+const pathV2=[[276,360],[450,360],[450,170],[840,170],[840,350]]; // R2出口→加算ノード→Rf→出力
 
 function lerpPath(path, t){ // t:0..1 全長に対する位置
   let segLens=[], total=0;
@@ -175,19 +176,23 @@ function update(){
   document.getElementById('i1v').textContent=(i1>=0?'':'')+i1.toFixed(2);
   document.getElementById('i2v').textContent=(i2>=0?'':'')+i2.toFixed(2);
   document.getElementById('isum').textContent=(i1+i2).toFixed(2);
-  let vout=-(V1+V2);
+  // 式の値は理想値のまま表示し、レールで頭打ちになる分は別に書く（式が偽になるのを避ける）
+  const videal=-(V1+V2);
+  let vout=videal;
   let sat=false;
   if(vout>VRAIL){vout=VRAIL;sat=true;} if(vout<-VRAIL){vout=-VRAIL;sat=true;}
-  document.getElementById('voutv').textContent=(vout>=0?'+':'')+vout.toFixed(1)+' V';
-  document.getElementById('satlab').textContent=sat?'　← 出力飽和（レールに張り付き）':'';
+  document.getElementById('voutv').textContent=(videal>=0?'+':'')+videal.toFixed(1)+' V';
+  document.getElementById('satlab').textContent=sat
+    ?'　→ 実際は '+(vout>=0?'+':'')+vout.toFixed(1)+' V（出力飽和＝レールに張り付き）':'';
 
   // bars
   const setBar=(id,val)=>{const b=document.getElementById(id);const h=Math.abs(val)*PXV;b.setAttribute('height',h);b.setAttribute('y',val>=0?160-h:160);};
   setBar('barV1',V1); setBar('barV2',V2); setBar('barVo',vout);
 
   // dot density ∝ |current|
-  const n1=Math.max(1,Math.round(Math.abs(i1)*30));
-  const n2=Math.max(1,Math.round(Math.abs(i2)*30));
+  // 経路が Rf 経由で長くなった分、粒の数も増やして間隔を保つ
+  const n1=Math.max(1,Math.round(Math.abs(i1)*70));
+  const n2=Math.max(1,Math.round(Math.abs(i2)*70));
   makeDots(dotsV1,n1,'#1565C0',dotState.v1);
   makeDots(dotsV2,n2,'#6A1B9A',dotState.v2);
 }

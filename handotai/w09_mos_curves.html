@@ -248,7 +248,7 @@
 
     <div class="note">μ・Cox・W/L は、その素子で決まってしまう「設計の値」。授業中に動かせるのは <b>Vgs</b> です。だから「飽和電流は Vgs で決まる」と覚えればOK。式変形は深追いしません。</div>
 
-    <div class="pass"><b>合格ライン：</b>式を完璧に変形できなくても大丈夫。<b>3つの領域（線形→ピンチオフ→飽和）の意味</b>と <b>カーブの形</b>、そして <b>「飽和電流は Vgs で決まり、(Vgs−Vth) が2乗で効く」</b> ――これがわかれば合格です。</div>
+    <div class="pass"><b>合格ライン：</b>式を完璧に変形できる必要はありません。<b>3つの領域（線形→ピンチオフ→飽和）の意味</b>と <b>カーブの形</b>、そして <b>「飽和電流は Vgs で決まり、(Vgs−Vth) が2乗で効く」</b> ――これがわかれば合格です。</div>
 
     <div class="ana" style="background:#EAF1F8; border-left-color:#1C3A5E;"><b>得意な人向け（発展・低配点）：</b>飽和領域でも Vds をさらに上げると電流がほんの少し増えます（チャネル長変調・Early電圧）。本編では「ほぼ一定」とみなして扱います。</div>
   </div>
@@ -421,7 +421,9 @@ function draw3(){
     db+=(i===0?"M":"L")+gx_frac(vd/VDS_MAX).toFixed(1)+" "+gy_frac(idb/ID_MAX).toFixed(1)+" ";
   }
   svg.appendChild(el("path",{d:db,fill:"none",stroke:"#7E3FA0","stroke-width":2,"stroke-dasharray":"6 4"}));
-  let bl=el("text",{x:gx_frac(0.42),y:gy_frac(0.92),"font-size":11,fill:"#7E3FA0","font-weight":"bold"});
+  // 境界線の上に載る位置なので、白フチを付けて読めるようにする
+  let bl=el("text",{x:gx_frac(0.42),y:gy_frac(0.92),"font-size":11,fill:"#7E3FA0","font-weight":"bold",
+    "paint-order":"stroke",stroke:"#fff","stroke-width":3.5});
   bl.textContent="ピンチオフ境界"; svg.appendChild(bl);
   // 選択中のVgsカーブ（青・濃い）
   if(Vgs>Vth){

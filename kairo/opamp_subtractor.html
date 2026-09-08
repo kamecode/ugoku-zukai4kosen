@@ -139,7 +139,8 @@ const VRAIL=7.0, PXV=15;
 const dotsV1=document.getElementById('dotsV1');
 
 // 反転側ループ：V1→R1→-入力ノード
-const pathV1=[[276,276],[450,276],[600,276]];                 // R1出口→-入力
+// −入力には流れ込まない（入力電流ゼロ）。R1を通った電流はそのまま Rf を抜けて出力へ。
+const pathV1=[[276,276],[450,276],[450,150],[840,150],[840,320]]; // R1出口→−入力ノード→Rf→出力
 
 function lerpPath(path,t){let s=[],T=0;for(let i=0;i<path.length-1;i++){const l=Math.hypot(path[i+1][0]-path[i][0],path[i+1][1]-path[i][1]);s.push(l);T+=l;}let d=t*T;for(let i=0;i<s.length;i++){if(d<=s[i]){const r=d/s[i];return[path[i][0]+(path[i+1][0]-path[i][0])*r,path[i][1]+(path[i+1][1]-path[i][1])*r];}d-=s[i];}return path[path.length-1];}
 
@@ -156,15 +157,19 @@ function update(){
   document.getElementById('vm').textContent=(vp>=0?'+':'')+vp.toFixed(1);
   document.getElementById('vplus').textContent='＋入力 = '+(vp>=0?'+':'')+vp.toFixed(1)+'V';
   document.getElementById('vminus').textContent='−入力 = '+(vp>=0?'+':'')+vp.toFixed(1)+'V';
-  let vout=V2-V1, sat=false;
+  // 式の値は理想値のまま表示し、レールで頭打ちになる分は別に書く（式が偽になるのを避ける）
+  const videal=V2-V1;
+  let vout=videal, sat=false;
   if(vout>VRAIL){vout=VRAIL;sat=true;}if(vout<-VRAIL){vout=-VRAIL;sat=true;}
-  document.getElementById('voutv').textContent=(vout>=0?'+':'')+vout.toFixed(1)+' V';
-  document.getElementById('satlab').textContent=sat?'　← 出力飽和（レールに張り付き）':'';
+  document.getElementById('voutv').textContent=(videal>=0?'+':'')+videal.toFixed(1)+' V';
+  document.getElementById('satlab').textContent=sat
+    ?'　→ 実際は '+(vout>=0?'+':'')+vout.toFixed(1)+' V（出力飽和＝レールに張り付き）':'';
   const setBar=(id,val)=>{const b=document.getElementById(id);const h=Math.abs(val)*PXV;b.setAttribute('height',h);b.setAttribute('y',val>=0?160-h:160);};
   setBar('barV1',V1);setBar('barV2',V2);setBar('barVo',vout);
   // 反転側の電流 i1 = (V1 - V(-入力))/R1 = (V1 - V2/2)/10  [mA]
   const i1=(V1 - vp)/10;
-  const n1=Math.max(1,Math.round(Math.abs(i1)*30));
+  // 経路が Rf 経由で長くなった分、粒の数も増やして間隔を保つ
+  const n1=Math.max(1,Math.round(Math.abs(i1)*70));
   makeDots(dotsV1,n1,'#1565C0',st.v1);
   window._i1=i1;
 }

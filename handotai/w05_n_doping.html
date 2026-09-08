@@ -124,7 +124,8 @@ function draw(progress=1){
     // 余った手（短い線）
     svg.appendChild(el("line",{x1:gx(centerC),y1:gy(centerR)-36,x2:ex,y2:ey+12,stroke:PURPLE,"stroke-width":3,"stroke-dasharray":"5 4"}));
     electron(svg,ex,ey,12);
-    txt(svg,ex,ey-22,"余った5本目の手＝電子",{size:14,fill:PURPLE,weight:"bold"});
+    // 縦の結合線（x=gx(centerC)）を隠さないよう、注記は横にずらす
+    txt(svg,ex+165,ey-4,"余った5本目の手＝電子",{size:14,fill:PURPLE,weight:"bold"});
   }
   if(state===2){
     // 自由電子が格子のすき間を動く（progressで周回）
@@ -138,11 +139,11 @@ function draw(progress=1){
     const p0=path[i], p1=path[(i+1)%seg];
     const ex=p0.x+(p1.x-p0.x)*easeIO(f), ey=p0.y+(p1.y-p0.y)*easeIO(f);
     electron(svg,ex,ey,12);
-    txt(svg,gx(1),gy(1)+95,"この電子が自由に動き回る＝電気を運ぶ主役（多数キャリア）",{size:15,fill:BLUE,weight:"bold"});
+    txt(svg,gx(1),gy(2)+70,"この電子が自由に動き回る＝電気を運ぶ担い手（多数キャリア）",{size:15,fill:BLUE,weight:"bold"});
   }
   // リンの＋表示（電子が出ていくと、リンは＋イオンとして残る：state2のみ軽く）
   if(state===2){
-    txt(svg,gx(centerC),gy(centerR)+52,"P⁺（電子を1個放出）",{size:13,fill:PURPLE});
+    txt(svg,gx(centerC)+150,gy(centerR)+58,"P⁺（電子を1個放出）",{size:13,fill:PURPLE});
   }
 }
 

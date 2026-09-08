@@ -72,7 +72,7 @@
 <body>
 <div class="wrap">
   <h1>第10週　pMOSの動作 ―― nMOSの鏡像（ぜんぶ逆）</h1>
-  <p class="sub">第9週まで学んだMOSは nMOS（電子で動く）。CMOSに進む前に、その「双子の相棒」pMOS を立てます。コツは「pMOSは nMOS のすべてが逆」。</p>
+  <p class="sub">第9週まで学んだMOSは nMOS（電子で動く）。CMOSに進む前に、それと対になる pMOS を立てます。コツは「pMOSは nMOS のすべてが逆」。</p>
 
   <div class="tabs">
     <button class="tab active" data-tab="t1">① nMOSのおさらい</button>
@@ -105,7 +105,7 @@
           <div class="readout" id="r1">…</div>
         </div>
         <div class="ana"><b>合言葉：</b>nMOSは「<b>押す（高い電圧）とON</b>」。電子（−）は＋に引かれるので、ゲートを＋（高く）すると電子が集まります。</div>
-        <div class="note">第9週の主役。動くのは電子。これを基準に、次は「ぜんぶ逆」のpMOSを見ます。</div>
+        <div class="note">第9週で扱った素子。動くのは電子。これを基準に、次は「ぜんぶ逆」のpMOSを見ます。</div>
       </div>
     </div>
   </div>
@@ -133,7 +133,7 @@
             すべてが反転しています。
           </div>
         </div>
-        <div class="note">第5週で学んだ「n型＝電子が多い／p型＝正孔が多い」がそのまま効きます。pMOSの主役は正孔（＋の符号を持つように振る舞う空席）。</div>
+        <div class="note">第5週で学んだ「n型＝電子が多い／p型＝正孔が多い」がそのまま効きます。pMOSの担い手は正孔（＋の符号を持つように振る舞う空席）。</div>
         <div class="ana"><b>覚え方：</b>名前の通り。<b>n</b>MOS は <b>n</b>型のS/Dで電子、<b>p</b>MOS は <b>p</b>型のS/Dで正孔。「S/Dの型＝動くキャリア」。</div>
       </div>
     </div>
@@ -354,7 +354,8 @@ function drawMOS(svg, type, on){
         svg.appendChild(el("circle",{cx:x,cy:chY+chMaxH/2,r:3.5,fill:"#15527f"}));
       }
     }
-    let cl=el("text",{x:chX0+6,y:chY-3,"font-size":11,fill:isP?"#7a241b":"#15527f","font-weight":"bold"});
+    // chY-3 だと酸化膜の帯にかぶる。チャネルの下（基板の中）に置く
+    let cl=el("text",{x:chX0+6,y:chY+chMaxH+12,"font-size":11,fill:isP?"#7a241b":"#15527f","font-weight":"bold"});
     cl.textContent=isP?"正孔のチャネル":"電子のチャネル"; svg.appendChild(cl);
     // 状態ラベル
     let on_t=el("text",{x:(chX0+chX1)/2,y:chY+chMaxH+34,"text-anchor":"middle","font-size":18,fill:"#2E8B57","font-weight":"bold"});
@@ -436,7 +437,9 @@ function pdraw1(){
   // Vth線(=-0.5)
   const xth=pgxg(-0.5);
   svg.appendChild(pel("line",{x1:xth,y1:Ppy,x2:xth,y2:Ppy+Pph,stroke:"#C0392B","stroke-width":1.5,"stroke-dasharray":"5 4"}));
-  let lab=pel("text",{x:xth-4,y:Ppy+12,"font-size":12,fill:"#C0392B","font-weight":"bold","text-anchor":"end"}); lab.textContent="Vth=−0.5V"; svg.appendChild(lab);
+  // 破線の左はカーブが通るので、Id=0の平らな側（右）に置く
+  let lab=pel("text",{x:xth+5,y:Ppy+18,"font-size":12,fill:"#C0392B","font-weight":"bold",
+    "paint-order":"stroke",stroke:"#fff","stroke-width":3.5}); lab.textContent="Vth=−0.5V"; svg.appendChild(lab);
   // 曲線（Vds=-5固定→飽和）
   let d="";
   for(let i=0;i<=120;i++){

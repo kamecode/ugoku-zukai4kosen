@@ -68,7 +68,7 @@
 <body>
 <div class="wrap">
   <h1>第9週　構造で見るピンチオフ ―― カーブの裏で何が起きているか</h1>
-  <p class="sub">特性カーブの「折れ曲がり」の正体を、MOSの断面で見ます。チャネル（電子の通り道）が、ドレイン側で締まって消える瞬間が「ピンチオフ」です。</p>
+  <p class="sub">特性カーブの「折れ曲がり」の理由を、MOSの断面で見ます。チャネル（電子の通り道）が、ドレイン側で締まって消える瞬間が「ピンチオフ」です。</p>
 
   <div class="tabs">
     <button class="tab active" data-tab="t1">① Vgs と Vds の役割分担</button>
@@ -264,7 +264,7 @@ function drawChannel(svg, Vgs, Vds, opts){
     const px=chX1, py=chY;
     svg.appendChild(el("circle",{cx:px,cy:py+2,r:6,fill:"#7E3FA0",stroke:"#fff","stroke-width":1.5}));
     // ラベルは基板の下方（流れ矢印より下）に置いて衝突回避
-    let pl=el("text",{x:px-4,y:chY+72,"text-anchor":"end","font-size":11.5,fill:"#7E3FA0","font-weight":"bold"});
+    let pl=el("text",{x:px-4,y:chY+88,"text-anchor":"end","font-size":11.5,fill:"#7E3FA0","font-weight":"bold"});
     pl.textContent="↑ ここが締まった（ピンチオフ）"; svg.appendChild(pl);
   }
   // 飽和：締まった区間を強調（ドレイン側に余分Vdsがかかる帯）
@@ -272,18 +272,19 @@ function drawChannel(svg, Vgs, Vds, opts){
     const zoneW=Math.min((Vds-Vov)/2*30, (chX1-chX0)*0.35); // 余分Vdsに応じて区間が伸びる
     if(zoneW>2){
       svg.appendChild(el("rect",{x:chX1-zoneW,y:chY,width:zoneW,height:chMaxH+4,fill:"#7E3FA0",opacity:0.18}));
-      let zt=el("text",{x:chX1-zoneW/2,y:chY+88,"text-anchor":"middle","font-size":10.5,fill:"#7E3FA0","font-weight":"bold"});
+      let zt=el("text",{x:chX1-zoneW/2,y:chY+104,"text-anchor":"middle","font-size":10.5,fill:"#7E3FA0","font-weight":"bold"});
       zt.textContent="余分なVdsはここに"; svg.appendChild(zt);
     }
   }
   // チャネルラベル
-  let ct=el("text",{x:chX0+6,y:chY-6,"font-size":11.5,fill:"#1F6FB2","font-weight":"bold"}); ct.textContent="チャネル"; svg.appendChild(ct);
+  // 注記はチャネルの下（基板の中）。chY-6 だと酸化膜の帯に重なる
+  let ct=el("text",{x:chX0+8,y:chY+42,"font-size":11.5,fill:"#1F6FB2","font-weight":"bold"}); ct.textContent="チャネル"; svg.appendChild(ct);
 }
 
 // 電子の流れ矢印（S→D）
 function drawFlow(svg, on){
   if(!on)return;
-  const ay=chY+40; // 流れ矢印の高さ（基板内）
+  const ay=chY+56; // 流れ矢印の高さ（基板内）。チャネルの注記を上に入れるぶん下げる
   svg.appendChild(el("line",{x1:chX0+10,y1:ay,x2:chX1-22,y2:ay,stroke:"#1F6FB2","stroke-width":2.5,"stroke-dasharray":"6 4"}));
   svg.appendChild(el("polygon",{points:`${chX1-22},${ay} ${chX1-30},${ay-4} ${chX1-30},${ay+4}`,fill:"#1F6FB2"}));
   let ft=el("text",{x:chX0+14,y:ay+15,"font-size":11,fill:"#1F6FB2","font-weight":"bold"}); ft.textContent="電子の流れ（→ 電流は逆向き）"; svg.appendChild(ft);

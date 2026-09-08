@@ -218,12 +218,14 @@ function drawCircuit(s){
   return `
   <rect x="0" y="0" width="460" height="330" fill="#fff"/>
   ${railNote}
-  <!-- Vin → ＋入力（OP三角の＋端子の高さへ） -->
-  <text x="38" y="${opBot-22-18}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">Vin</text>
-  <circle cx="38" cy="${opBot-22}" r="5" fill="#1565C0"/>
-  <line x1="38" y1="${opBot-22}" x2="${opX}" y2="${opBot-22}" stroke="#1565C0" stroke-width="2.5"/>
+  <!-- Vin → ＋入力（−入力ノードから下りる Rin の枝を突っ切らないよう、下を回して＋端子へ上げる） -->
+  <text x="38" y="282" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">Vin</text>
+  <circle cx="38" cy="300" r="5" fill="#1565C0"/>
+  <line x1="38" y1="300" x2="220" y2="300" stroke="#1565C0" stroke-width="2.5"/>
+  <line x1="220" y1="300" x2="220" y2="${opBot-22}" stroke="#1565C0" stroke-width="2.5"/>
+  <line x1="220" y1="${opBot-22}" x2="${opX}" y2="${opBot-22}" stroke="#1565C0" stroke-width="2.5"/>
   <circle cx="${opX}" cy="${opBot-22}" r="3.5" fill="#1565C0"/>
-  <text x="120" y="${opBot-30}" text-anchor="middle" font-size="10" fill="#D32F2F" font-weight="700">＋入力へ</text>
+  <text x="105" y="292" text-anchor="middle" font-size="10" fill="#D32F2F" font-weight="700">＋入力へ</text>
   ${fb}
   <!-- −入力ノード印 -->
   <circle cx="${sumX}" cy="${minusY}" r="4.5" fill="#2E7D32"/>
@@ -299,6 +301,7 @@ document.querySelectorAll(".tab").forEach(t=>{
     t.classList.add("active");
     mode=t.dataset.mode;
     $("modeline").textContent=modeLines[mode];
+    syncGainBtns();
     render();
   });
 });
@@ -309,7 +312,18 @@ document.querySelectorAll("#gainbtns button").forEach(b=>{
     b.classList.add("on"); gain=parseFloat(b.dataset.g); render();
   });
 });
+// フォロワ（Rf=0）では利得は1に固定。抵抗比のボタンは選べないことを見た目でも示す
+function syncGainBtns(){
+  const off = (mode==="follower");
+  document.querySelectorAll("#gainbtns button").forEach(x=>{
+    x.disabled = off;
+    x.style.opacity = off ? 0.4 : 1;
+    if(off) x.classList.remove("on");
+    else x.classList.toggle("on", parseFloat(x.dataset.g)===gain);
+  });
+}
 $("modeline").textContent=modeLines.ideal;
+syncGainBtns();
 render();
 
 window.__setState=function(o){

@@ -84,7 +84,8 @@
         <!-- wind particles (drawn dynamically) -->
         <g id="wind"></g>
         <!-- shoot label -->
-        <text id="shoot" x="140" y="218" text-anchor="middle" font-size="12" fill="var(--vdd)" font-weight="700" opacity="0">⚡ 風が吹き抜ける ⚡</text>
+        <!-- 通路の枠(y=180..216)と下のドアの枠(y=236〜)の間に置く -->
+        <text id="shoot" x="140" y="230" text-anchor="middle" font-size="12" fill="var(--vdd)" font-weight="700" opacity="0" paint-order="stroke" stroke="#fff" stroke-width="3">⚡ 風が吹き抜ける ⚡</text>
       </svg>
       <div class="legend">
         <span><i class="sw" style="background:var(--pmos)"></i>上=PMOS</span>
