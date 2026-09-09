@@ -226,9 +226,10 @@ function drawWave(vref){
   h += `<text x="6" y="${midY+4}" font-size="10" fill="#999">0</text>`;
   // Vref 線（紫破線）
   h += `<line x1="${x0}" y1="${Y(vref)}" x2="${x1}" y2="${Y(vref)}" stroke="#6A1B9A" stroke-width="1.6" stroke-dasharray="6 4"/>`;
-  // ラベルは左端に置く（右端は凡例の位置）。上端に寄ったときは線の下へ回し、白フチで波形から浮かせる
+  // ラベルは左端に置く（右端は凡例の位置）。上端に寄ったときは線の下へ回す。
+  // 描画は波形より後（下の方）で行う。先に描くと出力の立ち上がり（t=0 の縦線）に塗り潰される
   const yref=Y(vref), yreflab=(yref-y0<18)? yref+14 : yref-5;
-  h += `<text x="${x0+6}" y="${yreflab}" font-size="11" font-weight="700" fill="#6A1B9A" paint-order="stroke" stroke="#fff" stroke-width="3.5">V_ref=${(vref>=0?'+':'')+vref.toFixed(1)}V</text>`;
+  const reflab = `<text x="${x0+16}" y="${yreflab}" font-size="11" font-weight="700" fill="#6A1B9A" paint-order="stroke" stroke="#fff" stroke-width="3.5">V_ref=${(vref>=0?'+':'')+vref.toFixed(1)}V</text>`;
   // 入力 = 振幅5Vの正弦（青）
   const A=5, N=300;
   let pin='', pout='';
@@ -241,6 +242,7 @@ function drawWave(vref){
   }
   h += `<path d="${pout}" fill="none" stroke="#E65100" stroke-width="3"/>`;
   h += `<path d="${pin}" fill="none" stroke="#1565C0" stroke-width="2.4"/>`;
+  h += reflab;
   // 凡例
   h += `<rect x="${x1-210}" y="${y0+2}" width="200" height="20" rx="4" fill="#fff" opacity="0.85"/>`;
   h += `<line x1="${x1-200}" y1="${y0+12}" x2="${x1-180}" y2="${y0+12}" stroke="#1565C0" stroke-width="2.4"/>`;

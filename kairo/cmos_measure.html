@@ -6,7 +6,7 @@
 <style>body{margin:0;background:#fff;font-family:"Noto Sans CJK JP",sans-serif;}</style>
 </head>
 <body>
-<svg id="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 670" width="820" height="670">
+<svg id="fig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 638" width="820" height="638">
   <style>
     .vdd{stroke:#D32F2F;} .nmos{stroke:#2E7D32;} .pmos{stroke:#6A1B9A;}
     .in{stroke:#1565C0;} .mark{stroke:#E65100;} .gnd{stroke:#444;}
@@ -115,12 +115,11 @@
   <line class="wire gnd" x1="366" y1="564" x2="374" y2="564"/>
   <text x="435" y="556" class="small">GND（VSS, pin7 = N基板）　電源①－・電源②－・pin7 をすべて共通</text>
 
-  <!-- 注記は配線帯の外（GND母線より下）へ。回路の縦線を隠さないため -->
-  <rect x="30" y="576" width="400" height="80" rx="6" fill="#f3f4f6" stroke="#9E9E9E" stroke-width="1.4"/>
-  <text x="44" y="597" class="lbl" fill="#455a64">未使用ゲートの処理（開放禁止）</text>
-  <text x="44" y="615" class="small">・Q3 のゲート pin10 →使わないなら VSS(pin7) か VDD(pin14) に固定</text>
-  <text x="44" y="631" class="small">・Q2(N)・Q3 など使わない素子のゲートも開放にしない</text>
-  <text x="44" y="647" class="small">　（放置すると誤動作・IC発熱の原因）</text>
+  <!-- 注記は配線帯の外（GND母線より下）へ。回路の縦線を隠さないため。
+       縦に伸ばすと図が縦長になってスライド上で小さくなるので、横長2行に収める -->
+  <rect x="30" y="572" width="760" height="52" rx="6" fill="#f3f4f6" stroke="#9E9E9E" stroke-width="1.4"/>
+  <text x="44" y="592" class="small" fill="#455a64">未使用ゲートの処理（開放禁止）：Q3 のゲート pin10 は、使わないなら VSS(pin7) か VDD(pin14) に固定する</text>
+  <text x="44" y="611" class="small" fill="#455a64">Q2(N)・Q3 など使わない素子のゲートも開放にしない（放置すると誤動作・IC発熱の原因）</text>
 </svg>
 </body>
 </html>

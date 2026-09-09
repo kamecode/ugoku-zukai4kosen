@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>仮想短絡＝シーソーの自動バランス（反転増幅）</title>
+<title>仮想短絡＝電圧のシーソー（反転増幅）</title>
 <style>
   :root{
     --in:#1565C0;      /* 入力・Vin・−入力 */
@@ -61,8 +61,8 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>仮想短絡＝シーソーの自動バランス</h1>
-  <p class="sub">反転増幅回路：OPアンプは「2本の入力が同じ高さ（同じ電圧）」になるよう、出力を猛烈に素早く自動調整する。だから −入力 は + 入力（ここでは0V）と同じに見える＝仮想短絡。</p>
+  <h1>仮想短絡＝電圧のシーソー（支点＝−入力を0Vに保つ）</h1>
+  <p class="sub">反転増幅回路：梁の高さが電圧、支点が −入力。OPアンプは出力側の高さを猛烈に素早く動かして、支点を ＋入力（ここでは0V）と同じ高さに保つ＝仮想短絡。</p>
 
   <div class="tabs">
     <button class="tab active" data-mode="ideal">① 理想動作（仮想短絡と利得）</button>
@@ -73,7 +73,7 @@
 
   <div class="stage">
     <div class="panel">
-      <h2><span class="dot" style="background:var(--head)"></span>シーソー：いつも水平に保とうとする</h2>
+      <h2><span class="dot" style="background:var(--head)"></span>シーソー：支点（−入力）を0Vに保つ</h2>
       <svg id="seesaw" viewBox="0 0 460 320" aria-label="シーソー図"></svg>
     </div>
     <div class="panel">
@@ -123,76 +123,73 @@ const $ = id => document.getElementById(id);
 
 // ====== 計算 ======
 function compute(){
-  const a = gain * bwLoss;
-  let videal = a * (vin + Voff);
+  const ratio = Math.abs(gain);     // Rf/Rin
+  const a = gain * bwLoss;          // 信号に対する利得（③では帯域で目減りする）
+  // 入力オフセット Voff は「＋入力と−入力の電位差」なので、信号の利得ではなく
+  // ノイズゲイン (1+Rf/Rin) 倍されて、同符号で出力に現れる。
+  let videal = a * vin + (1 + ratio) * Voff;
   let vout = videal, clipped = false;
-  let vminus;
-  if(mode==="ideal"){
-    // 理想モードは飽和を適用しない（仮想短絡と利得の素直な対応だけを見せる）。
-    // 範囲設計上 vout はレール内に収まる。−入力は常に0V。
-    vminus = 0;
-  } else {
-    // ②③：レール飽和を適用
+  if(mode!=="ideal"){
+    // ②③：レール飽和を適用（①は仮想短絡と利得の対応だけを見せるので飽和させない）
     if(vout > RAIL){ vout = RAIL; clipped = true; }
     if(vout < -RAIL){ vout = -RAIL; clipped = true; }
-    if(clipped){
-      // 飽和時：仮想短絡が破れ、−入力が0Vからずれる（帰還点の電位を簡略表示）
-      // 節点電位 ≈ Vin と Vout を Rin:Rf で分圧した点（A=-Rf/Rin より Rf/Rin=|a|）
-      const ratio = Math.abs(gain); // Rf/Rin
-      vminus = (vin*ratio + vout) / (ratio + 1);
-    } else {
-      vminus = Voff; // 仮想短絡：+入力(0V)に対しオフセット分だけずれる
-    }
   }
-  return {a, videal, vout, clipped, vminus};
+  // −入力ノードの電位は抵抗2本の分圧そのもの（OPアンプの状態によらず常に成り立つ）。
+  // 理想動作では Vout=−(Rf/Rin)·Vin なので、この式はちょうど 0V を返す。
+  const vminus = (vin*ratio + vout) / (ratio + 1);
+  return {a, ratio, videal, vout, clipped, vminus};
 }
 
 // ====== シーソー描画 ======
 function drawSeesaw(s){
-  const cx=230, cy=170, halfLen=150;     // 支点と腕の長さ
-  // 傾き角：Vinの符号で傾けて「自動で水平へ戻る」を見せる。
-  // 理想＝即座に水平（傾き≈0）。飽和＝戻しきれず傾いたまま。
-  let tilt; // ラジアン、左下がり正
-  if(mode==="ideal"){ tilt = s.clipped?0:0; }
-  if(mode==="clip"){ tilt = s.clipped ? (s.vout>0? -0.16 : 0.16) : 0; }
-  if(mode==="real"){ tilt = Voff*0.05; } // わずかに傾く
-  // 描画ヘルパ
-  const lx = cx - halfLen*Math.cos(tilt), ly = cy + halfLen*Math.sin(tilt);
-  const rx = cx + halfLen*Math.cos(tilt), ry = cy - halfLen*Math.sin(tilt);
-  // 入力側(左)＝Vin、出力側(右)＝Vout の重り
+  // 電圧のシーソー（てこ）。梁の高さ＝電圧。
+  //   左端＝Vin ／ 支点＝−入力ノード ／ 右端＝Vout
+  // 支点は抵抗の内分点（左端から Rin/(Rin+Rf)）に置く。梁を左右の実電圧で
+  // 引けば、支点の高さは自動的に −入力の電位に一致する（分圧そのものだから）。
+  // したがって「支点が0Vのまま＝仮想短絡」「支点が浮く＝仮想短絡が破れる」が
+  // 図の上でそのまま読める。梁を水平に描くのは誤り（両端の電圧が違うため）。
+  const XL=70, XR=400, y0=158, K=17;      // 0V線の高さ／1V あたりの px
+  const XP = XL + (XR-XL)/(1+s.ratio);    // 支点＝Rin:Rf の内分点
+  const Y = v => y0 - K*v;
+  const yl=Y(vin), yr=Y(s.vout), yp=Y(s.vminus);
   const inLabel = (vin>=0?"+":"")+vin.toFixed(2)+"V";
   const outLabel = (s.vout>=0?"+":"")+s.vout.toFixed(2)+"V";
-  let extra="";
+  const vmLabel = (s.vminus>=0?"+":"")+s.vminus.toFixed(2)+"V";
+  let extra="", pivCol="#0D3C6E";
   if(mode==="clip" && s.clipped){
-    extra=`<text x="230" y="40" text-anchor="middle" font-size="14" fill="#b00020" font-weight="800">傾いたまま！ 出力がレールで止まり、水平に戻せない</text>`;
+    pivCol="#b00020";
+    extra=`<text x="230" y="26" text-anchor="middle" font-size="14" fill="#b00020" font-weight="800">支点が浮いたまま！ 出力がレールで止まり、戻せない</text>`;
+  } else if(mode==="ideal"){
+    extra=`<text x="230" y="26" text-anchor="middle" font-size="14" fill="#2E7D32" font-weight="800">支点は0Vのまま → −入力 ＝ +入力(0V)＝仮想短絡</text>`;
+  } else if(mode==="real"){
+    extra=`<text x="230" y="26" text-anchor="middle" font-size="13.5" fill="#0D3C6E" font-weight="700">オフセットの分だけ、支点が0Vからずれる</text>`;
+  } else {
+    extra=`<text x="230" y="26" text-anchor="middle" font-size="14" fill="#2E7D32" font-weight="800">支点は0Vのまま＝仮想短絡が成り立っている</text>`;
   }
-  if(mode==="ideal"){
-    extra=`<text x="230" y="40" text-anchor="middle" font-size="14" fill="#2E7D32" font-weight="800">いつも水平 → −入力 ＝ +入力(0V)＝仮想短絡</text>`;
-  }
-  if(mode==="real"){
-    extra=`<text x="230" y="40" text-anchor="middle" font-size="13.5" fill="#0D3C6E" font-weight="700">入力オフセットの分だけ、ほんの少し傾いた水平</text>`;
-  }
+  // 支点の注記は梁の下へ（左に寄りすぎたときだけ右へ逃がす）
+  const labX = Math.max(XP, 96);
   return `
   <rect x="0" y="0" width="460" height="320" fill="#fff"/>
   ${extra}
-  <!-- 水平の基準線 -->
-  <line x1="60" y1="${cy}" x2="400" y2="${cy}" stroke="#cfd6de" stroke-dasharray="5 5" stroke-width="1.5"/>
-  <text x="406" y="${cy+4}" font-size="11" fill="#9aa3ad">水平=0V</text>
+  <!-- 0Vの基準線 -->
+  <line x1="50" y1="${y0}" x2="410" y2="${y0}" stroke="#cfd6de" stroke-dasharray="5 5" stroke-width="1.5"/>
+  <text x="424" y="${y0+4}" font-size="11" fill="#9aa3ad">0V</text>
+  <!-- 腕（先に描き、支点と重りを上に載せる） -->
+  <line x1="${XL}" y1="${yl}" x2="${XR}" y2="${yr}" stroke="#3a4654" stroke-width="7" stroke-linecap="round"/>
   <!-- 支点（三角・仮想短絡点） -->
-  <polygon points="${cx},${cy} ${cx-16},${cy+30} ${cx+16},${cy+30}" fill="#0D3C6E"/>
-  <text x="${cx}" y="${cy+48}" text-anchor="middle" font-size="11.5" fill="#0D3C6E" font-weight="700">支点＝仮想短絡点（−入力）</text>
-  <!-- 腕 -->
-  <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="#3a4654" stroke-width="7" stroke-linecap="round"/>
+  <polygon points="${XP},${yp} ${XP-13},${yp+26} ${XP+13},${yp+26}" fill="${pivCol}"/>
+  <text x="${labX}" y="${yp+44}" text-anchor="middle" font-size="11.5" fill="${pivCol}" font-weight="700">支点＝−入力 ${vmLabel}</text>
+  <text x="${labX}" y="${yp+59}" text-anchor="middle" font-size="10.5" fill="#7a8590">支点の位置＝Rin:Rf＝1:${s.ratio}</text>
   <!-- 左の重り：Vin -->
-  <circle cx="${lx}" cy="${ly}" r="20" fill="#1565C0"/>
-  <text x="${lx}" y="${ly-28}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">入力側</text>
-  <text x="${lx}" y="${ly+5}" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">${inLabel}</text>
+  <circle cx="${XL}" cy="${yl}" r="19" fill="#1565C0"/>
+  <text x="${XL}" y="${yl-27}" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="800">入力側</text>
+  <text x="${XL}" y="${yl+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${inLabel}</text>
   <!-- 右の重り：Vout -->
-  <circle cx="${rx}" cy="${ry}" r="20" fill="#E65100"/>
-  <text x="${rx}" y="${ry-28}" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">出力側</text>
-  <text x="${rx}" y="${ry+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${outLabel}</text>
-  <!-- 自動調整の矢印 -->
-  <text x="${rx}" y="${ry+ (s.vout>=0?42:-40)}" text-anchor="middle" font-size="11" fill="#E65100">↕ 自動調整</text>
+  <circle cx="${XR}" cy="${yr}" r="19" fill="#E65100"/>
+  <text x="${XR}" y="${yr-27}" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">出力側</text>
+  <text x="${XR}" y="${yr+5}" text-anchor="middle" font-size="11.5" fill="#fff" font-weight="800">${outLabel}</text>
+  <!-- 自動調整の矢印（出力側は常に円の下へ。上に置くと「出力側」の文字と重なる） -->
+  <text x="${XR}" y="${yr+34}" text-anchor="middle" font-size="11" fill="#E65100">↕ 自動調整</text>
   `;
 }
 
@@ -253,7 +250,7 @@ function drawCircuit(s){
   <text x="${outX}" y="140" text-anchor="middle" font-size="12" fill="#E65100" font-weight="800">Vout</text>
   <!-- 数値ボックス -->
   <rect x="300" y="240" width="150" height="62" rx="9" fill="#fff7f0" stroke="#E65100" stroke-width="1.5"/>
-  <text x="375" y="260" text-anchor="middle" font-size="12" fill="#444">Vout = A · Vin</text>
+  <text x="375" y="260" text-anchor="middle" font-size="12" fill="#444">${mode==="real" ? "Vout（オフセット込み）" : "Vout = A · Vin"}</text>
   <text x="375" y="282" text-anchor="middle" font-size="15" fill="#E65100" font-weight="800">${(s.vout>=0?"+":"")+s.vout.toFixed(2)} V</text>
   <text x="375" y="297" text-anchor="middle" font-size="10.5" fill="#7a8590">A=${aTxt}, Vin=${(vin>=0?"+":"")+vin.toFixed(2)}V</text>
   `;
@@ -285,13 +282,14 @@ function noteText(s){
   if(mode==="clip"){
     return `理想式では Vout=${s.videal.toFixed(2)}V ですが、出力は電源レール（ここでは ±${RAIL}V）より外へは出られません。`
       +(s.clipped
-        ?`<b>いまレールに張り付いています（${s.vout.toFixed(2)}V）。</b>こうなると出力をこれ以上動かせず、シーソーを水平に戻せない＝<b>仮想短絡が破れます</b>。`
+        ?`<b>いまレールに張り付いています（${s.vout.toFixed(2)}V）。</b>こうなると出力をこれ以上動かせず、支点（−入力）を0Vに戻せない＝<b>仮想短絡が破れます</b>。`
         :`Vinを大きくして A·Vin が ±${RAIL}V を超えると張り付きます。`)
       +`実機ではこの飽和を「波形の頭が平らに潰れる」形で必ず観察します。`;
   }
   // real
-  return `現実のNJM4558は理想と少しずれます。<b>入力オフセット電圧</b>のせいで Vin=0 でも出力がわずかにずれ、`
-    +`<b>有限の帯域</b>のせいで入力が速くなる（高周波）ほど利得が落ちます（いまの利得係数 ${bwLoss.toFixed(2)}）。`
+  return `現実のNJM4558は理想と少しずれます。<b>入力オフセット電圧</b>（ここでは ${(Voff*1000).toFixed(0)}mV）は`
+    +`信号の利得ではなく <b>(1+Rf/Rin)=${(1+s.ratio)}倍</b> されて出力に現れるので、Vin=0 でも出力が ${((1+s.ratio)*Voff).toFixed(2)}V ずれます。`
+    +`さらに<b>有限の帯域</b>のせいで、入力が速くなる（高周波）ほど信号の利得が落ちます（いまの利得係数 ${bwLoss.toFixed(2)}）。`
     +`このズレを「つまずき」でなく「測って考える対象」として実験で確かめます。`;
 }
 
@@ -311,8 +309,8 @@ function render(){
 
 // ====== モード切替 ======
 const modeLines = {
-  ideal:"スライダーでVinを動かすと、シーソーは即座に水平へ。−入力は常に0Vに見え、Voutは抵抗比で決まります。",
-  clip:"Vinを大きく振ってみてください。理想式の出力がレール(±"+RAIL+"V)を超えると、出力が張り付いて水平に戻せなくなります。",
+  ideal:"スライダーでVinを動かすと、梁は傾いても支点は0Vのまま。−入力は常に0Vに見え、Voutは抵抗比で決まります。",
+  clip:"Vinを大きく振ってみてください。理想式の出力がレール(±"+RAIL+"V)を超えると、出力が張り付いて支点を0Vに戻せなくなります。",
   real:"理想からのズレ（オフセット・帯域）。Vin=0でも出力が少しずれ、速い入力ほど利得が落ちます。"
 };
 document.querySelectorAll(".tab").forEach(t=>{
