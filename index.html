@@ -77,6 +77,15 @@
                                  border-color: transparent transparent transparent #0d3c6e; }
   .videos-banner strong { font-size: 1.02rem; }
   .videos-banner span { display: block; font-size: .82rem; opacity: .85; }
+  .banners { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  @media (max-width: 760px) { .banners { grid-template-columns: 1fr; } }
+  .banners .videos-banner { margin-top: 0; height: 100%; }
+  .quiz-banner { background: var(--card); color: var(--ink); border: 1.5px solid var(--blue); }
+  .quiz-banner .play { background: var(--blue); color: #fff; font-weight: 700; font-size: 1.25rem; }
+  .quiz-banner .play::before { content: "?"; border: 0; margin: 0; }
+  .quiz-banner span { opacity: 1; color: var(--sub); }
+  .quiz-banner strong { color: var(--ink); }
+  .quiz-banner:hover, .quiz-banner:focus-visible { box-shadow: 0 6px 18px rgba(21,101,192,.22); }
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9837198638535384"
      crossorigin="anonymous"></script>
@@ -102,11 +111,18 @@
   高専・大学・工業高校での授業の予習・復習、実験レポート作成時の確認にどうぞ。</p>
 </div>
 
-<a class="videos-banner" href="videos.html">
-  <span class="play" aria-hidden="true"></span>
-  <span><strong>講義動画 ― 半導体工学(全15回)</strong>
-  <span>スライド+ナレーションの講義動画。約25分×15本・日本語字幕付き(全15回そろいました)</span></span>
-</a>
+<div class="banners">
+  <a class="videos-banner" href="videos.html">
+    <span class="play" aria-hidden="true"></span>
+    <span><strong>講義動画 ― 半導体工学(全15回)</strong>
+    <span>スライド+ナレーションの講義動画。約25分×15本・日本語字幕付き(全15回そろいました)</span></span>
+  </a>
+  <a class="videos-banner quiz-banner" href="quiz.html">
+    <span class="play" aria-hidden="true"></span>
+    <span><strong>半導体工学クイズ ― 理解度チェック</strong>
+    <span>全30問からランダム10問。採点と解説がその場で出ます</span></span>
+  </a>
+</div>
 
 <section class="subject">
   <h2>半導体工学</h2>
@@ -341,6 +357,7 @@
 <footer>
   全導体(ぜんどうたい) — 教育目的での利用を歓迎します<br>
   <a href="videos.html" style="color:var(--sub);">講義動画</a> ・
+  <a href="quiz.html" style="color:var(--sub);">クイズ</a> ・
   <a href="about.html" style="color:var(--sub);">このサイトについて</a> ・
   <a href="privacy.html" style="color:var(--sub);">プライバシーポリシー</a>
 </footer>

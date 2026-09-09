@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>半導体工学クイズ 全30問からランダム10問 | 全導体</title>
+<meta name="description" content="半導体工学の理解度チェッククイズ。全30問からランダムに10問を出題し、採点と解説をその場で確認できます。バンドギャップ・n型p型・pn接合・ダイオード・MOSFET・CMOS・半導体製造プロセスまで。高専・大学の試験対策に。">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="canonical" href="https://ugoku-zukai4kosen.com/quiz.html">
+<meta property="og:title" content="半導体工学クイズ ― 全30問からランダム10問|全導体">
+<meta property="og:description" content="バンドギャップからCMOS・製造プロセスまで。10問に答えると採点と解説が出ます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ugoku-zukai4kosen.com/quiz.html">
+<meta property="og:image" content="https://ugoku-zukai4kosen.com/og.png">
+<style>
+  :root { --ink:#1a2230; --sub:#5a6b82; --bg:#f7f8fa; --card:#fff; --blue:#1565c0;
+          --deep:#0d3c6e; --line:#e3e7ee; --ok:#2e7d32; --ng:#c62828; --amber:#ffb531; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Yu Gothic",sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.7; }
+  header { background:var(--deep); color:#fff; padding:26px 20px 22px; text-align:center; }
+  .brand { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+  .brand img { display:block; }
+  header h1 { margin:0; font-size:1.45rem; }
+  header p { margin:4px 0 0; opacity:.85; font-size:.9rem; }
+  header a.back { display:inline-block; margin-top:8px; color:#cfe0f5; font-size:.85rem; text-decoration:none; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 64px; }
+
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px;
+           padding:22px 24px; box-shadow:0 1px 3px rgba(13,60,110,.05); }
+  @media (max-width:520px) { .panel { padding:18px 16px; } }
+
+  .lead { color:var(--sub); font-size:.94rem; margin:0 0 18px; }
+  .btn { display:inline-block; border:0; border-radius:10px; padding:13px 30px; font-size:1rem;
+         font-weight:700; font-family:inherit; background:var(--blue); color:#fff; cursor:pointer;
+         transition:box-shadow .15s, transform .15s; }
+  .btn:hover, .btn:focus-visible { box-shadow:0 6px 18px rgba(21,101,192,.3); transform:translateY(-2px); }
+  .btn.sub { background:#eef2f7; color:var(--ink); }
+  .btn:disabled { opacity:.4; cursor:default; transform:none; box-shadow:none; }
+
+  .meta { display:flex; align-items:center; justify-content:space-between;
+          font-size:.85rem; color:var(--sub); margin-bottom:6px; }
+  .bar { height:6px; border-radius:99px; background:#e8edf4; overflow:hidden; margin-bottom:20px; }
+  .bar span { display:block; height:100%; background:var(--blue); border-radius:99px; transition:width .3s; }
+  .tag { display:inline-block; font-size:.74rem; font-weight:600; color:var(--blue);
+         background:#e8f1fc; border-radius:99px; padding:3px 11px; margin-bottom:10px; }
+  .q { font-size:1.12rem; font-weight:700; line-height:1.6; margin:0 0 18px; }
+
+  ul.choices { list-style:none; padding:0; margin:0 0 18px; display:grid; gap:10px; }
+  ul.choices button { width:100%; text-align:left; font-family:inherit; font-size:.97rem;
+                      line-height:1.55; padding:13px 16px; border:1.5px solid var(--line);
+                      border-radius:10px; background:#fff; color:var(--ink); cursor:pointer;
+                      display:flex; gap:11px; align-items:flex-start;
+                      transition:border-color .15s, background .15s; }
+  ul.choices button:hover:not(:disabled) { border-color:#9ec0e8; background:#f6faff; }
+  ul.choices button .k { flex:none; width:24px; height:24px; border-radius:50%; background:#eef2f7;
+                         color:var(--sub); font-size:.8rem; font-weight:700; display:flex;
+                         align-items:center; justify-content:center; margin-top:1px; }
+  ul.choices button[aria-pressed="true"] { border-color:var(--blue); background:#eef6ff; }
+  ul.choices button[aria-pressed="true"] .k { background:var(--blue); color:#fff; }
+  ul.choices button:disabled { cursor:default; }
+  ul.choices button.correct { border-color:var(--ok); background:#eef7ef; }
+  ul.choices button.correct .k { background:var(--ok); color:#fff; }
+  ul.choices button.wrong { border-color:var(--ng); background:#fdeded; }
+  ul.choices button.wrong .k { background:var(--ng); color:#fff; }
+
+  .judge { font-weight:700; margin:0 0 6px; }
+  .judge.ok { color:var(--ok); }
+  .judge.ng { color:var(--ng); }
+  .exp { background:#f6f8fb; border-left:4px solid var(--blue); border-radius:0 8px 8px 0;
+         padding:12px 16px; font-size:.92rem; margin:0 0 18px; }
+  .exp p { margin:0; }
+
+  .score { text-align:center; padding:8px 0 4px; }
+  .score .n { font-size:3.4rem; font-weight:800; color:var(--deep); line-height:1.1; }
+  .score .n small { font-size:1.3rem; font-weight:700; color:var(--sub); }
+  .score .msg { font-size:1.02rem; font-weight:700; margin:6px 0 0; }
+  .score .sub { color:var(--sub); font-size:.88rem; margin:4px 0 0; }
+
+  ol.review { list-style:none; counter-reset:r; padding:0; margin:24px 0 0; display:grid; gap:14px; }
+  ol.review li { counter-increment:r; border:1px solid var(--line); border-radius:12px;
+                 padding:14px 16px; background:#fff; }
+  ol.review li::before { content:"Q" counter(r); font-size:.76rem; font-weight:700; color:var(--sub); }
+  ol.review .rq { font-weight:700; font-size:.97rem; margin:4px 0 8px; }
+  ol.review .ans { font-size:.9rem; margin:0 0 4px; }
+  ol.review .ans .mark { font-weight:700; }
+  ol.review .ans .mark.ok { color:var(--ok); }
+  ol.review .ans .mark.ng { color:var(--ng); }
+  ol.review .yours { color:var(--sub); }
+  ol.review .rexp { font-size:.88rem; color:var(--sub); margin:8px 0 0; padding-top:8px;
+                    border-top:1px dashed var(--line); }
+  .actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:26px; }
+  .links { text-align:center; font-size:.9rem; color:var(--sub); margin-top:22px; }
+  .links a { color:var(--blue); }
+  footer { text-align:center; color:var(--sub); font-size:.82rem; padding:28px 16px 40px;
+           border-top:1px solid var(--line); }
+  footer a { color:var(--sub); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9837198638535384"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="logo.svg" alt="" width="44" height="44">
+    <h1>半導体工学クイズ</h1>
+  </div>
+  <p>全30問からランダムに10問出題。採点と解説がその場で見られます</p>
+  <a class="back" href="./">← 全導体 トップへ</a>
+</header>
+<main>
+  <div class="panel" id="panel"></div>
+  <p class="links">
+    まちがえたところは<a href="./">アニメーション教材</a>や<a href="videos.html">講義動画</a>で確認できます。
+  </p>
+</main>
+<footer>
+  全導体(ぜんどうたい) — 教育目的での利用を歓迎します<br>
+  <a href="./">トップ</a> ・ <a href="videos.html">講義動画</a> ・
+  <a href="about.html">このサイトについて</a> ・ <a href="privacy.html">プライバシーポリシー</a>
+</footer>
+
+<script>
+// 問題データ: a=選択肢, c=正解のindex, e=解説, t=分野
+const BANK = [
+  { t:"半導体の基礎", q:"半導体の抵抗率は、導体と絶縁体のどちらの側に位置するか。",
+    a:["導体と絶縁体のちょうど中間あたり","導体よりさらに低い","絶縁体よりさらに高い","温度によらず一定で導体と同じ"], c:0,
+    e:"半導体は導体(金属)と絶縁体の中間の抵抗率をもつ物質です。しかも不純物の添加や温度・光・電圧によって導電性が大きく変わる点が、単なる「中間の物質」と違うところです。" },
+  { t:"半導体の基礎", q:"温度を上げたとき、金属と半導体の導電率はそれぞれどうなるか。",
+    a:["金属は下がり、半導体は上がる","どちらも上がる","どちらも下がる","金属は上がり、半導体は下がる"], c:0,
+    e:"金属は温度が上がると原子の熱振動が激しくなり電子が散乱されるので導電率が下がります。半導体は熱エネルギーで価電子帯から伝導帯へ電子が励起され、キャリアの数そのものが増えるため導電率が上がります。" },
+  { t:"結晶と結合", q:"シリコン原子の最外殻電子(価電子)は何個か。",
+    a:["4個","2個","6個","8個"], c:0,
+    e:"シリコンは14族の元素で価電子は4個です。隣り合う4個の原子と価電子を出し合って共有結合し、ダイヤモンド構造の結晶をつくります。" },
+  { t:"バンド構造", q:"バンドギャップ(禁制帯幅)とは何か。",
+    a:["価電子帯の上端と伝導帯の下端のエネルギー差","伝導帯の幅そのもの","電子が持てる最大のエネルギー","原子と原子の距離"], c:0,
+    e:"電子が存在できないエネルギーの範囲がバンドギャップです。この幅を越えるエネルギーをもらった電子だけが価電子帯から伝導帯へ移れます。" },
+  { t:"バンド構造", q:"金属・半導体・絶縁体をバンド構造で区別すると、正しいのはどれか。",
+    a:["金属はバンドが重なり、半導体はギャップが小さく、絶縁体はギャップが大きい","金属だけがギャップを持つ","3つともギャップの大きさは同じ","半導体だけバンドが重なっている"], c:0,
+    e:"金属は価電子帯と伝導帯が重なっていて常に自由電子があります。半導体はギャップが小さい(Siで約1.1eV)ので熱や光で電子を励起でき、絶縁体はギャップが大きすぎて(数eV以上)電子が越えられません。" },
+  { t:"バンド構造", q:"室温におけるシリコンのバンドギャップはおよそいくらか。",
+    a:["約1.1 eV","約0.1 eV","約5.5 eV","約12 eV"], c:0,
+    e:"Siは約1.1eVです。参考までにGaAsは約1.4eV、SiCは約3.3eV、絶縁体のダイヤモンドは約5.5eV。ギャップが広い材料ほど高温・高電圧に強く、パワー半導体に使われます。" },
+  { t:"キャリア", q:"真性半導体(不純物を含まない純粋な半導体)のキャリアについて正しいのはどれか。",
+    a:["自由電子と正孔が同じ数だけ存在する","自由電子だけが存在する","正孔だけが存在する","キャリアはまったく存在しない"], c:0,
+    e:"電子が価電子帯から伝導帯へ1個励起されると、価電子帯には正孔が1個できます。必ずペアで生まれるので、真性半導体では電子濃度と正孔濃度が等しくなります(n = p = n_i)。" },
+  { t:"キャリア", q:"正孔(ホール)とは何か。",
+    a:["電子が抜けた空席で、正の電荷をもつ粒子のようにふるまう","陽子そのもの","原子核から飛び出した粒子","電子より重い負電荷の粒子"], c:0,
+    e:"正孔は「電子の抜けた席」です。周りの電子が次々とその席へ移ることで、結果として空席が電子と逆向きに動きます。これを正の電荷をもつ1個のキャリアとみなすと扱いやすくなります。" },
+  { t:"ドーピング", q:"シリコンにリン(P)などの5価の元素を添加すると何ができるか。",
+    a:["n型半導体。多数キャリアは電子","p型半導体。多数キャリアは正孔","絶縁体になる","真性半導体のまま変わらない"], c:0,
+    e:"5価の原子は共有結合に4個使うと電子が1個余り、これがわずかなエネルギーで自由電子になります。電子を供給するのでドナーと呼び、negative(負)のnをとってn型といいます。" },
+  { t:"ドーピング", q:"p型半導体をつくるために添加する不純物はどれか。",
+    a:["ホウ素(B)などの3価の元素","リン(P)などの5価の元素","ヒ素(As)などの5価の元素","アルゴン(Ar)などの希ガス"], c:0,
+    e:"3価の原子は共有結合をつくるのに電子が1個足りず、そこが正孔になります。電子を受け取るのでアクセプタと呼び、positive(正)のpをとってp型といいます。" },
+  { t:"ドーピング", q:"n型半導体において、少数キャリアはどちらか。",
+    a:["正孔","電子","電子と正孔で同数","少数キャリアは存在しない"], c:0,
+    e:"n型では電子が多数キャリア、正孔が少数キャリアです。少数キャリアはごくわずかですが、pn接合やトランジスタの動作を決める重要な役割を担います。" },
+  { t:"電流", q:"ドリフト電流と拡散電流の違いとして正しいのはどれか。",
+    a:["ドリフトは電界による流れ、拡散は濃度勾配による流れ","ドリフトは電子だけ、拡散は正孔だけの流れ","ドリフトは直流、拡散は交流","違いはなく同じものを指す"], c:0,
+    e:"電圧をかけて電界で引っぱるのがドリフト電流、キャリアが濃いところから薄いところへ自然に広がるのが拡散電流です。pn接合ではこの2つがつり合った状態が平衡です。" },
+  { t:"電流", q:"シリコン中の移動度について正しいのはどれか。",
+    a:["電子のほうが正孔より大きい","正孔のほうが電子より大きい","両者は完全に等しい","移動度は温度に無関係"], c:0,
+    e:"Si中の移動度は電子が約1350、正孔が約480 cm²/(V·s)で、電子のほうが約3倍動きやすいです。CMOSでpMOSのほうが電流を流しにくいのはこのためで、設計ではpMOSの幅を広げて補います。" },
+  { t:"pn接合", q:"pn接合の接合部にできる空乏層とはどんな領域か。",
+    a:["キャリアが拡散・再結合して消え、イオン化した不純物だけが残った領域","電子だけが極端に多い領域","絶縁膜を貼りつけた領域","電流がもっとも流れやすい領域"], c:0,
+    e:"接合直後、n側の電子とp側の正孔が拡散して出会い再結合します。残された固定イオン(n側は正、p側は負)が電界をつくり、それ以上の拡散を止めます。この可動キャリアが枯渇した層が空乏層です。" },
+  { t:"pn接合", q:"シリコンpn接合の内蔵電位(ビルトインポテンシャル)はおよそいくらか。",
+    a:["0.6〜0.7 V程度","0.05 V程度","5 V程度","50 V程度"], c:0,
+    e:"Siでは約0.7Vです。ダイオードの順方向電圧が約0.7Vなのは、この内蔵電位の坂を打ち消すだけの電圧が必要だからです。" },
+  { t:"pn接合", q:"pn接合に順方向バイアス(p側に+、n側に−)をかけると空乏層はどうなるか。",
+    a:["狭くなり、電流が流れやすくなる","広がり、電流が流れにくくなる","変化しない","絶縁膜に変わる"], c:0,
+    e:"外部電圧が内蔵電位を打ち消す向きに働くので、電位の坂が低くなり空乏層が狭まります。キャリアが相手側へ拡散できるようになり、大きな電流が流れます。" },
+  { t:"ダイオード", q:"ダイオードの整流作用とは何か。",
+    a:["一方向にだけ電流を流し、逆向きにはほとんど流さない性質","電圧を一定に保つ性質","電流を増幅する性質","光を出す性質"], c:0,
+    e:"順方向では空乏層が狭まって電流が流れ、逆方向では空乏層が広がってごくわずかな漏れ電流しか流れません。この非対称性が交流を直流に変える整流回路の基礎になります。" },
+  { t:"ダイオード", q:"逆方向電圧を上げていくと、ある電圧で急に大電流が流れる現象を何というか。",
+    a:["降伏(ブレークダウン)","飽和","ピンチオフ","反転"], c:0,
+    e:"ツェナー降伏やなだれ降伏によって起こります。壊れる現象と思われがちですが、電流さえ制限すれば電圧が一定に保たれるので、定電圧ダイオード(ツェナーダイオード)として積極的に利用されます。" },
+  { t:"ダイオード", q:"シリコンで高効率な発光ダイオード(LED)が作れないのはなぜか。",
+    a:["Siは間接遷移型半導体で、電子と正孔が再結合しても光になりにくいから","Siのバンドギャップが大きすぎるから","Siは電流を流せないから","Siは高温にできないから"], c:0,
+    e:"間接遷移型のSiでは再結合の際に格子振動が関与し、エネルギーの多くが熱になります。LEDにはGaNやGaAsのような直接遷移型半導体が使われます。" },
+  { t:"MOSの構造", q:"MOS構造の3層は何か。",
+    a:["金属(ゲート)−酸化膜−半導体","金属−金属−半導体","半導体−空気−金属","酸化膜−酸化膜−金属"], c:0,
+    e:"Metal(金属)-Oxide(酸化膜)-Semiconductor(半導体)の頭文字でMOSです。酸化膜には主にSiO₂が使われ、ゲートと基板を絶縁するのでゲート電流はほとんど流れません。" },
+  { t:"MOSの構造", q:"nチャネルMOSFETの基本構造として正しいのはどれか。",
+    a:["p型基板にn⁺のソースとドレインを作る","n型基板にn⁺のソースとドレインを作る","p型基板にp⁺のソースとドレインを作る","絶縁体の基板に金属電極を並べる"], c:0,
+    e:"nMOSはp型基板上にn⁺のソース・ドレインを配置します。ゲートに正電圧を加えると基板表面に電子が集まって反転層(nチャネル)ができ、ソースとドレインがつながります。" },
+  { t:"MOSの動作", q:"MOSFETのしきい値電圧(Vth)とは何か。",
+    a:["チャネルが形成されて電流が流れ始めるゲート電圧","素子が壊れる限界の電圧","ドレインに加えられる最大電圧","電源電圧の半分の値"], c:0,
+    e:"ゲート電圧がVthを超えると反転層(チャネル)ができ、ドレイン電流が流れ始めます。Vthはデジタル回路の0と1を分ける基準であり、消費電力と速度を左右する重要な設計パラメータです。" },
+  { t:"MOSの動作", q:"MOSFETの飽和領域では、ドレイン電流はどうなるか。",
+    a:["ドレイン電圧を上げてもほぼ一定になる","ドレイン電圧に比例して増え続ける","ゼロになる","急激に減少する"], c:0,
+    e:"V_DS が V_GS − V_th を超えるとドレイン側のチャネルが消える(ピンチオフ)ため、それ以上電圧を上げても電流はほぼ増えません。この定電流性が増幅回路で活かされます。" },
+  { t:"MOSの動作", q:"MOSFETとバイポーラトランジスタの制御方式の違いは何か。",
+    a:["MOSFETは電圧制御、バイポーラは電流制御","MOSFETは電流制御、バイポーラは電圧制御","どちらも電流制御","どちらも電圧制御"], c:0,
+    e:"MOSFETはゲートが絶縁されているのでゲート電流がほぼ流れず、電圧だけで制御できます(入力インピーダンスが非常に高い)。バイポーラはベース電流でコレクタ電流を制御します。" },
+  { t:"CMOS", q:"CMOS回路の最大の利点は何か。",
+    a:["静止時の消費電力がほぼゼロになること","抵抗器が不要なので小さく作れること","電源電圧を高くできること","アナログ信号しか扱えないこと"], c:0,
+    e:"nMOSとpMOSを相補的に組み合わせるため、入力が0でも1でも必ずどちらか一方がOFFになり、電源からグランドへ電流が流れません。電流が流れるのは切り替わる瞬間だけです。" },
+  { t:"CMOS", q:"CMOSインバータの入力にHigh(電源電圧)を与えたとき、内部はどうなるか。",
+    a:["nMOSがON、pMOSがOFFになり、出力はLow","nMOSがOFF、pMOSがONになり、出力はHigh","両方ONになり出力は中間電位","両方OFFになり出力はHigh"], c:0,
+    e:"入力Highでは、nMOSはゲート電圧が高くONになり、pMOSはゲート-ソース間電圧がほぼ0でOFFになります。出力はnMOS経由でグランドに引き下げられてLowになり、これが反転(NOT)動作です。" },
+  { t:"微細化", q:"ムーアの法則が述べている内容として正しいのはどれか。",
+    a:["集積回路上のトランジスタ数がおよそ2年で2倍になる","半導体の価格が毎年2倍になる","電子の移動度が2年で2倍になる","ウェハの直径が2年で2倍になる"], c:0,
+    e:"1965年にゴードン・ムーアが示した経験則で、微細化によって集積度が指数関数的に高まることを述べたものです。物理法則ではなく業界の指針として機能してきました。" },
+  { t:"微細化", q:"FinFETやGAA(ゲートオールアラウンド)構造の目的は何か。",
+    a:["ゲートがチャネルを囲む立体構造にして、短チャネル効果を抑え制御力を高める","チップの面積をあえて広げるため","絶縁膜を厚くして電圧を上げるため","冷却用の放熱板を兼ねるため"], c:0,
+    e:"微細化が進むと平面型ではゲートがチャネルを制御しきれず、OFFにしても漏れ電流が流れます(短チャネル効果)。チャネルをヒレ状にしたり全周を囲んだりして接触面積を増やし、制御力を回復させます。" },
+  { t:"製造プロセス", q:"半導体製造の「前工程」と「後工程」の区分として正しいのはどれか。",
+    a:["前工程はウェハ上に素子を作り込む工程、後工程は切り出してパッケージする工程","前工程は営業、後工程は製造","前工程は検査、後工程は設計","前工程は出荷、後工程は回収"], c:0,
+    e:"前工程は成膜・リソグラフィ・エッチング・イオン注入などをくり返してウェハ上に回路を作る工程です。後工程はダイシング(切り出し)、ボンディング、封止、最終検査を指します。" },
+  { t:"製造プロセス", q:"フォトリソグラフィ工程の役割は何か。",
+    a:["回路パターンを光でレジストに転写し、加工する場所を決めること","シリコン単結晶のインゴットを育てること","チップを樹脂で封止すること","ウェハを切断して個々のチップにすること"], c:0,
+    e:"レジスト塗布→露光→現像でマスクのパターンをウェハ上に写し取り、エッチングやイオン注入を行う領域を決めます。より細かいパターンを描くために、露光光源は短波長化が進みEUV(波長13.5nm)に至っています。" }
+];
+
+const N = 10;
+const panel = document.getElementById("panel");
+const KEY = ["A","B","C","D"];
+let quiz = [], idx = 0, answers = [], locked = false;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 選択肢もシャッフルして、常に同じ位置が正解にならないようにする
+function buildQuiz() {
+  quiz = shuffle(BANK).slice(0, N).map(item => {
+    const order = shuffle(item.a.map((text, i) => ({ text, i })));
+    return {
+      t: item.t, q: item.q, e: item.e,
+      a: order.map(o => o.text),
+      c: order.findIndex(o => o.i === item.c)
+    };
+  });
+  answers = new Array(N).fill(null);
+  idx = 0;
+  locked = false;
+}
+
+function esc(s) {
+  return s.replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+}
+
+function renderStart() {
+  panel.innerHTML = `
+    <h2 style="margin:0 0 10px; font-size:1.2rem;">全${BANK.length}問からランダム${N}問</h2>
+    <p class="lead">半導体の基礎・バンド構造・キャリア・pn接合・ダイオード・MOSFET・CMOS・製造プロセスまで、
+    講義全15回の範囲から出題します。1問ずつ答えると、その場で正誤と解説が出ます。
+    最後に得点と全問の振り返りを表示します。</p>
+    <button class="btn" id="start">クイズをはじめる</button>`;
+  document.getElementById("start").onclick = () => { buildQuiz(); renderQuestion(); };
+}
+
+function renderQuestion() {
+  const item = quiz[idx];
+  const pct = Math.round((idx / N) * 100);
+  panel.innerHTML = `
+    <div class="meta"><span>第${idx + 1}問 / ${N}問</span><span>正解 ${countCorrect()}問</span></div>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <span class="tag">${esc(item.t)}</span>
+    <p class="q">${esc(item.q)}</p>
+    <ul class="choices" id="choices">
+      ${item.a.map((text, i) => `
+        <li><button type="button" data-i="${i}" aria-pressed="false">
+          <span class="k">${KEY[i]}</span><span>${esc(text)}</span>
+        </button></li>`).join("")}
+    </ul>
+    <div id="after"></div>`;
+  locked = false;
+  document.getElementById("choices").querySelectorAll("button").forEach(b => {
+    b.onclick = () => choose(Number(b.dataset.i));
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function choose(pick) {
+  if (locked) return;
+  locked = true;
+  answers[idx] = pick;
+  const item = quiz[idx];
+  const ok = pick === item.c;
+  document.getElementById("choices").querySelectorAll("button").forEach(b => {
+    const i = Number(b.dataset.i);
+    b.disabled = true;
+    if (i === item.c) b.classList.add("correct");
+    else if (i === pick) b.classList.add("wrong");
+  });
+  const last = idx === N - 1;
+  document.getElementById("after").innerHTML = `
+    <p class="judge ${ok ? "ok" : "ng"}">${ok ? "◯ 正解" : "✗ 不正解 — 正解は " + KEY[item.c]}</p>
+    <div class="exp"><p>${esc(item.e)}</p></div>
+    <button class="btn" id="next">${last ? "結果を見る" : "次の問題へ"}</button>`;
+  document.getElementById("next").onclick = () => {
+    if (last) renderResult();
+    else { idx++; renderQuestion(); }
+  };
+}
+
+function countCorrect() {
+  return answers.reduce((n, a, i) => n + (a !== null && a === quiz[i].c ? 1 : 0), 0);
+}
+
+function renderResult() {
+  const score = countCorrect();
+  const msg = score === 10 ? "満点です。文句なしの理解度です"
+            : score >= 8 ? "よく理解できています"
+            : score >= 6 ? "基礎は身についています。あと一歩"
+            : score >= 4 ? "要復習。解説を読んで確認しましょう"
+            : "まずは講義動画と図解で基礎から確認しましょう";
+  panel.innerHTML = `
+    <div class="score">
+      <div class="n">${score}<small> / ${N}問正解</small></div>
+      <p class="msg">${msg}</p>
+      <p class="sub">下に全${N}問の正解と解説をまとめました。まちがえた分野を確認しましょう。</p>
+    </div>
+    <ol class="review">
+      ${quiz.map((item, i) => {
+        const ok = answers[i] === item.c;
+        return `<li>
+          <p class="rq">${esc(item.q)}</p>
+          <p class="ans"><span class="mark ${ok ? "ok" : "ng"}">${ok ? "◯" : "✗"}</span>
+             正解: ${KEY[item.c]} ${esc(item.a[item.c])}</p>
+          ${ok ? "" : `<p class="ans yours">あなたの解答: ${KEY[answers[i]]} ${esc(item.a[answers[i]])}</p>`}
+          <p class="rexp">${esc(item.e)}</p>
+        </li>`;
+      }).join("")}
+    </ol>
+    <div class="actions">
+      <button class="btn" id="again">もう一度挑戦する</button>
+      <a class="btn sub" href="./">図解で復習する</a>
+    </div>`;
+  document.getElementById("again").onclick = () => { buildQuiz(); renderQuestion(); };
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+renderStart();
+</script>
+</body>
+</html>
